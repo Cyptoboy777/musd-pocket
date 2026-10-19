@@ -22,9 +22,9 @@ export const MUSD_ADDRESS = "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503" as cons
 
 /**
  * Set after deploy. Override with VITE_POCKET_ADDRESS in .env
- * Placeholder zero until funded deploy — frontend still builds & demos UI.
+ * Default: deployed MUSDPocket on Mezo testnet (tx 0x98181dcd…1df6).
  */
 export const POCKET_ADDRESS = (
   import.meta.env.VITE_POCKET_ADDRESS ||
-  "0x0000000000000000000000000000000000000000"
+  "0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8"
 ) as `0x${string}`;

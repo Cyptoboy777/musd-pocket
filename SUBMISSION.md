@@ -30,7 +30,7 @@ India already thinks in recurring deposits, gold schemes, and UPI family sends �
 KhipuVault proved LatAm cooperative savings win; MezoPay proved consumer payments win. MUSD Pocket owns the **India FD + remit** wedge on the same MUSD rails.
 
 ## Challenges
-- Mezo testnet faucet is CAPTCHA-gated; automated deploy from CI/box stops until a human funds the deployer.
+- Mezo testnet faucet is CAPTCHA-gated; automated deploy from CI/box had to wait until a human funded the deployer.
 - Testnet MUSD is borrowed (not dripped), so end-to-end demos need a one-time borrow against test BTC.
 - WalletConnect project IDs / RainbowKit need a production `projectId` for reliable mobile wallet deep links.
 - Early-fee economics must stay fair (capped at 5% in contract) while still shaping behavior.
@@ -47,7 +47,8 @@ KhipuVault proved LatAm cooperative savings win; MezoPay proved consumer payment
 2. Designed `MUSDPocket.sol`: goals, deposits, timed withdraw, early fee, family allowlist, remittance events.
 3. Wrote Foundry tests (unit + fuzz) — all green.
 4. Built a UPI-inspired dark mobile UI with Goals / Save / Send tabs.
-5. Generated a fresh testnet deployer wallet; documented faucet blocker for live deploy.
+5. Funded a fresh testnet deployer via the faucet and deployed `MUSDPocket` to Mezo testnet at `0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8`.
+6. Hosted the Vite frontend on GitHub Pages via GitHub Actions.
 
 ## What we learned
 - Mezo’s EVM surface is familiar (Foundry/Hardhat), but **BTC-as-gas** and **borrow-to-get-MUSD** change onboarding vs typical L2 faucets.
@@ -55,17 +56,17 @@ KhipuVault proved LatAm cooperative savings win; MezoPay proved consumer payment
 - Judging historically rewards **clear Mezo integration + shipped UX** over pure DeFi novelty.
 
 ## What’s next / Wave 2 roadmap
-- Live Mezo testnet deploy + public demo URL
 - Recurring auto-save (keeper / intent) into goals
 - UPI-style QR pay links settling in MUSD
 - Optional MEZO fee discounts / loyalty
 - Fiat on-ramp partners for INR → MUSD corridor
 - Security review + mainnet launch checklist
 
-## Links (fill after deploy)
-- Live app: _(local `npm run dev` until hosted)_
-- Contract: _(pending faucet)_ · Explorer: https://explorer.test.mezo.org
-- Repo: local git under `/workspace/buildathons/mezo` (push when ready)
+## Links
+- **Live demo:** https://cyptoboy777.github.io/musd-pocket/
+- **MUSDPocket contract (Mezo testnet):** [`0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8`](https://explorer.test.mezo.org/address/0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8)
+- **Deploy tx:** [`0x98181dcd…b61df6`](https://explorer.test.mezo.org/tx/0x98181dcdda80939a99ce5dbd33be70cc4081356f50561d9be46545b0eab61df6)
+- **Repo:** https://github.com/Cyptoboy777/musd-pocket
 - Demo video: see script below
 
 ---
