@@ -8,3 +8,6 @@ contracts/cache/
 contracts/broadcast/
 *.log
 .DS_Store
+
+contracts/broadcast/
+contracts/cache/
