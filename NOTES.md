@@ -3,7 +3,7 @@
 **Buildathon:** [AKINDO Mezo Buildathon](https://app.akindo.io/wave-hacks/OVOO0gdrVU8379D10)  
 **Builder:** Crypto boy · AKINDO `@Cryptoboy_777`  
 **Track:** Access & Distribution  
-**Concept:** India-first goal savings + family remittance using Bitcoin-backed MUSD on Mezo.
+**Concept:** Global goal savings + memo payments using Bitcoin-backed MUSD on Mezo.
 
 ## Why this concept scores
 
@@ -12,7 +12,7 @@ Past Mezo hackathon winners (2025) clustered around:
 - **Username payments** (MezoPay) — send/request + pots
 - **Prize-linked savings** (MezoLotto), **NFC spend** (BitSpend), **creator payouts** (CreatorBank)
 
-**MUSD Pocket** differentiates by targeting **India remittance + FD/RD mental models** (goal-lock, family chip-in, memo’d sends) with a mobile-first “fintech” UX — Access & Distribution track, strong Mezo/MUSD integration (30%), clean implementation (30%), clear business path for diaspora remittance (20%).
+**MUSD Pocket** differentiates by targeting **universal term-deposit mental models** (goal-lock, family chip-in, memo’d sends) with a mobile-first “fintech” UX — Access & Distribution track, strong Mezo/MUSD integration (30%), clean implementation (30%), clear business path for cross-border savers and payments (20%).
 
 ## Official docs
 

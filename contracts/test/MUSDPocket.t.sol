@@ -11,7 +11,7 @@ contract MUSDPocketTest is Test {
 
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
-    address internal ma = makeAddr("ma");
+    address internal friend = makeAddr("friend");
     address internal admin = makeAddr("admin");
 
     uint256 internal constant ONE = 1e18;
@@ -22,7 +22,7 @@ contract MUSDPocketTest is Test {
 
         musd.mint(alice, 10_000 * ONE);
         musd.mint(bob, 5_000 * ONE);
-        musd.mint(ma, 100 * ONE);
+        musd.mint(friend, 100 * ONE);
 
         vm.prank(alice);
         musd.approve(address(pocket), type(uint256).max);
@@ -39,7 +39,7 @@ contract MUSDPocketTest is Test {
     }
 
     function test_createGoal_andDeposit() public {
-        uint256 id = _createPersonal(alice, "Emergency FD", 1000 * ONE, 30 days);
+        uint256 id = _createPersonal(alice, "Emergency fund", 1000 * ONE, 30 days);
         vm.prank(alice);
         pocket.deposit(id, 250 * ONE);
 
@@ -54,7 +54,7 @@ contract MUSDPocketTest is Test {
         ) = pocket.getGoal(id);
 
         assertEq(o, alice);
-        assertEq(name, "Emergency FD");
+        assertEq(name, "Emergency fund");
         assertEq(target, 1000 * ONE);
         assertEq(bal, 250 * ONE);
         assertTrue(active);
@@ -107,7 +107,7 @@ contract MUSDPocketTest is Test {
 
     function test_familyGoal_contributorCanDeposit() public {
         vm.prank(alice);
-        uint256 id = pocket.createGoal("Sister wedding", 2000 * ONE, uint64(block.timestamp + 180 days), true);
+        uint256 id = pocket.createGoal("Home deposit", 2000 * ONE, uint64(block.timestamp + 180 days), true);
 
         vm.prank(alice);
         pocket.setFamilyMember(id, bob, true);
@@ -123,7 +123,7 @@ contract MUSDPocketTest is Test {
 
     function test_familyGoal_strangerCannotDeposit() public {
         vm.prank(alice);
-        uint256 id = pocket.createGoal("Family FD", 1000 * ONE, uint64(block.timestamp + 60 days), true);
+        uint256 id = pocket.createGoal("Family trip", 1000 * ONE, uint64(block.timestamp + 60 days), true);
 
         vm.prank(bob);
         vm.expectRevert(MUSDPocket.NotContributor.selector);
@@ -132,8 +132,8 @@ contract MUSDPocketTest is Test {
 
     function test_sendRemittance() public {
         vm.prank(alice);
-        pocket.sendRemittance(ma, 50 * ONE, "Ma rent Oct");
-        assertEq(musd.balanceOf(ma), 150 * ONE);
+        pocket.sendRemittance(friend, 50 * ONE, "Rent buffer Oct");
+        assertEq(musd.balanceOf(friend), 150 * ONE);
     }
 
     function test_claimFees() public {

@@ -1,7 +1,27 @@
+<p align="center"><img src="frontend/public/logo.svg" alt="MUSD Pocket" height="56"></p>
+
 # MUSD Pocket
 
-India-first **goal savings + family remittance** app for [Mezo](https://mezo.org)’s Bitcoin-backed **MUSD**.  
+> **Money that keeps its promises.** Lock MUSD, Mezo's Bitcoin-backed dollar, into savings goals with a date. Withdraw on time, or early for a 2% fee. Send MUSD to anyone with an on-chain memo.
+
+Global **goal savings + memo payments** app for [Mezo](https://mezo.org)’s Bitcoin-backed **MUSD**.  
 Built for the [AKINDO Mezo Buildathon](https://app.akindo.io/wave-hacks/OVOO0gdrVU8379D10) · Access & Distribution track · `@Cryptoboy_777`.
+
+![MUSD Pocket landing](docs/redesign-desktop-landing.png)
+
+## Design
+
+**Art direction: "Engraved light."** The security engraving of banknotes and bond certificates (guilloche rosettes, double-line strokes) lit like a vault at night: bottle-green ink, champagne-gold light, one slowly turning engraved plate.
+Type pairs Gloock (high-contrast engraved serif for headlines and balances) with Geist (precise UI sans, tabular figures); all colour, space, radius, depth and motion live in CSS tokens (`frontend/src/styles/tokens.css`).
+
+**Logo.** Two engraved lines, the double stroke shared by currency signs and security print, form a pocket that cradles a coin; the gap around the coin is the lock. Files: `frontend/public/logo.svg`, `logo-mark.svg`, `logo-mono.svg`, `favicon.svg`, `docs/musd-pocket-icon.png`.
+
+| Desktop app | Mobile |
+| --- | --- |
+| ![App view](docs/redesign-desktop-app.png) | ![Mobile landing](docs/redesign-mobile-landing.png) |
+| ![New goal](docs/redesign-desktop-save.png) | ![Mobile app](docs/redesign-mobile-app.png) |
+
+Before the redesign: [`docs/redesign-before.png`](docs/redesign-before.png).
 
 ## Links
 

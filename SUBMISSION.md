@@ -9,25 +9,25 @@
 Access & Distribution
 
 ## Tagline
-Bitcoin-backed savings goals and family remittance for everyday India — powered by Mezo MUSD.
+Bitcoin-backed savings goals and payments for everyone, powered by Mezo MUSD.
 
 ## What it does
 MUSD Pocket is a mobile-first web app where users:
-1. **Create FD-style savings goals** in MUSD (Emergency, Wedding, Education…) with a lock date.
+1. **Create time-locked savings goals** in MUSD (Emergency fund, Travel, New laptop, Home deposit…) with an unlock date.
 2. **Deposit Bitcoin-backed MUSD** into a smart-contract vault that soft-locks until unlock.
-3. **Invite family members** to chip into shared goals.
-4. **Send remittances** with an on-chain memo (“Ma rent”, “School fees”) so transfers are human-readable on explorers.
+3. **Invite family or friends** to chip into shared goals.
+4. **Send MUSD to anyone** with an on-chain memo (“Rent buffer”, “Trip split”) so transfers are human-readable on explorers.
 5. **Early-withdraw** if needed, paying a small fee into a protocol fee pool (discourages breaking the goal).
 
 All balances settle in **MUSD on Mezo Testnet**. Gas is paid in **BTC**.
 
 ## The problem it solves
-India already thinks in recurring deposits, gold schemes, and UPI family sends — but crypto UX is still explorer-native. Diaspora workers and crypto-curious savers need:
+People everywhere save toward dated goals and send money to the people they care about, but crypto UX is still explorer-native. Savers and cross-border earners need:
 - A **stable unit** (MUSD) backed by Bitcoin, not another volatile chart.
-- **Goal locks** that feel like a bank FD, not a DeFi farm.
-- **Family remittance** with memos, not raw hex addresses only.
+- **Goal locks** that feel like a term deposit, not a DeFi farm.
+- **Payments with memos**, not raw hex addresses only.
 
-KhipuVault proved LatAm cooperative savings win; MezoPay proved consumer payments win. MUSD Pocket owns the **India FD + remit** wedge on the same MUSD rails.
+KhipuVault proved LatAm cooperative savings win; MezoPay proved consumer payments win. MUSD Pocket owns the **goal-locked savings + memo payments** wedge on the same MUSD rails.
 
 ## Challenges
 - Mezo testnet faucet is CAPTCHA-gated; automated deploy from CI/box had to wait until a human funded the deployer.
@@ -46,20 +46,20 @@ KhipuVault proved LatAm cooperative savings win; MezoPay proved consumer payment
 1. Researched Mezo docs, MUSD addresses, and past winners to pick an Access track wedge.
 2. Designed `MUSDPocket.sol`: goals, deposits, timed withdraw, early fee, family allowlist, remittance events.
 3. Wrote Foundry tests (unit + fuzz) — all green.
-4. Built a UPI-inspired dark mobile UI with Goals / Save / Send tabs.
+4. Built a mobile-first, premium web UI with Goals / Save / Send views.
 5. Funded a fresh testnet deployer via the faucet and deployed `MUSDPocket` to Mezo testnet at `0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8`.
 6. Hosted the Vite frontend on GitHub Pages via GitHub Actions.
 
 ## What we learned
 - Mezo’s EVM surface is familiar (Foundry/Hardhat), but **BTC-as-gas** and **borrow-to-get-MUSD** change onboarding vs typical L2 faucets.
-- Consumer products on MUSD win when they **hide CDP complexity** and speak local money metaphors (FD, remit, family).
+- Consumer products on MUSD win when they **hide CDP complexity** and speak familiar money metaphors (goals, term deposits, sending to family).
 - Judging historically rewards **clear Mezo integration + shipped UX** over pure DeFi novelty.
 
 ## What’s next / Wave 2 roadmap
 - Recurring auto-save (keeper / intent) into goals
-- UPI-style QR pay links settling in MUSD
+- QR pay links settling in MUSD
 - Optional MEZO fee discounts / loyalty
-- Fiat on-ramp partners for INR → MUSD corridor
+- Fiat on-ramp partners for local currency → MUSD
 - Security review + mainnet launch checklist
 
 ## Links
@@ -73,13 +73,13 @@ KhipuVault proved LatAm cooperative savings win; MezoPay proved consumer payment
 
 ## 60-second demo video script
 
-**[0–8s]** Cold open on phone UI. Voiceover: “This is MUSD Pocket — Bitcoin-backed savings that feel like a bank FD, built on Mezo.”
+**[0–8s]** Cold open on phone UI. Voiceover: “This is MUSD Pocket: Bitcoin-backed savings goals with a date, built on Mezo.”
 
 **[8–18s]** Connect wallet → Mezo Testnet. Show MUSD balance. “Gas in BTC. Savings in MUSD — Mezo’s Bitcoin-backed stablecoin.”
 
-**[18–32s]** Tap **Save** → create “Sister wedding” goal, 180-day lock, Family on. Approve + deposit 200 MUSD. Progress bar fills.
+**[18–32s]** Tap **Save** → create “Home deposit” goal, 180-day lock, Family on. Approve + deposit 200 MUSD. Progress bar fills.
 
-**[32–45s]** Switch to **Send**. Remit 50 MUSD to Ma with memo “Ma rent Oct”. Show explorer event with memo.
+**[32–45s]** Switch to **Send**. Send 50 MUSD to a friend with memo “Rent buffer Oct”. Show explorer event with memo.
 
 **[45–55s]** Back to Goals: early-withdraw warning (2% fee) vs wait for unlock. “Soft locks build the habit. Bitcoin backs the money.”
 
