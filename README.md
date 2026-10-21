@@ -79,7 +79,7 @@ npm run build
 npm run preview
 ```
 
-**Wallets.** Set `VITE_WC_PROJECT_ID` to a Reown (WalletConnect) Cloud project id to enable mobile QR and deep-link wallets. Without it, the app does not fall back to a placeholder id. It offers browser wallets only (MetaMask, Rabby, Brave, OKX and others via EIP-6963, plus Coinbase Wallet). On a phone, use a wallet's in-app browser.
+**Wallets.** `VITE_WC_PROJECT_ID` is the public Reown (WalletConnect) project id. The hosted build sets it in `.github/workflows/pages.yml`, which enables mobile QR and deep-link wallets (Rainbow, Base, MetaMask, WalletConnect). If the id is unset, the app falls back to browser wallets only (EIP-6963 injected and Coinbase Wallet) rather than a placeholder id. `package.json` pins `qr@0.5.5` under `cuer`, because `qr` 0.7 throws "invalid border=0" when RainbowKit renders the WalletConnect QR code.
 
 The hosted build is deployed to GitHub Pages by `.github/workflows/pages.yml` on every push to `master` that touches `frontend/` (Vite `base` = `/musd-pocket/`).
 
