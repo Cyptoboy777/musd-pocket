@@ -26,6 +26,8 @@ jobs:
     env:
       VITE_BASE: /musd-pocket/
       VITE_POCKET_ADDRESS: "0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8"
+      # Public Reown (WalletConnect) client id; ends up in the bundle anyway.
+      VITE_WC_PROJECT_ID: "53cdf0246c31d16b926bb32678595ae4"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
