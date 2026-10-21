@@ -1,0 +1,58 @@
+
+Detector: reentrancy-no-eth
+Reentrancy in MUSDPocket.deposit(uint256,uint256) (src/MUSDPocket.sol#145-158):
+	External calls:
+	- ! musd.transferFrom(msg.sender,address(this),amount) (src/MUSDPocket.sol#155)
+	State variables written after the call(s):
+	- g.balance += amount (src/MUSDPocket.sol#156)
+	MUSDPocket.goals (src/MUSDPocket.sol#41) can be used in cross function reentrancies:
+	- MUSDPocket.createGoal(string,uint256,uint64,bool) (src/MUSDPocket.sol#114-142)
+	- MUSDPocket.deposit(uint256,uint256) (src/MUSDPocket.sol#145-158)
+	- MUSDPocket.earlyWithdraw(uint256) (src/MUSDPocket.sol#177-195)
+	- MUSDPocket.getGoal(uint256) (src/MUSDPocket.sol#232-247)
+	- MUSDPocket.goals (src/MUSDPocket.sol#41)
+	- MUSDPocket.progressBps(uint256) (src/MUSDPocket.sol#253-257)
+	- MUSDPocket.setFamilyMember(uint256,address,bool) (src/MUSDPocket.sol#201-210)
+	- MUSDPocket.withdraw(uint256) (src/MUSDPocket.sol#161-174)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+
+Detector: reentrancy-events
+Reentrancy in MUSDPocket.claimFees(address) (src/MUSDPocket.sol#269-276):
+	External calls:
+	- ! musd.transfer(to,amount) (src/MUSDPocket.sol#274)
+	Event emitted after the call(s):
+	- FeeClaimed(to,amount) (src/MUSDPocket.sol#275)
+Reentrancy in MUSDPocket.deposit(uint256,uint256) (src/MUSDPocket.sol#145-158):
+	External calls:
+	- ! musd.transferFrom(msg.sender,address(this),amount) (src/MUSDPocket.sol#155)
+	Event emitted after the call(s):
+	- Deposited(goalId,msg.sender,amount) (src/MUSDPocket.sol#157)
+Reentrancy in MUSDPocket.earlyWithdraw(uint256) (src/MUSDPocket.sol#177-195):
+	External calls:
+	- ! musd.transfer(msg.sender,net) (src/MUSDPocket.sol#193)
+	Event emitted after the call(s):
+	- EarlyWithdrawn(goalId,msg.sender,net,fee) (src/MUSDPocket.sol#194)
+Reentrancy in MUSDPocket.sendRemittance(address,uint256,string) (src/MUSDPocket.sol#218-226):
+	External calls:
+	- ! musd.transferFrom(msg.sender,to,amount) (src/MUSDPocket.sol#223)
+	Event emitted after the call(s):
+	- RemittanceSent(msg.sender,to,amount,memo,tag) (src/MUSDPocket.sol#225)
+Reentrancy in MUSDPocket.withdraw(uint256) (src/MUSDPocket.sol#161-174):
+	External calls:
+	- ! musd.transfer(msg.sender,amount) (src/MUSDPocket.sol#172)
+	Event emitted after the call(s):
+	- Withdrawn(goalId,msg.sender,amount) (src/MUSDPocket.sol#173)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+
+Detector: timestamp
+MUSDPocket.createGoal(string,uint256,uint64,bool) (src/MUSDPocket.sol#114-142) uses timestamp for comparisons
+	Dangerous comparisons:
+	- unlockTime <= block.timestamp || lock < MIN_LOCK || lock > MAX_LOCK (src/MUSDPocket.sol#122)
+MUSDPocket.withdraw(uint256) (src/MUSDPocket.sol#161-174) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < g.unlockTime (src/MUSDPocket.sol#165)
+MUSDPocket.earlyWithdraw(uint256) (src/MUSDPocket.sol#177-195) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= g.unlockTime (src/MUSDPocket.sol#181)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+. analyzed (3 contracts with 102 detectors), 9 result(s) found

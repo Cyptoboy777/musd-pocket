@@ -12,7 +12,7 @@ Past Mezo hackathon winners (2025) clustered around:
 - **Username payments** (MezoPay) — send/request + pots
 - **Prize-linked savings** (MezoLotto), **NFC spend** (BitSpend), **creator payouts** (CreatorBank)
 
-**MUSD Pocket** differentiates by targeting **universal term-deposit mental models** (goal-lock, family chip-in, memo’d sends) with a mobile-first “fintech” UX — Access & Distribution track, strong Mezo/MUSD integration (30%), clean implementation (30%), clear business path for cross-border savers and payments (20%).
+**MUSD Pocket** differentiates by targeting **universal term-deposit mental models** (goal-lock, family chip-in, memo’d sends) with a mobile-first “fintech” UX — Access & Distribution track, strong Mezo/MUSD integration (30%), product & business viability (30%), technical implementation (20%), UX (10%), submission materials (10%).
 
 ## Official docs
 
@@ -56,12 +56,12 @@ MUSD also bridges via Wormhole NTT to Ethereum / Base (same MUSD mainnet address
 
 ## Getting testnet MUSD
 
-MUSD on testnet is **not faucet-dispensed**. Flow from Mezo x402 / borrow docs:
+MUSD on testnet is **not faucet-dispensed**. Swap BTC→MUSD at https://testnet.mezo.org/feature/swap, or borrow. Borrow flow from the Mezo x402 / borrow docs:
 1. Request **testnet BTC** from https://faucet.test.mezo.org (CAPTCHA) or Mezo Discord `#testnet`
-2. Borrow/mint MUSD against BTC at https://mezo.org/feature/borrow (minimum debt floor applies on borrow UI)
+2. Borrow/mint MUSD against BTC at https://testnet.mezo.org/feature/borrow (minimum 1,800 MUSD principal + 200 MUSD gas deposit)
 3. Add MUSD token `0x1189…Ac503` in the wallet
 
-## Judging weights (historical Mezo)
+## Judging weights (superseded; current rubric from the kickoff: Integration 30 / Business 30 / Tech 20 / UX 10 / Materials 10)
 
 - Mezo integration 30%
 - Technical implementation 30%

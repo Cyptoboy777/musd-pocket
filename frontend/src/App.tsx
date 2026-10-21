@@ -6,6 +6,9 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
   useChainId,
+  useBalance,
+  useSwitchChain,
+  useWatchAsset,
 } from "wagmi";
 import { formatUnits, parseUnits, isAddress, zeroAddress } from "viem";
 import { AnimatePresence, m } from "motion/react";
@@ -15,6 +18,7 @@ import { LogoMark, Wordmark } from "./components/Logo";
 import { Guilloche } from "./components/Guilloche";
 import { useCountUp } from "./hooks/useCountUp";
 import { txUrl, useTxFeedback } from "./hooks/useTxFeedback";
+import { walletConnectEnabled } from "./wagmi";
 import {
   IconBitcoin, IconCheck, IconClock, IconCode, IconCopy, IconExternal, IconLock,
   IconDeposit, IconPlus, IconSend, IconShield, IconUnlock, IconUsers,
@@ -27,6 +31,14 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "send", label: "Send" },
 ];
 const EXPLORER = mezoTestnet.blockExplorers.default.url;
+const REPO = "https://github.com/Cyptoboy777/musd-pocket";
+/** Verified against mezo.org/docs on 21 Oct 2026. */
+const LINKS = {
+  faucet: "https://faucet.test.mezo.org",
+  swap: "https://testnet.mezo.org/feature/swap",
+  borrow: "https://testnet.mezo.org/feature/borrow",
+  borrowGuide: "https://mezo.org/docs/users/borrow/mint-musd/",
+};
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 function toNum(n: bigint | undefined) {
@@ -71,9 +83,18 @@ export default function App() {
     query: { enabled: !!address && deployed },
   });
 
+  const { data: btcBal, isLoading: btcLoading } = useBalance({
+    address,
+    chainId: mezoTestnet.id,
+    query: { enabled: !!address },
+  });
+
   const wrongNetwork = isConnected && chainId !== mezoTestnet.id;
   const ids = (goalIds as bigint[] | undefined) || [];
   const balance = isConnected ? toNum(musdBal as bigint | undefined) : 0;
+  const btc = isConnected && btcBal ? Number(formatUnits(btcBal.value, 18)) : 0;
+  const noMusd = isConnected && !wrongNetwork && !balLoading && musdBal !== undefined && balance === 0;
+  const toStart = () => document.getElementById("start")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   const go = (t: Tab) => {
     setTab(t);
@@ -90,6 +111,7 @@ export default function App() {
           </a>
           <nav className="nav-links" aria-label="Sections">
             <a href="#how">How it works</a>
+            <a href="#start">Get test MUSD</a>
             <a href="#app">Pockets</a>
             <a href={`${EXPLORER}/address/${POCKET_ADDRESS}`} target="_blank" rel="noreferrer">
               Contract <IconExternal width={14} height={14} />
@@ -100,8 +122,19 @@ export default function App() {
       </header>
 
       <main id="top">
-        <Hero balance={balance} loading={isConnected && balLoading} connected={isConnected} goals={ids.length} onStart={() => go("save")} onView={() => go("goals")} />
+        <Hero balance={balance} loading={isConnected && balLoading} connected={isConnected} goals={ids.length} onStart={() => go("save")} onView={() => go("goals")} onGuide={toStart} />
         <HowItWorks />
+        <GetStarted
+          connected={isConnected}
+          address={address}
+          wrongNetwork={wrongNetwork}
+          btc={btc}
+          btcLoading={isConnected && btcLoading}
+          musd={balance}
+          musdLoading={isConnected && balLoading}
+          goals={ids.length}
+          onCreate={() => go("save")}
+        />
 
         <section id="app" className="app-section" aria-labelledby="app-title">
           <div className="section-head">
@@ -111,7 +144,7 @@ export default function App() {
 
           <div className="app-grid">
             <aside className="account">
-              <AccountPanel balance={balance} loading={isConnected && balLoading} connected={isConnected} address={address} goals={ids.length} wrongNetwork={wrongNetwork} />
+              <AccountPanel balance={balance} loading={isConnected && balLoading} connected={isConnected} address={address} goals={ids.length} wrongNetwork={wrongNetwork} noMusd={noMusd} onGuide={toStart} />
             </aside>
 
             <div className="workspace">
@@ -145,10 +178,10 @@ export default function App() {
                   transition={{ duration: 0.32, ease: EASE }}
                 >
                   {tab === "goals" && (
-                    <GoalsPanel goalIds={ids} deployed={deployed} connected={isConnected} loading={isConnected && goalsLoading} onCreate={() => setTab("save")} />
+                    <GoalsPanel goalIds={ids} deployed={deployed} connected={isConnected} loading={isConnected && goalsLoading} noMusd={noMusd} onCreate={() => setTab("save")} onGuide={toStart} />
                   )}
-                  {tab === "save" && <SavePanel deployed={deployed} />}
-                  {tab === "send" && <SendPanel deployed={deployed} />}
+                  {tab === "save" && <SavePanel deployed={deployed} noMusd={noMusd} onGuide={toStart} />}
+                  {tab === "send" && <SendPanel deployed={deployed} noMusd={noMusd} onGuide={toStart} />}
                 </m.div>
               </AnimatePresence>
             </div>
@@ -169,8 +202,10 @@ export default function App() {
           </dl>
           <div className="footer-links">
             <a href={EXPLORER} target="_blank" rel="noreferrer">Explorer <IconExternal width={14} height={14} /></a>
-            <a href="https://github.com/Cyptoboy777/musd-pocket" target="_blank" rel="noreferrer">Source <IconExternal width={14} height={14} /></a>
-            <a href="https://faucet.test.mezo.org" target="_blank" rel="noreferrer">Faucet <IconExternal width={14} height={14} /></a>
+            <a href={REPO} target="_blank" rel="noreferrer">Source <IconExternal width={14} height={14} /></a>
+            <a href={`${REPO}/blob/master/docs/onchain-activity.md`} target="_blank" rel="noreferrer">On-chain activity <IconExternal width={14} height={14} /></a>
+            <a href={`${REPO}/blob/master/docs/SECURITY_REVIEW.md`} target="_blank" rel="noreferrer">Security review <IconExternal width={14} height={14} /></a>
+            <a href={LINKS.faucet} target="_blank" rel="noreferrer">Faucet <IconExternal width={14} height={14} /></a>
           </div>
         </div>
       </footer>
@@ -188,7 +223,7 @@ function IconInfo2() {
 
 /* ───────────────────────── Hero ───────────────────────── */
 
-function Hero({ balance, loading, connected, goals, onStart, onView }: { balance: number; loading: boolean; connected: boolean; goals: number; onStart: () => void; onView: () => void }) {
+function Hero({ balance, loading, connected, goals, onStart, onView, onGuide }: { balance: number; loading: boolean; connected: boolean; goals: number; onStart: () => void; onView: () => void; onGuide: () => void }) {
   return (
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero-light" aria-hidden="true" />
@@ -217,10 +252,13 @@ function Hero({ balance, loading, connected, goals, onStart, onView }: { balance
               View my pockets
             </button>
           </m.div>
+          <m.p className="hero-guide" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.55 }}>
+            New to Mezo? <button type="button" className="link-btn" onClick={onGuide}>Get free test MUSD in four steps</button>
+          </m.p>
           <m.ul className="hero-facts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.6 }}>
             <li><IconBitcoin /> Backed by Bitcoin</li>
             <li><IconShield /> Self-custody vault</li>
-            <li><IconCode /> Open source, 11/11 tests</li>
+            <li><IconCode /> Open source, 24 tests, self-reviewed</li>
           </m.ul>
         </div>
 
@@ -350,7 +388,7 @@ function HowItWorks() {
 
 /* ───────────────────────── Account ───────────────────────── */
 
-function AccountPanel({ balance, loading, connected, address, goals, wrongNetwork }: { balance: number; loading: boolean; connected: boolean; address?: string; goals: number; wrongNetwork: boolean }) {
+function AccountPanel({ balance, loading, connected, address, goals, wrongNetwork, noMusd, onGuide }: { balance: number; loading: boolean; connected: boolean; address?: string; goals: number; wrongNetwork: boolean; noMusd: boolean; onGuide: () => void }) {
   const shown = useCountUp(balance, 900);
   return (
     <div className="panel account-panel">
@@ -370,6 +408,12 @@ function AccountPanel({ balance, loading, connected, address, goals, wrongNetwor
         <div><dt>Gas</dt><dd>BTC</dd></div>
         <div><dt>Early exit fee</dt><dd className="tnum">2%</dd></div>
       </dl>
+      {noMusd && (
+        <div className="account-empty">
+          <p>No MUSD in this wallet yet. Test MUSD is free: swap a little test BTC for it, or borrow it.</p>
+          <button type="button" className="btn btn-ghost btn-block" onClick={onGuide}>Get test MUSD</button>
+        </div>
+      )}
       {!connected && (
         <div className="account-connect"><ConnectCta /></div>
       )}
@@ -419,7 +463,7 @@ const EXAMPLES = [
   { name: "Home deposit", target: "5,000", days: 365 },
 ];
 
-function GoalsPanel({ goalIds, deployed, connected, loading, onCreate }: { goalIds: bigint[]; deployed: boolean; connected: boolean; loading: boolean; onCreate: () => void }) {
+function GoalsPanel({ goalIds, deployed, connected, loading, noMusd, onCreate, onGuide }: { goalIds: bigint[]; deployed: boolean; connected: boolean; loading: boolean; noMusd: boolean; onCreate: () => void; onGuide: () => void }) {
   if (!deployed) {
     return <EmptyState title="Pockets open after deploy" body="Once the contract is live you can create goals like an Emergency fund, Travel or a Home deposit." />;
   }
@@ -441,6 +485,7 @@ function GoalsPanel({ goalIds, deployed, connected, loading, onCreate }: { goalI
           ))}
         </ul>
         <div className="empty-cta"><ConnectCta label="Connect wallet to start" /></div>
+        <p className="empty-foot">No wallet or no MUSD yet? <button type="button" className="link-btn" onClick={onGuide}>Follow the four-step guide</button>.</p>
       </div>
     );
   }
@@ -452,7 +497,18 @@ function GoalsPanel({ goalIds, deployed, connected, loading, onCreate }: { goalI
     );
   }
   if (!goalIds.length) {
-    return (
+    return noMusd ? (
+      <EmptyState
+        title="Get some test MUSD first"
+        body="Pockets hold MUSD, and this wallet has none yet. The guide above gets you free test MUSD in about five minutes. You can create a goal now and fill it later."
+        action={
+          <div className="empty-actions">
+            <button className="btn btn-primary" onClick={onGuide}>Get test MUSD</button>
+            <button className="btn btn-ghost" onClick={onCreate}><IconPlus /> Create a goal</button>
+          </div>
+        }
+      />
+    ) : (
       <EmptyState
         title="No pockets yet"
         body="Create your first goal: pick a name, a target and an unlock date. It takes one transaction."
@@ -633,7 +689,7 @@ const PRESETS = [
   { name: "Home deposit", target: "5000", days: "365" },
 ];
 
-function SavePanel({ deployed }: { deployed: boolean }) {
+function SavePanel({ deployed, noMusd, onGuide }: { deployed: boolean; noMusd: boolean; onGuide: () => void }) {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash });
   const [name, setName] = useState("Emergency fund");
@@ -699,13 +755,14 @@ function SavePanel({ deployed }: { deployed: boolean }) {
         <span className="switch-track" aria-hidden="true"><span className="switch-thumb" /></span>
         <span className="switch-copy">
           <strong>Shared goal</strong>
-          <span>Invite family or friends to deposit later</span>
+          <span>Family or friends can add MUSD. Only you can withdraw.</span>
         </span>
       </label>
       <div className="summary">
         <IconClock width={16} height={16} />
         <span>Unlocks around <strong>{unlockPreview}</strong></span>
       </div>
+      {noMusd && <MusdHint onGuide={onGuide} text="Creating a goal only costs a little test BTC for gas. To fill it you'll need MUSD." />}
       <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={!deployed || busy}>
         {busy ? (<><span className="spinner" /> Confirm in wallet…</>) : (<><IconCheck /> Create goal</>)}
       </button>
@@ -717,7 +774,7 @@ function SavePanel({ deployed }: { deployed: boolean }) {
 
 /* ───────────────────────── Send ───────────────────────── */
 
-function SendPanel({ deployed }: { deployed: boolean }) {
+function SendPanel({ deployed, noMusd, onGuide }: { deployed: boolean; noMusd: boolean; onGuide: () => void }) {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash });
   const [to, setTo] = useState("");
@@ -756,7 +813,7 @@ function SendPanel({ deployed }: { deployed: boolean }) {
     <form className="panel form" onSubmit={(e) => { e.preventDefault(); send(); }}>
       <div className="form-head">
         <h3>Send MUSD</h3>
-        <p>Pay anyone with a note that lives on-chain, so both sides know what it was for.</p>
+        <p>Pay anyone with a note that lives on-chain, so both sides know what it was for. Memos are public.</p>
       </div>
       <div className="field">
         <label htmlFor="s-to">Recipient address</label>
@@ -776,6 +833,7 @@ function SendPanel({ deployed }: { deployed: boolean }) {
           <input id="s-memo" value={memo} onChange={(e) => setMemo(e.target.value)} maxLength={96} autoComplete="off" />
         </div>
       </div>
+      {noMusd && <MusdHint onGuide={onGuide} text="You need MUSD to send. This wallet has none yet." />}
       <ol className="send-steps" aria-label="Two transactions">
         <li className={step === "send" && isSuccess ? "done" : ""}><span className="tnum">1</span> Approve MUSD</li>
         <li><span className="tnum">2</span> Send with memo</li>
@@ -792,14 +850,152 @@ function SendPanel({ deployed }: { deployed: boolean }) {
   );
 }
 
+/* ───────────────────────── Get started (onboarding) ───────────────────────── */
+
+type StepState = "done" | "todo" | "loading";
+
+function GetStarted({ connected, address, wrongNetwork, btc, btcLoading, musd, musdLoading, goals, onCreate }: {
+  connected: boolean; address?: string; wrongNetwork: boolean; btc: number; btcLoading: boolean;
+  musd: number; musdLoading: boolean; goals: number; onCreate: () => void;
+}) {
+  const { switchChain, isPending: switching } = useSwitchChain();
+  const { watchAsset } = useWatchAsset();
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const t = window.setTimeout(() => setCopied(false), 1400);
+    return () => window.clearTimeout(t);
+  }, [copied]);
+
+  const ready = connected && !wrongNetwork;
+  const s1: StepState = ready ? "done" : "todo";
+  const s2: StepState = !ready ? "todo" : btcLoading ? "loading" : btc > 0 ? "done" : "todo";
+  const s3: StepState = !ready ? "todo" : musdLoading ? "loading" : musd > 0 ? "done" : "todo";
+  const s4: StepState = ready && goals > 0 ? "done" : "todo";
+  const states = [s1, s2, s3, s4];
+  const doneCount = states.filter((x) => x === "done").length;
+  const current = states.findIndex((x) => x !== "done");
+
+  const addMusd = () =>
+    watchAsset({ type: "ERC20", options: { address: MUSD_ADDRESS, symbol: "MUSD", decimals: 18 } });
+
+  const steps: { title: string; body: ReactNode; status: string; actions: ReactNode }[] = [
+    {
+      title: "Connect a wallet on Mezo Testnet",
+      body: (
+        <>
+          Any browser wallet works: MetaMask, Rabby, Brave, OKX or Coinbase Wallet. We add the Mezo Testnet network for you.
+          {!walletConnectEnabled && <> On a phone, open this page in your wallet app's built-in browser.</>}
+        </>
+      ),
+      status: !connected ? "Not connected" : wrongNetwork ? "Wrong network" : `Connected as ${short(address)}`,
+      actions: !connected ? (
+        <ConnectCta label="Connect wallet" size="md" />
+      ) : wrongNetwork ? (
+        <button type="button" className="btn btn-primary" disabled={switching} onClick={() => switchChain({ chainId: mezoTestnet.id })}>
+          {switching && <span className="spinner" />} Switch to Mezo Testnet
+        </button>
+      ) : null,
+    },
+    {
+      title: "Get free test BTC",
+      body: <>BTC pays the gas on Mezo. The official faucet sends test BTC (and MEZO) to your address after a quick CAPTCHA.</>,
+      status: !ready ? "Waiting for step 1" : btcLoading ? "Checking balance…" : btc > 0 ? `${fmtNum(btc, btc < 0.01 ? 5 : 4)} BTC in your wallet` : "No test BTC yet",
+      actions: (
+        <>
+          <a className="btn btn-primary" href={LINKS.faucet} target="_blank" rel="noreferrer">Open the Mezo faucet <IconExternal width={15} height={15} /></a>
+          {connected && address && (
+            <button type="button" className="btn btn-ghost" onClick={() => { navigator.clipboard?.writeText(address).then(() => setCopied(true)).catch(() => {}); }}>
+              {copied ? <IconCheck width={16} height={16} /> : <IconCopy width={16} height={16} />} {copied ? "Copied" : "Copy my address"}
+            </button>
+          )}
+        </>
+      ),
+    },
+    {
+      title: "Turn test BTC into MUSD",
+      body: (
+        <>
+          Sign in to the Mezo testnet app with the same wallet. <strong>Swap</strong> a little BTC for MUSD (any amount), or{" "}
+          <strong>borrow</strong> MUSD against your BTC (the minimum loan is 1,800 MUSD).{" "}
+          <a href={LINKS.borrowGuide} target="_blank" rel="noreferrer">Borrowing guide</a>
+        </>
+      ),
+      status: !ready ? "Waiting for step 1" : musdLoading ? "Checking balance…" : musd > 0 ? `${fmtNum(musd)} MUSD ready to save` : "No MUSD yet",
+      actions: (
+        <>
+          <a className="btn btn-primary" href={LINKS.swap} target="_blank" rel="noreferrer">Swap BTC to MUSD <IconExternal width={15} height={15} /></a>
+          <a className="btn btn-ghost" href={LINKS.borrow} target="_blank" rel="noreferrer">Borrow MUSD <IconExternal width={15} height={15} /></a>
+          {ready && <button type="button" className="link-btn" onClick={addMusd}>Show MUSD in my wallet</button>}
+        </>
+      ),
+    },
+    {
+      title: "Open your first pocket",
+      body: <>Name a goal, set a target and an unlock date, then deposit any amount of MUSD.</>,
+      status: !ready ? "Waiting for step 1" : goals > 0 ? `${goals} ${goals === 1 ? "pocket" : "pockets"} created` : "No pockets yet",
+      actions: <button type="button" className="btn btn-primary" onClick={onCreate}><IconPlus /> Create a goal</button>,
+    },
+  ];
+
+  return (
+    <section id="start" className="start" aria-labelledby="start-title">
+      <div className="section-head">
+        <h2 id="start-title">Get test MUSD in five minutes</h2>
+        <p>MUSD Pocket runs on Mezo testnet, so everything here uses free test money. Your progress updates as you go.</p>
+      </div>
+      <div className="start-wrap">
+        <div className="panel start-panel">
+          <div className="start-progress">
+            <span className="tnum">{connected ? `${doneCount} of 4 done` : "4 steps"}</span>
+            <span className="bar"><i style={{ transform: `scaleX(${doneCount / 4})` }} /></span>
+          </div>
+          <ol className="start-steps">
+            {steps.map((st, i) => {
+              const state = states[i];
+              const isCurrent = i === current;
+              return (
+                <li key={st.title} className={`start-step is-${state} ${isCurrent ? "is-current" : ""}`} aria-current={isCurrent ? "step" : undefined}>
+                  <span className="start-mark" aria-hidden="true">
+                    {state === "done" ? <IconCheck width={16} height={16} /> : state === "loading" ? <span className="spinner" /> : <span className="tnum">{i + 1}</span>}
+                  </span>
+                  <div className="start-body">
+                    <div className="start-head">
+                      <h3>{st.title}</h3>
+                      <span className={`start-status ${state === "done" ? "ok" : ""}`}>
+                        <span className="sr-only">{state === "done" ? "Done: " : "To do: "}</span>{st.status}
+                      </span>
+                    </div>
+                    <p>{st.body}</p>
+                    {st.actions && state !== "done" && <div className="start-actions">{st.actions}</div>}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MusdHint({ text, onGuide }: { text: string; onGuide: () => void }) {
+  return (
+    <div className="notice" role="note">
+      <IconInfo2 />
+      <span>{text} <button type="button" className="link-btn" onClick={onGuide}>Get test MUSD</button></span>
+    </div>
+  );
+}
+
 /* ───────────────────────── Bits ───────────────────────── */
 
 /** Same RainbowKit connect modal, styled as our primary button. */
-function ConnectCta({ label = "Connect wallet" }: { label?: string }) {
+function ConnectCta({ label = "Connect wallet", size = "lg" }: { label?: string; size?: "md" | "lg" }) {
   return (
     <ConnectButton.Custom>
       {({ openConnectModal, mounted }) => (
-        <button type="button" className="btn btn-primary btn-block btn-lg" onClick={openConnectModal} disabled={!mounted}>
+        <button type="button" className={size === "lg" ? "btn btn-primary btn-block btn-lg" : "btn btn-primary"} onClick={openConnectModal} disabled={!mounted}>
           {label}
         </button>
       )}

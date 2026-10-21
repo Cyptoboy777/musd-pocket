@@ -7,6 +7,16 @@
 Global **goal savings + memo payments** app for [Mezo](https://mezo.org)’s Bitcoin-backed **MUSD**.  
 Built for the [AKINDO Mezo Buildathon](https://app.akindo.io/wave-hacks/OVOO0gdrVU8379D10) · Access & Distribution track · `@Cryptoboy_777`.
 
+**Proof it works**
+- **Real on-chain activity:** [docs/onchain-activity.md](docs/onchain-activity.md) lists 19 transactions on Mezo testnet with explorer links:
+  - borrowing MUSD against test BTC;
+  - creating three goals (one of them shared), with deposits;
+  - a second wallet contributing to the shared goal;
+  - two memo payments;
+  - an early withdrawal that paid the 2% fee.
+- **Security review:** [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) covers Slither (9 results, 0 high) and a manual review, with each finding given a severity. 24/24 Foundry tests pass. The deployed bytecode matches this source, and the contract is verified on the explorer.
+- **Onboarding for first-time users:** an in-app "Get test MUSD" guide with four steps (wallet → faucet → swap or borrow MUSD → first pocket). Each step checks off live from your wallet's balances.
+
 ![MUSD Pocket landing](docs/redesign-desktop-landing.png)
 
 ## Design
@@ -23,12 +33,22 @@ Type pairs Gloock (high-contrast engraved serif for headlines and balances) with
 
 Before the redesign: [`docs/redesign-before.png`](docs/redesign-before.png).
 
+### Onboarding: "Get test MUSD"
+
+| New wallet (desktop) | Finished (desktop, real testnet data) | Mobile |
+| --- | --- | --- |
+| ![Onboarding, new wallet](docs/onboarding-desktop-empty-wallet.png) | ![Onboarding, all done](docs/onboarding-desktop-complete.png) | ![Onboarding on mobile](docs/onboarding-mobile.png) |
+
+Empty states point back to the guide: [`docs/empty-state-desktop.png`](docs/empty-state-desktop.png). Real pockets from the demo wallet: [`docs/pockets-real-desktop.png`](docs/pockets-real-desktop.png).
+The "connected" screenshots use a read-only viewer wallet that loads public on-chain data for an address. It cannot sign and it is not part of the app.
+
 ## Links
 
 - **Live demo:** https://cyptoboy777.github.io/musd-pocket/
 - **MUSDPocket contract (Mezo testnet):** [`0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8`](https://explorer.test.mezo.org/address/0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8)
 - **Deploy tx:** [`0x98181dcd…b61df6`](https://explorer.test.mezo.org/tx/0x98181dcdda80939a99ce5dbd33be70cc4081356f50561d9be46545b0eab61df6)
 - **Repo:** https://github.com/Cyptoboy777/musd-pocket
+- **On-chain activity:** [docs/onchain-activity.md](docs/onchain-activity.md) · **Security review:** [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md)
 
 ## Quick start
 
@@ -37,7 +57,7 @@ Before the redesign: [`docs/redesign-before.png`](docs/redesign-before.png).
 ```bash
 export PATH="$HOME/.foundry/bin:$PATH"
 cd contracts
-forge test -vv
+forge test -vv   # 24 tests: 11 core + 13 security (see docs/SECURITY_REVIEW.md)
 ```
 
 Deploy to Mezo testnet (needs BTC gas on deployer):
@@ -59,6 +79,8 @@ npm run build
 npm run preview
 ```
 
+**Wallets.** Set `VITE_WC_PROJECT_ID` to a Reown (WalletConnect) Cloud project id to enable mobile QR and deep-link wallets. Without it, the app does not fall back to a placeholder id. It offers browser wallets only (MetaMask, Rabby, Brave, OKX and others via EIP-6963, plus Coinbase Wallet). On a phone, use a wallet's in-app browser.
+
 The hosted build is deployed to GitHub Pages by `.github/workflows/pages.yml` on every push to `master` that touches `frontend/` (Vite `base` = `/musd-pocket/`).
 
 ## Network
@@ -67,6 +89,7 @@ The hosted build is deployed to GitHub Pages by `.github/workflows/pages.yml` on
 - MUSD `0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503`
 - MUSDPocket `0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8`
 - Explorer https://explorer.test.mezo.org
-- Faucet https://faucet.test.mezo.org (CAPTCHA)
+- Faucet https://faucet.test.mezo.org (test BTC and MEZO, CAPTCHA)
+- Get MUSD: swap BTC→MUSD at https://testnet.mezo.org/feature/swap, or borrow at https://testnet.mezo.org/feature/borrow (minimum loan 1,800 MUSD; [guide](https://mezo.org/docs/users/borrow/mint-musd/))
 
 See [NOTES.md](./NOTES.md) and [SUBMISSION.md](./SUBMISSION.md).

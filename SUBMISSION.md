@@ -31,8 +31,8 @@ KhipuVault proved LatAm cooperative savings win; MezoPay proved consumer payment
 
 ## Challenges
 - Mezo testnet faucet is CAPTCHA-gated; automated deploy from CI/box had to wait until a human funded the deployer.
-- Testnet MUSD is borrowed (not dripped), so end-to-end demos need a one-time borrow against test BTC.
-- WalletConnect project IDs / RainbowKit need a production `projectId` for reliable mobile wallet deep links.
+- Testnet MUSD isn't dripped by the faucet: you swap test BTC for it or borrow it on testnet.mezo.org. The app now walks first-time users through this.
+- WalletConnect needs a real Reown `projectId` for mobile deep links. Until one is set, the app offers browser wallets only.
 - Early-fee economics must stay fair (capped at 5% in contract) while still shaping behavior.
 
 ## Technologies used
@@ -51,7 +51,7 @@ KhipuVault proved LatAm cooperative savings win; MezoPay proved consumer payment
 6. Hosted the Vite frontend on GitHub Pages via GitHub Actions.
 
 ## What we learned
-- Mezo’s EVM surface is familiar (Foundry/Hardhat), but **BTC-as-gas** and **borrow-to-get-MUSD** change onboarding vs typical L2 faucets.
+- Mezo’s EVM surface is familiar (Foundry/Hardhat), but **BTC-as-gas** and **swap-or-borrow-to-get-MUSD** change onboarding vs typical L2 faucets.
 - Consumer products on MUSD win when they **hide CDP complexity** and speak familiar money metaphors (goals, term deposits, sending to family).
 - Judging historically rewards **clear Mezo integration + shipped UX** over pure DeFi novelty.
 
