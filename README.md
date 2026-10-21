@@ -93,3 +93,7 @@ The hosted build is deployed to GitHub Pages by `.github/workflows/pages.yml` on
 - Get MUSD: swap BTC→MUSD at https://testnet.mezo.org/feature/swap, or borrow at https://testnet.mezo.org/feature/borrow (minimum loan 1,800 MUSD; [guide](https://mezo.org/docs/users/borrow/mint-musd/))
 
 See [NOTES.md](./NOTES.md) and [SUBMISSION.md](./SUBMISSION.md).
+
+## Pitch
+- Pitch deck (PDF): [docs/MUSD-Pocket-Pitch-Deck.pdf](docs/MUSD-Pocket-Pitch-Deck.pdf)
+- Pitch video (2 min): https://youtu.be/v9pkZ0W2YDE
