@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "build": {
+    "env": {
+      "VITE_BASE": "/",
+      "VITE_POCKET_ADDRESS": "0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8",
+      "VITE_WC_PROJECT_ID": "53cdf0246c31d16b926bb32678595ae4"
+    }
+  },
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

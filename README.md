@@ -83,6 +83,8 @@ npm run preview
 
 The hosted build is deployed to GitHub Pages by `.github/workflows/pages.yml` on every push to `master` that touches `frontend/` (Vite `base` = `/musd-pocket/`).
 
+The same build also runs on Vercel at the domain root. `frontend/vite.config.ts` picks the base path: `VITE_BASE` if set, otherwise `/` when Vercel's `VERCEL` env var is present, otherwise `/musd-pocket/` for Pages. `frontend/vercel.json` holds the Vercel config (framework Vite, `npm ci`, `npm run build`, output `dist`, SPA rewrite, and the public build env). To set it up, import the repo in Vercel and set Root Directory to `frontend`; everything else comes from `vercel.json`. You can also add `VITE_WC_PROJECT_ID` under Project Settings > Environment Variables if you want to use a different Reown project id.
+
 ## Network
 
 - Chain ID `31611` · RPC `https://rpc.test.mezo.org`
