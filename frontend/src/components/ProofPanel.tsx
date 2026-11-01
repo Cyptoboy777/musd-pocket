@@ -1,15 +1,16 @@
 import { EXPLORER, LIVE_APP, PROOF_WALLETS } from "../lib/proof";
 import { IconExternal } from "./Icons";
 
-/** On-chain proof: real Mezo testnet wallets with explorer links. */
+/** On-chain proof: my own Mezo testnet wallets with explorer links. Honest labelling. */
 export function ProofPanel() {
   return (
     <section id="proof" className="proof-section" aria-labelledby="proof-title">
       <div className="section-head">
         <h2 id="proof-title">Proof (Mezo testnet)</h2>
         <p>
-          Real wallets that used MUSD Pocket on Mezo testnet (chain 31611). Not a user count. Every link opens the explorer.
-          Live app: <a href={LIVE_APP} target="_blank" rel="noreferrer">{LIVE_APP.replace("https://", "")}</a>.
+          I only have my own test wallets so far. Here they are with explorer links on Mezo testnet (chain 31611).
+          None of these are third-party users. Live app:{" "}
+          <a href={LIVE_APP} target="_blank" rel="noreferrer">{LIVE_APP.replace("https://", "")}</a>.
         </p>
       </div>
       <div className="proof-grid">

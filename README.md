@@ -18,7 +18,7 @@ Built for the [AKINDO Mezo Buildathon](https://app.akindo.io/wave-hacks/OVOO0gdr
 - **Borrow-into-goal:** one Mezo `WithdrawMUSD` signature, recipient = Pocket; live ICR, liquidation price, and a max-safe recompute right before send. Contract reverts under 150% ICR.
 - **Loan readiness:** Mezo minimum is 1,800 MUSD principal + 200 MUSD gas deposit (about 2,000 MUSD total debt at open). Small savers keep the plain MUSD deposit path; borrow-into-goal only enables with a valid trove.
 - **Savings Vault (sMUSD):** documented on mainnet at `0xb4D498029af77680cD1eF828b967f010d06C51CC`. `eth_getCode` on that address on testnet 31611 returns empty, so the app labels it documented-but-not-live. sMUSD does **not** raise trove ICR.
-- **Proof:** in-app Proof section lists 5 real testnet wallets with explorer tx links (not a fake count). Details in [docs/onchain-activity.md](docs/onchain-activity.md).
+- **Proof:** I only have my own test wallets so far. The in-app Proof section lists them with explorer tx links and labels them as my own (deployer, Wave 1 second key, and three Wave 2 generated wallets funded from the deployer). No third-party users yet. Details in [docs/onchain-activity.md](docs/onchain-activity.md).
 
 ![MUSD Pocket landing](docs/redesign-desktop-landing.png)
 

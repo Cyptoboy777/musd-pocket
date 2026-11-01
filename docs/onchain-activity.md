@@ -72,15 +72,17 @@ cast call 0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8 "feePool()(uint256)" --rpc-
 
 Contract v2 [`0xEC03F758219746b6e773f107a05cF17b66E7D460`](https://explorer.test.mezo.org/address/0xEC03F758219746b6e773f107a05cF17b66E7D460) is **verified** on the explorer (compiler `0.8.28`, london, optimizer 200). Runtime bytecode matches this repo (`forge verify-bytecode` → full match).
 
-## Wallets (testnet only, real txs)
+## Wallets (testnet only)
+
+Honest note: these are **my own test wallets**. There are no third-party users yet. Wallets 3-5 were generated and funded from the deployer during Wave 2. Wallet 2 is my Wave 1 second test key (funded via memo from the deployer).
 
 | # | Role | Address | Sample txs |
 |---|---|---|---|
-| 1 | Deployer / saver | [`0xA8F5…d1EA`](https://explorer.test.mezo.org/address/0xA8F5Ce266d62430f4B83C94fC5ADfb737948d1EA) | v1 openTrove + goals; v2 GoalCreated [`0xc36a…d3cf`](https://explorer.test.mezo.org/tx/0xc36a38916b40712fd10b20e7b47c942211257de4063c402919ea68f57e40d3cf) |
-| 2 | Shared-goal contributor | [`0xEEB0…509a`](https://explorer.test.mezo.org/address/0xEEB0C4736e3ce84c85aEfe1BB63144422191509a) | deposit [`0x0524…7ba6`](https://explorer.test.mezo.org/tx/0x052409282ba732dde3d923d7f83845d0f970d4b34535f1c1215500681a0e7ba6) |
-| 3 | Wave 2 saver A | [`0xF02F…bb29`](https://explorer.test.mezo.org/address/0xF02F7c394713DCECfB94D993BB584b8cA5D4bb29) | create [`0xf29b…7ff6`](https://explorer.test.mezo.org/tx/0xf29b3f5be590ecba642a6195aa34b34c8b31883dda9357139539fb619e257ff6) · deposit [`0xc3ac…43be`](https://explorer.test.mezo.org/tx/0xc3ac5680ba4b9ff3dc0d9a96645fdd1208dddacca08410e2ba7bb02e97a943be) |
-| 4 | Wave 2 saver B | [`0xa482…2985`](https://explorer.test.mezo.org/address/0xa4824D70514a6a2a78CECe3d7D25549F0b472985) | create [`0xdb50…e8f6`](https://explorer.test.mezo.org/tx/0xdb50dbca4848c4bd3e6786883d0594166a6c06e4f7557ef3b95a03bc629ae8f6) · deposit [`0x2217…4ea2`](https://explorer.test.mezo.org/tx/0x2217bf007fd35e70ffe75dde126d4115c8f9a50f14a05593ab152a08cdf04ea2) |
-| 5 | Wave 2 saver C | [`0x77eb…c580`](https://explorer.test.mezo.org/address/0x77eb4E81c9B9be068b2aE3fbA7545fFb28C2c580) | create [`0x5cc2…5eb3`](https://explorer.test.mezo.org/tx/0x5cc2f40dafc78fbdc74cdea2de1bb9f5b1aac31868863f5080da414833105eb3) · deposit [`0x94e6…dd64`](https://explorer.test.mezo.org/tx/0x94e6caf48516b383c50d291c2a3f69eb793aecac9e8191a2597d1ce2a059dd64) |
+| 1 | My test wallet (deployer) | [`0xA8F5…d1EA`](https://explorer.test.mezo.org/address/0xA8F5Ce266d62430f4B83C94fC5ADfb737948d1EA) | v1 openTrove + goals; v2 GoalCreated [`0xc36a…d3cf`](https://explorer.test.mezo.org/tx/0xc36a38916b40712fd10b20e7b47c942211257de4063c402919ea68f57e40d3cf) |
+| 2 | My own test wallet (Wave 1 second key) | [`0xEEB0…509a`](https://explorer.test.mezo.org/address/0xEEB0C4736e3ce84c85aEfe1BB63144422191509a) | deposit [`0x0524…7ba6`](https://explorer.test.mezo.org/tx/0x052409282ba732dde3d923d7f83845d0f970d4b34535f1c1215500681a0e7ba6) |
+| 3 | My own test wallet (Wave 2 generated) | [`0xF02F…bb29`](https://explorer.test.mezo.org/address/0xF02F7c394713DCECfB94D993BB584b8cA5D4bb29) | create [`0xf29b…7ff6`](https://explorer.test.mezo.org/tx/0xf29b3f5be590ecba642a6195aa34b34c8b31883dda9357139539fb619e257ff6) · deposit [`0xc3ac…43be`](https://explorer.test.mezo.org/tx/0xc3ac5680ba4b9ff3dc0d9a96645fdd1208dddacca08410e2ba7bb02e97a943be) |
+| 4 | My own test wallet (Wave 2 generated) | [`0xa482…2985`](https://explorer.test.mezo.org/address/0xa4824D70514a6a2a78CECe3d7D25549F0b472985) | create [`0xdb50…e8f6`](https://explorer.test.mezo.org/tx/0xdb50dbca4848c4bd3e6786883d0594166a6c06e4f7557ef3b95a03bc629ae8f6) · deposit [`0x2217…4ea2`](https://explorer.test.mezo.org/tx/0x2217bf007fd35e70ffe75dde126d4115c8f9a50f14a05593ab152a08cdf04ea2) |
+| 5 | My own test wallet (Wave 2 generated) | [`0x77eb…c580`](https://explorer.test.mezo.org/address/0x77eb4E81c9B9be068b2aE3fbA7545fFb28C2c580) | create [`0x5cc2…5eb3`](https://explorer.test.mezo.org/tx/0x5cc2f40dafc78fbdc74cdea2de1bb9f5b1aac31868863f5080da414833105eb3) · deposit [`0x94e6…dd64`](https://explorer.test.mezo.org/tx/0x94e6caf48516b383c50d291c2a3f69eb793aecac9e8191a2597d1ce2a059dd64) |
 
 ## Savings Vault check
 
