@@ -7,7 +7,7 @@
   "build": {
     "env": {
       "VITE_BASE": "/",
-      "VITE_POCKET_ADDRESS": "0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8",
+      "VITE_POCKET_ADDRESS": "0xEC03F758219746b6e773f107a05cF17b66E7D460",
       "VITE_WC_PROJECT_ID": "53cdf0246c31d16b926bb32678595ae4"
     }
   },

@@ -13,7 +13,15 @@ import {
 import { formatUnits, parseUnits, isAddress, zeroAddress } from "viem";
 import { AnimatePresence, m } from "motion/react";
 import { musdPocketAbi, erc20Abi } from "./lib/abi";
-import { MUSD_ADDRESS, POCKET_ADDRESS, mezoTestnet } from "./lib/chains";
+import { MUSD_ADDRESS, POCKET_ADDRESS, POCKET_V1_ADDRESS, MEZO, mezoTestnet } from "./lib/chains";
+import { useMezoActions, useMezoPosition, type MezoPosition } from "./lib/mezo";
+import { COMFORT, POCKET_FLOOR, BAND_COPY, band, liquidationPrice, maxBorrowAt, ratio, ratioAfterBorrow } from "./lib/risk";
+import { BitcoinPanel } from "./components/BitcoinPanel";
+import { SavingsVaultPanel } from "./components/SavingsVaultPanel";
+import { ProofPanel } from "./components/ProofPanel";
+import { Coach, type Draft } from "./components/Coach";
+import { LIVE_APP } from "./lib/proof";
+import { useAsyncTx } from "./hooks/useAsyncTx";
 import { LogoMark, Wordmark } from "./components/Logo";
 import { Guilloche } from "./components/Guilloche";
 import { useCountUp } from "./hooks/useCountUp";
@@ -24,10 +32,11 @@ import {
   IconDeposit, IconPlus, IconSend, IconShield, IconUnlock, IconUsers,
 } from "./components/Icons";
 
-type Tab = "goals" | "save" | "send";
+type Tab = "goals" | "save" | "coach" | "send";
 const TABS: { id: Tab; label: string }[] = [
   { id: "goals", label: "Pockets" },
   { id: "save", label: "New goal" },
+  { id: "coach", label: "Coach" },
   { id: "send", label: "Send" },
 ];
 const EXPLORER = mezoTestnet.blockExplorers.default.url;
@@ -65,6 +74,8 @@ export default function App() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const [tab, setTab] = useState<Tab>("goals");
+  const [draft, setDraft] = useState<(Draft & { n: number }) | null>(null);
+  const pos = useMezoPosition();
   const deployed = POCKET_ADDRESS !== zeroAddress;
 
   const { data: musdBal, isLoading: balLoading } = useReadContract({
@@ -75,7 +86,7 @@ export default function App() {
     query: { enabled: !!address },
   });
 
-  const { data: goalIds, isLoading: goalsLoading } = useReadContract({
+  const { data: goalIds, isLoading: goalsLoading, refetch: refetchGoals } = useReadContract({
     address: POCKET_ADDRESS,
     abi: musdPocketAbi,
     functionName: "goalsOf",
@@ -113,6 +124,7 @@ export default function App() {
             <a href="#how">How it works</a>
             <a href="#start">Get test MUSD</a>
             <a href="#app">Pockets</a>
+            <a href="#proof">Proof</a>
             <a href={`${EXPLORER}/address/${POCKET_ADDRESS}`} target="_blank" rel="noreferrer">
               Contract <IconExternal width={14} height={14} />
             </a>
@@ -145,6 +157,8 @@ export default function App() {
           <div className="app-grid">
             <aside className="account">
               <AccountPanel balance={balance} loading={isConnected && balLoading} connected={isConnected} address={address} goals={ids.length} wrongNetwork={wrongNetwork} noMusd={noMusd} onGuide={toStart} />
+              <BitcoinPanel pos={pos} connected={isConnected && !wrongNetwork} />
+              <SavingsVaultPanel />
             </aside>
 
             <div className="workspace">
@@ -178,15 +192,17 @@ export default function App() {
                   transition={{ duration: 0.32, ease: EASE }}
                 >
                   {tab === "goals" && (
-                    <GoalsPanel goalIds={ids} deployed={deployed} connected={isConnected} loading={isConnected && goalsLoading} noMusd={noMusd} onCreate={() => setTab("save")} onGuide={toStart} />
+                    <GoalsPanel goalIds={ids} deployed={deployed} connected={isConnected} loading={isConnected && goalsLoading} noMusd={noMusd} pos={pos} onCreate={() => setTab("save")} onCoach={() => setTab("coach")} onGuide={toStart} />
                   )}
-                  {tab === "save" && <SavePanel deployed={deployed} noMusd={noMusd} onGuide={toStart} />}
+                  {tab === "save" && <SavePanel key={draft?.n ?? 0} draft={draft} deployed={deployed} noMusd={noMusd} onGuide={toStart} onCreated={() => { void refetchGoals(); setTab("goals"); }} />}
+                  {tab === "coach" && <Coach pos={pos} walletMusd={balance} connected={isConnected && !wrongNetwork} onUse={(d) => { setDraft({ ...d, n: Date.now() }); setTab("save"); }} />}
                   {tab === "send" && <SendPanel deployed={deployed} noMusd={noMusd} onGuide={toStart} />}
                 </m.div>
               </AnimatePresence>
             </div>
           </div>
         </section>
+        <ProofPanel />
       </main>
 
       <footer className="footer">
@@ -196,11 +212,14 @@ export default function App() {
             <p>Bitcoin-backed savings goals on Mezo. Built for the AKINDO Mezo Buildathon, Access &amp; Distribution track.</p>
           </div>
           <dl className="footer-addrs">
-            <div><dt>MUSDPocket</dt><dd><Addr value={POCKET_ADDRESS} /></dd></div>
+            <div><dt>MUSD Pocket v2</dt><dd><Addr value={POCKET_ADDRESS} /></dd></div>
+            <div><dt>v1 (Wave 1 start)</dt><dd><Addr value={POCKET_V1_ADDRESS} /></dd></div>
+            <div><dt>Mezo borrow signatures</dt><dd><Addr value={MEZO.borrowerOpsSignatures} /></dd></div>
             <div><dt>MUSD token</dt><dd><Addr value={MUSD_ADDRESS} /></dd></div>
             <div><dt>Network</dt><dd>Mezo Testnet, chain 31611</dd></div>
           </dl>
           <div className="footer-links">
+            <a href={LIVE_APP} target="_blank" rel="noreferrer">Live app <IconExternal width={14} height={14} /></a>
             <a href={EXPLORER} target="_blank" rel="noreferrer">Explorer <IconExternal width={14} height={14} /></a>
             <a href={REPO} target="_blank" rel="noreferrer">Source <IconExternal width={14} height={14} /></a>
             <a href={`${REPO}/blob/master/docs/onchain-activity.md`} target="_blank" rel="noreferrer">On-chain activity <IconExternal width={14} height={14} /></a>
@@ -242,7 +261,7 @@ function Hero({ balance, loading, connected, goals, onStart, onView, onGuide }: 
             ))}
           </h1>
           <m.p className="hero-sub" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: EASE, delay: 0.35 }}>
-            Lock MUSD, the Bitcoin-backed dollar on Mezo, into goals with a date: an emergency fund, a trip, a home deposit. Withdraw when it unlocks, or early for a 2% fee.
+            Save in MUSD, the Bitcoin-backed dollar on Mezo, toward goals with a date. Fill a goal from your wallet, or borrow against your BTC straight into it with one signature, without selling a satoshi.
           </m.p>
           <m.div className="hero-cta" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: EASE, delay: 0.45 }}>
             <button className="btn btn-primary btn-lg" onClick={onStart}>
@@ -258,7 +277,7 @@ function Hero({ balance, loading, connected, goals, onStart, onView, onGuide }: 
           <m.ul className="hero-facts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.6 }}>
             <li><IconBitcoin /> Backed by Bitcoin</li>
             <li><IconShield /> Self-custody vault</li>
-            <li><IconCode /> Open source, 24 tests, self-reviewed</li>
+            <li><IconCode /> Open source, 61 tests, Slither-reviewed</li>
           </m.ul>
         </div>
 
@@ -356,14 +375,14 @@ function Note({ balance, loading, connected, goals }: { balance: number; loading
 function HowItWorks() {
   const steps = [
     { icon: <IconPlus />, title: "Name a goal", body: "Set a target in MUSD and an unlock date between 1 day and 2 years." },
-    { icon: <IconDeposit />, title: "Fill the pocket", body: "Approve and deposit MUSD whenever you like. Share a goal so others can chip in." },
+    { icon: <IconDeposit />, title: "Fill the pocket", body: "Add MUSD with one signature, or borrow it from your Mezo loan straight into the goal. Share a goal so others can chip in." },
     { icon: <IconUnlock />, title: "Unlock on time", body: "Withdraw everything on the date. Need it sooner? Break early for a 2% fee." },
   ];
   return (
     <section id="how" className="how" aria-labelledby="how-title">
       <div className="section-head">
         <h2 id="how-title">Three steps, one promise</h2>
-        <p>A term deposit you hold yourself, settled in a Bitcoin-backed dollar.</p>
+        <p>A term deposit you hold yourself, funded by your Bitcoin without selling it.</p>
       </div>
       <ol className="steps">
         {steps.map((s, i) => (
@@ -463,7 +482,7 @@ const EXAMPLES = [
   { name: "Home deposit", target: "5,000", days: 365 },
 ];
 
-function GoalsPanel({ goalIds, deployed, connected, loading, noMusd, onCreate, onGuide }: { goalIds: bigint[]; deployed: boolean; connected: boolean; loading: boolean; noMusd: boolean; onCreate: () => void; onGuide: () => void }) {
+function GoalsPanel({ goalIds, deployed, connected, loading, noMusd, pos, onCreate, onCoach, onGuide }: { goalIds: bigint[]; deployed: boolean; connected: boolean; loading: boolean; noMusd: boolean; pos: MezoPosition; onCreate: () => void; onCoach: () => void; onGuide: () => void }) {
   if (!deployed) {
     return <EmptyState title="Pockets open after deploy" body="Once the contract is live you can create goals like an Emergency fund, Travel or a Home deposit." />;
   }
@@ -512,14 +531,19 @@ function GoalsPanel({ goalIds, deployed, connected, loading, noMusd, onCreate, o
       <EmptyState
         title="No pockets yet"
         body="Create your first goal: pick a name, a target and an unlock date. It takes one transaction."
-        action={<button className="btn btn-primary" onClick={onCreate}><IconPlus /> Create a goal</button>}
+        action={
+          <div className="empty-actions">
+            <button className="btn btn-primary" onClick={onCreate}><IconPlus /> Create a goal</button>
+            <button className="btn btn-ghost" onClick={onCoach}>Plan one with the coach</button>
+          </div>
+        }
       />
     );
   }
   return (
     <div className="goal-list">
       {goalIds.map((id, i) => (
-        <GoalCard key={id.toString()} goalId={id} index={i} />
+        <GoalCard key={id.toString()} goalId={id} index={i} pos={pos} />
       ))}
     </div>
   );
@@ -552,75 +576,51 @@ function GoalSkeleton() {
   );
 }
 
-function GoalCard({ goalId, index }: { goalId: bigint; index: number }) {
-  const { address } = useAccount();
+function GoalCard({ goalId, index, pos }: { goalId: bigint; index: number; pos: MezoPosition }) {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash });
-  const { data, isLoading } = useReadContract({
+  const { data, isLoading, refetch } = useReadContract({
     address: POCKET_ADDRESS,
     abi: musdPocketAbi,
     functionName: "getGoal",
     args: [goalId],
   });
-  const { data: progress } = useReadContract({
-    address: POCKET_ADDRESS,
-    abi: musdPocketAbi,
-    functionName: "progressBps",
-    args: [goalId],
-  });
+  const actions = useMezoActions();
   const [addAmt, setAddAmt] = useState("");
-  const [lastAction, setLastAction] = useState("Done");
+  const [borrowAmt, setBorrowAmt] = useState("");
+  const [mode, setMode] = useState<"add" | "borrow">("add");
+  const dep = useAsyncTx(`dep-${goalId}`, `Added ${addAmt || "MUSD"} MUSD`);
+  const bor = useAsyncTx(`bor-${goalId}`, `Borrowed ${borrowAmt || ""} MUSD into the goal`);
 
-  useTxFeedback({ key: `goal-${goalId}`, isPending, hash, confirming, success: isSuccess, error, doneTitle: lastAction });
+  useTxFeedback({ key: `goal-${goalId}`, isPending, hash, confirming, success: isSuccess, error, doneTitle: "Withdrawn" });
+  useEffect(() => {
+    if (dep.success || bor.success || isSuccess) { void refetch(); pos.refetch(); }
+  }, [dep.success, bor.success, isSuccess]);
 
   if (isLoading) return <GoalSkeleton />;
   if (!data) return null;
-  const name = data[1];
-  const target = data[2];
-  const balance = data[3];
-  const unlockTime = data[4];
-  const active = data[5];
-  const isFamily = data[6];
+  const [, name, target, balance, unlockTime, active, isFamily] = data;
   if (!active && balance === 0n) return null;
 
   const unlock = new Date(Number(unlockTime) * 1000);
   const locked = Date.now() / 1000 < Number(unlockTime);
-  const pct = Math.min(100, Number(progress || 0n) / 100);
+  const pct = target > 0n ? Math.min(100, Number((balance * 10000n) / target) / 100) : 0;
   const daysLeft = Math.max(0, Math.ceil((Number(unlockTime) - Date.now() / 1000) / 86400));
-  const busy = isPending || confirming;
+  const busy = isPending || confirming || dep.busy || bor.busy;
+  const left = Math.max(0, toNum(target) - toNum(balance));
 
-  async function approveAndDeposit() {
-    if (!addAmt || !address) return;
-    const amount = parseUnits(addAmt, 18);
-    setLastAction("Approved. Now deposit.");
-    writeContract({
-      address: MUSD_ADDRESS,
-      abi: erc20Abi,
-      functionName: "approve",
-      args: [POCKET_ADDRESS, amount],
-    });
-    // user confirms second tx via Deposit button after approve
-  }
-
-  function deposit() {
-    if (!addAmt) return;
-    setLastAction(`Deposited ${addAmt} MUSD`);
-    writeContract({
-      address: POCKET_ADDRESS,
-      abi: musdPocketAbi,
-      functionName: "deposit",
-      args: [goalId, parseUnits(addAmt, 18)],
-    });
-  }
+  // Live preview of the Mezo loan if this borrow goes through
+  const t = pos.trove, price = pos.price;
+  const bAmt = Number(borrowAmt) || 0;
+  const now = t && price ? ratio(t, price) : undefined;
+  const after = t && price && bAmt > 0 ? ratioAfterBorrow(t, price, bAmt) : undefined;
+  const safeRoom = t && price ? maxBorrowAt(t, price, COMFORT) : 0;
+  const floorRoom = t && price ? maxBorrowAt(t, price, POCKET_FLOOR) : 0;
+  const tooRisky = after !== undefined && after < POCKET_FLOOR;
+  const liqAfter = t && bAmt > 0 ? liquidationPrice({ coll: t.coll, debt: t.debt + bAmt * 1.001 }) : undefined;
 
   function withdraw() {
-    setLastAction(locked ? "Withdrawn early" : "Withdrawn");
-    writeContract({
-      address: POCKET_ADDRESS,
-      abi: musdPocketAbi,
-      functionName: locked ? "earlyWithdraw" : "withdraw",
-      args: [goalId],
-    });
+    writeContract({ address: POCKET_ADDRESS, abi: musdPocketAbi, functionName: locked ? "earlyWithdraw" : "withdraw", args: [goalId] });
   }
 
   return (
@@ -652,21 +652,57 @@ function GoalCard({ goalId, index }: { goalId: bigint; index: number }) {
         </div>
       </div>
 
-      <div className="field">
-        <label htmlFor={`add-${goalId}`}>Add MUSD to this goal</label>
-        <div className="input-wrap">
-          <input id={`add-${goalId}`} inputMode="decimal" autoComplete="off" placeholder="e.g. 100" value={addAmt} onChange={(e) => setAddAmt(e.target.value)} />
-          <span className="suffix">MUSD</span>
+      <div className="seg" role="group" aria-label="How to fund this goal">
+        <button type="button" className={mode === "add" ? "on" : ""} aria-pressed={mode === "add"} onClick={() => setMode("add")}><IconDeposit width={15} height={15} /> From wallet</button>
+        <button type="button" className={mode === "borrow" ? "on" : ""} aria-pressed={mode === "borrow"} onClick={() => setMode("borrow")}><IconBitcoin width={15} height={15} /> Borrow from my BTC</button>
+      </div>
+
+      {mode === "add" ? (
+        <form className="fund" onSubmit={(e) => { e.preventDefault(); if (addAmt) void dep.run(() => actions.depositWithPermit(goalId, addAmt)); }}>
+          <div className="field">
+            <label htmlFor={`add-${goalId}`}>Add MUSD to this goal</label>
+            <div className="input-wrap">
+              <input id={`add-${goalId}`} inputMode="decimal" autoComplete="off" placeholder={left > 0 ? `${fmtNum(left, 0)} to go` : "e.g. 100"} value={addAmt} onChange={(e) => setAddAmt(e.target.value)} />
+              <span className="suffix">MUSD</span>
+            </div>
+          </div>
+          <button type="submit" className="btn btn-primary btn-block" disabled={busy || !(Number(addAmt) > 0)}>
+            {dep.busy ? <span className="spinner" /> : <IconDeposit />} Add MUSD
+          </button>
+          <p className="fund-note">One signature and one transaction: MUSD's permit replaces the separate approval.</p>
+        </form>
+      ) : !t ? (
+        <div className="fund fund-empty">
+          <p>Borrowing into a goal needs a Mezo loan on this wallet. Open one on Mezo (minimum 1,800 MUSD principal + 200 MUSD gas deposit, about 2,000 MUSD total debt). Small savers should keep using From wallet. With a valid trove, MUSD goes straight into this goal and your BTC stays yours.</p>
+          <a className="btn btn-ghost btn-block" href={LINKS.borrow} target="_blank" rel="noreferrer">Open a loan on Mezo <IconExternal width={15} height={15} /></a>
         </div>
-      </div>
-      <div className="btn-row">
-        <button className="btn btn-ghost" disabled={busy} onClick={approveAndDeposit}>Approve</button>
-        <button className="btn btn-primary" disabled={busy} onClick={deposit}>{busy ? <span className="spinner" /> : null}Deposit</button>
-      </div>
+      ) : (
+        <form className="fund" onSubmit={(e) => { e.preventDefault(); if (bAmt > 0 && !tooRisky) void bor.run(() => actions.borrowToGoal(goalId, borrowAmt, t)); }}>
+          <div className="field">
+            <label htmlFor={`bor-${goalId}`}>Borrow MUSD against your BTC into this goal</label>
+            <div className="input-wrap">
+              <input id={`bor-${goalId}`} inputMode="decimal" autoComplete="off" placeholder={safeRoom >= 1 ? `up to ${fmtNum(Math.min(safeRoom, left || safeRoom), 0)} at 200%` : "e.g. 25"} value={borrowAmt} onChange={(e) => setBorrowAmt(e.target.value)} />
+              <span className="suffix">MUSD</span>
+            </div>
+          </div>
+          <div className={`preview ${after !== undefined ? `band-${band(after)}` : ""}`}>
+            <div><span>Loan ratio</span><strong className="tnum">{now !== undefined ? `${Math.round(now * 100)}%` : "—"}{after !== undefined && <> → {Math.round(after * 100)}%</>}</strong></div>
+            <div><span>Liquidation at</span><strong className="tnum">{liqAfter ? `$${fmtNum(liqAfter, 0)}` : t ? `$${fmtNum(liquidationPrice(t), 0)}` : "—"}</strong></div>
+            <div><span>After this</span><strong>{after !== undefined ? BAND_COPY[band(after)] : now !== undefined ? BAND_COPY[band(now)] : "—"}</strong></div>
+          </div>
+          {tooRisky && <div className="form-error" role="alert">That would take your loan under 150%. The contract refuses it; most you can borrow here is {fmtNum(floorRoom)} MUSD.</div>}
+          {!tooRisky && after !== undefined && after < COMFORT && <div className="notice notice-warn" role="note"><span>Below 200% your loan is more exposed to BTC drops and to redemptions. Fine for testing; be careful with real money.</span></div>}
+          <button type="submit" className="btn btn-primary btn-block" disabled={busy || !(bAmt > 0) || tooRisky}>
+            {bor.busy ? <span className="spinner" /> : <IconBitcoin />} Sign and borrow into goal
+          </button>
+          <p className="fund-note">You sign Mezo's own borrow message with this goal as the recipient. The MUSD never touches your wallet, and the whole thing reverts if your loan would end under 150%.</p>
+        </form>
+      )}
+
       <button className={`btn btn-block ${locked ? "btn-danger" : "btn-soft"}`} disabled={busy || balance === 0n} onClick={withdraw}>
         {locked ? "Early withdraw (2% fee)" : "Withdraw unlocked"}
       </button>
-      {hash && <TxLine hash={hash} />}
+      {(bor.hash || dep.hash || hash) && <TxLine hash={(bor.hash || dep.hash || hash)!} />}
     </m.article>
   );
 }
@@ -689,24 +725,33 @@ const PRESETS = [
   { name: "Home deposit", target: "5000", days: "365" },
 ];
 
-function SavePanel({ deployed, noMusd, onGuide }: { deployed: boolean; noMusd: boolean; onGuide: () => void }) {
+function SavePanel({ deployed, noMusd, onGuide, draft, onCreated }: { deployed: boolean; noMusd: boolean; onGuide: () => void; draft: Draft | null; onCreated: () => void }) {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash });
-  const [name, setName] = useState("Emergency fund");
-  const [target, setTarget] = useState("1000");
-  const [days, setDays] = useState("30");
+  const [name, setName] = useState(draft?.name ?? "Emergency fund");
+  const [target, setTarget] = useState(draft?.target ?? "1000");
+  const [days, setDays] = useState(draft?.days ?? "30");
   const [family, setFamily] = useState(false);
 
   useTxFeedback({ key: "save", isPending, hash, confirming, success: isSuccess, error, doneTitle: `Goal created: ${name}` });
+  useEffect(() => {
+    if (!isSuccess) return;
+    const t = window.setTimeout(onCreated, 1200);
+    return () => window.clearTimeout(t);
+  }, [isSuccess, onCreated]);
 
   const unlockPreview = useMemo(() => {
     const d = Number(days) || 0;
     return fmtDate(new Date(Date.now() + d * 86400000));
   }, [days]);
 
+  const daysN = Number(days);
+  const badDays = days !== "" && (!Number.isFinite(daysN) || daysN < 1 || daysN > 730);
+
   function create() {
-    if (!deployed) return;
-    const unlock = BigInt(Math.floor(Date.now() / 1000) + Number(days) * 86400);
+    if (!deployed || badDays) return;
+    // +2 min so a slow wallet confirmation can't push a 1-day lock under the contract's minimum
+    const unlock = BigInt(Math.floor(Date.now() / 1000) + Math.round(daysN * 86400) + 120);
     writeContract({
       address: POCKET_ADDRESS,
       abi: musdPocketAbi,
@@ -721,7 +766,7 @@ function SavePanel({ deployed, noMusd, onGuide }: { deployed: boolean; noMusd: b
     <form className="panel form" onSubmit={(e) => { e.preventDefault(); create(); }}>
       <div className="form-head">
         <h3>New savings goal</h3>
-        <p>Lock MUSD until a date you choose. Shared goals let family or friends chip in.</p>
+        <p>{draft ? "Filled in by the coach. Check it, then create." : "Lock MUSD until a date you choose. Shared goals let family or friends chip in."}</p>
       </div>
       <div className="presets" role="group" aria-label="Quick start">
         {PRESETS.map((p) => (
@@ -743,11 +788,12 @@ function SavePanel({ deployed, noMusd, onGuide }: { deployed: boolean; noMusd: b
           </div>
         </div>
         <div className="field">
-          <label htmlFor="g-days">Lock (min 1 day)</label>
+          <label htmlFor="g-days">Lock (1 to 730 days)</label>
           <div className="input-wrap">
-            <input id="g-days" inputMode="numeric" value={days} onChange={(e) => setDays(e.target.value)} autoComplete="off" />
+            <input id="g-days" inputMode="numeric" value={days} onChange={(e) => setDays(e.target.value)} autoComplete="off" aria-invalid={badDays} />
             <span className="suffix">days</span>
           </div>
+          {badDays && <span className="field-error">Pick between 1 and 730 days.</span>}
         </div>
       </div>
       <label className="switch">
@@ -762,8 +808,8 @@ function SavePanel({ deployed, noMusd, onGuide }: { deployed: boolean; noMusd: b
         <IconClock width={16} height={16} />
         <span>Unlocks around <strong>{unlockPreview}</strong></span>
       </div>
-      {noMusd && <MusdHint onGuide={onGuide} text="Creating a goal only costs a little test BTC for gas. To fill it you'll need MUSD." />}
-      <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={!deployed || busy}>
+      {noMusd && <MusdHint onGuide={onGuide} text="Creating a goal only costs a little test BTC for gas. Fill it later with MUSD, or borrow into it from a Mezo loan." />}
+      <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={!deployed || busy || badDays}>
         {busy ? (<><span className="spinner" /> Confirm in wallet…</>) : (<><IconCheck /> Create goal</>)}
       </button>
       {hash && <TxLine hash={hash} />}
@@ -775,38 +821,17 @@ function SavePanel({ deployed, noMusd, onGuide }: { deployed: boolean; noMusd: b
 /* ───────────────────────── Send ───────────────────────── */
 
 function SendPanel({ deployed, noMusd, onGuide }: { deployed: boolean; noMusd: boolean; onGuide: () => void }) {
-  const { writeContract, data: hash, isPending, error } = useWriteContract();
-  const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+  const actions = useMezoActions();
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("50");
   const [memo, setMemo] = useState("Rent buffer");
-  const [step, setStep] = useState<"approve" | "send">("approve");
-
-  useTxFeedback({ key: "send", isPending, hash, confirming, success: isSuccess, error, doneTitle: step === "approve" ? "Approved. Now send." : `Sent ${amount} MUSD` });
-
-  function approve() {
-    if (!isAddress(to) || !amount) return;
-    setStep("approve");
-    writeContract({
-      address: MUSD_ADDRESS,
-      abi: erc20Abi,
-      functionName: "approve",
-      args: [POCKET_ADDRESS, parseUnits(amount, 18)],
-    });
-  }
+  const tx = useAsyncTx("send", `Sent ${amount} MUSD`);
 
   function send() {
-    if (!deployed || !isAddress(to)) return;
-    setStep("send");
-    writeContract({
-      address: POCKET_ADDRESS,
-      abi: musdPocketAbi,
-      functionName: "sendRemittance",
-      args: [to as `0x${string}`, parseUnits(amount, 18), memo],
-    });
+    if (!deployed || !isAddress(to) || !(Number(amount) > 0)) return;
+    void tx.run(() => actions.sendWithPermit(to as `0x${string}`, amount, memo));
   }
 
-  const busy = isPending || confirming;
   const badAddr = to.length > 0 && !isAddress(to);
 
   return (
@@ -834,18 +859,11 @@ function SendPanel({ deployed, noMusd, onGuide }: { deployed: boolean; noMusd: b
         </div>
       </div>
       {noMusd && <MusdHint onGuide={onGuide} text="You need MUSD to send. This wallet has none yet." />}
-      <ol className="send-steps" aria-label="Two transactions">
-        <li className={step === "send" && isSuccess ? "done" : ""}><span className="tnum">1</span> Approve MUSD</li>
-        <li><span className="tnum">2</span> Send with memo</li>
-      </ol>
-      <div className="btn-row">
-        <button type="button" className="btn btn-ghost btn-lg" disabled={!deployed || busy} onClick={approve}>Approve</button>
-        <button type="submit" className="btn btn-primary btn-lg" disabled={!deployed || busy || !isAddress(to)}>
-          {busy ? <span className="spinner" /> : <IconSend />} Send MUSD
-        </button>
-      </div>
-      {hash && <TxLine hash={hash} />}
-      {error && <div className="form-error" role="alert">{error.message.split("\n")[0]}</div>}
+      <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={!deployed || tx.busy || !isAddress(to)}>
+        {tx.busy ? <span className="spinner" /> : <IconSend />} Sign and send
+      </button>
+      <p className="fund-note">One signature authorises exactly this amount (MUSD permit), then one transaction sends it with the memo.</p>
+      {tx.hash && <TxLine hash={tx.hash} />}
     </form>
   );
 }
@@ -917,7 +935,7 @@ function GetStarted({ connected, address, wrongNetwork, btc, btcLoading, musd, m
       body: (
         <>
           Sign in to the Mezo testnet app with the same wallet. <strong>Swap</strong> a little BTC for MUSD (any amount), or{" "}
-          <strong>borrow</strong> MUSD against your BTC (the minimum loan is 1,800 MUSD).{" "}
+          <strong>borrow</strong> MUSD against your BTC (the minimum loan is 1,800 MUSD). Opening a loan means at least about 2,000 MUSD total debt (1,800 + 200 gas deposit). With a loan open, MUSD Pocket can borrow more straight into a goal.{" "}
           <a href={LINKS.borrowGuide} target="_blank" rel="noreferrer">Borrowing guide</a>
         </>
       ),
