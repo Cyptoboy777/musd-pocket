@@ -2,53 +2,38 @@
 
 # MUSD Pocket
 
-> **Money that keeps its promises.** Lock MUSD, Mezo's Bitcoin-backed dollar, into savings goals with a date. Withdraw on time, or early for a 2% fee. Send MUSD to anyone with an on-chain memo.
+> Money that keeps its promises. Lock MUSD, Mezo's Bitcoin-backed dollar, into savings goals with a date. Withdraw on time, or early for a 2% fee. Borrow against your BTC straight into a goal. Send MUSD to anyone with an on-chain memo.
 
-Global **goal savings + memo payments** app for [Mezo](https://mezo.org)’s Bitcoin-backed **MUSD**.  
+India-first **goal savings + memo payments** app for [Mezo](https://mezo.org)’s Bitcoin-backed **MUSD**.
 Built for the [AKINDO Mezo Buildathon](https://app.akindo.io/wave-hacks/OVOO0gdrVU8379D10) · Access & Distribution track · `@Cryptoboy_777`.
 
-**Proof it works**
-- **Real on-chain activity:** [docs/onchain-activity.md](docs/onchain-activity.md) lists 19 transactions on Mezo testnet with explorer links:
-  - borrowing MUSD against test BTC;
-  - creating three goals (one of them shared), with deposits;
-  - a second wallet contributing to the shared goal;
-  - two memo payments;
-  - an early withdrawal that paid the 2% fee.
-- **Security review:** [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) covers Slither (9 results, 0 high) and a manual review, with each finding given a severity. 24/24 Foundry tests pass. The deployed bytecode matches this source, and the contract is verified on the explorer.
-- **Onboarding for first-time users:** an in-app "Get test MUSD" guide with four steps (wallet → faucet → swap or borrow MUSD → first pocket). Each step checks off live from your wallet's balances.
+**Everything below is Mezo testnet (chain 31611) unless a line says mainnet.**
+
+## Wave 2
+
+- **Live app (primary):** https://musd-pocket-mezo.vercel.app
+- Also: https://musd-pocket-wheat.vercel.app · GitHub Pages: https://cyptoboy777.github.io/musd-pocket/
+- **Do not use** `musd-pocket.vercel.app` (another team's app).
+- **MUSDPocket v2 (verified):** [`0xEC03F758219746b6e773f107a05cF17b66E7D460`](https://explorer.test.mezo.org/address/0xEC03F758219746b6e773f107a05cF17b66E7D460) · deploy [`0xa58ddba9…64f6`](https://explorer.test.mezo.org/tx/0xa58ddba9e9c1fb87ee211016f729491806bf74e06ce23fa38a97fe0d092d64f6)
+- **Borrow-into-goal:** one Mezo `WithdrawMUSD` signature, recipient = Pocket; live ICR, liquidation price, and a max-safe recompute right before send. Contract reverts under 150% ICR.
+- **Loan readiness:** Mezo minimum is 1,800 MUSD principal + 200 MUSD gas deposit (about 2,000 MUSD total debt at open). Small savers keep the plain MUSD deposit path; borrow-into-goal only enables with a valid trove.
+- **Savings Vault (sMUSD):** documented on mainnet at `0xb4D498029af77680cD1eF828b967f010d06C51CC`. `eth_getCode` on that address on testnet 31611 returns empty, so the app labels it documented-but-not-live. sMUSD does **not** raise trove ICR.
+- **Proof:** I only have my own test wallets so far. The in-app Proof section lists them with explorer tx links and labels them as my own (deployer, Wave 1 second key, and three Wave 2 generated wallets funded from the deployer). No third-party users yet. Details in [docs/onchain-activity.md](docs/onchain-activity.md).
 
 ![MUSD Pocket landing](docs/redesign-desktop-landing.png)
 
 ## Design
 
-**Art direction: "Engraved light."** The security engraving of banknotes and bond certificates (guilloche rosettes, double-line strokes) lit like a vault at night: bottle-green ink, champagne-gold light, one slowly turning engraved plate.
-Type pairs Gloock (high-contrast engraved serif for headlines and balances) with Geist (precise UI sans, tabular figures); all colour, space, radius, depth and motion live in CSS tokens (`frontend/src/styles/tokens.css`).
-
-**Logo.** Two engraved lines, the double stroke shared by currency signs and security print, form a pocket that cradles a coin; the gap around the coin is the lock. Files: `frontend/public/logo.svg`, `logo-mark.svg`, `logo-mono.svg`, `favicon.svg`, `docs/musd-pocket-icon.png`.
-
-| Desktop app | Mobile |
-| --- | --- |
-| ![App view](docs/redesign-desktop-app.png) | ![Mobile landing](docs/redesign-mobile-landing.png) |
-| ![New goal](docs/redesign-desktop-save.png) | ![Mobile app](docs/redesign-mobile-app.png) |
-
-Before the redesign: [`docs/redesign-before.png`](docs/redesign-before.png).
-
-### Onboarding: "Get test MUSD"
-
-| New wallet (desktop) | Finished (desktop, real testnet data) | Mobile |
-| --- | --- | --- |
-| ![Onboarding, new wallet](docs/onboarding-desktop-empty-wallet.png) | ![Onboarding, all done](docs/onboarding-desktop-complete.png) | ![Onboarding on mobile](docs/onboarding-mobile.png) |
-
-Empty states point back to the guide: [`docs/empty-state-desktop.png`](docs/empty-state-desktop.png). Real pockets from the demo wallet: [`docs/pockets-real-desktop.png`](docs/pockets-real-desktop.png).
-The "connected" screenshots use a read-only viewer wallet that loads public on-chain data for an address. It cannot sign and it is not part of the app.
+**Art direction: "Engraved light."** Banknote-style guilloche, bottle-green ink, champagne-gold light.
+Type: Gloock + Geist. Tokens in `frontend/src/styles/tokens.css`.
 
 ## Links
 
-- **Live demo:** https://cyptoboy777.github.io/musd-pocket/
-- **MUSDPocket contract (Mezo testnet):** [`0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8`](https://explorer.test.mezo.org/address/0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8)
-- **Deploy tx:** [`0x98181dcd…b61df6`](https://explorer.test.mezo.org/tx/0x98181dcdda80939a99ce5dbd33be70cc4081356f50561d9be46545b0eab61df6)
+- **Live demo:** https://musd-pocket-mezo.vercel.app
+- **MUSDPocket v2 (Mezo testnet, verified):** [`0xEC03…D460`](https://explorer.test.mezo.org/address/0xEC03F758219746b6e773f107a05cF17b66E7D460)
+- **v1 (Wave 1):** [`0x2d5f…A1C8`](https://explorer.test.mezo.org/address/0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8)
 - **Repo:** https://github.com/Cyptoboy777/musd-pocket
-- **On-chain activity:** [docs/onchain-activity.md](docs/onchain-activity.md) · **Security review:** [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md)
+- **On-chain activity:** [docs/onchain-activity.md](docs/onchain-activity.md) · **Security:** [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md)
 
 ## Quick start
 
@@ -57,45 +42,32 @@ The "connected" screenshots use a read-only viewer wallet that loads public on-c
 ```bash
 export PATH="$HOME/.foundry/bin:$PATH"
 cd contracts
-forge test -vv   # 24 tests: 11 core + 13 security (see docs/SECURITY_REVIEW.md)
+forge test -vv
+# bytecode match for the deployed v2:
+# forge verify-bytecode 0xEC03F758219746b6e773f107a05cF17b66E7D460 src/MUSDPocketV2.sol:MUSDPocketV2 \
+#   --constructor-args <MUSD> <BOS> <TroveManager> <PriceFeed> <owner> --rpc-url https://rpc.test.mezo.org
 ```
-
-Deploy to Mezo testnet (needs BTC gas on deployer):
-
-```bash
-set -a && source ../.env && set +a
-forge script script/Deploy.s.sol:Deploy --rpc-url "$MEZO_TESTNET_RPC" --broadcast -vvvv
-```
-
-The frontend defaults to the deployed address `0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8`; override with `VITE_POCKET_ADDRESS` in `frontend/.env`.
 
 ### Frontend
 
 ```bash
 cd frontend
 npm install
-npm run dev      # http://localhost:5173
 npm run build
-npm run preview
 ```
 
-**Wallets.** `VITE_WC_PROJECT_ID` is the public Reown (WalletConnect) project id. The hosted build sets it in `.github/workflows/pages.yml`, which enables mobile QR and deep-link wallets (Rainbow, Base, MetaMask, WalletConnect). If the id is unset, the app falls back to browser wallets only (EIP-6963 injected and Coinbase Wallet) rather than a placeholder id. `package.json` pins `qr@0.5.5` under `cuer`, because `qr` 0.7 throws "invalid border=0" when RainbowKit renders the WalletConnect QR code.
+Hosted on Vercel with Root Directory `frontend` (see `frontend/vercel.json`). Pages workflow still builds with `VITE_BASE=/musd-pocket/`.
 
-The hosted build is deployed to GitHub Pages by `.github/workflows/pages.yml` on every push to `master` that touches `frontend/` (Vite `base` = `/musd-pocket/`).
-
-The same build also runs on Vercel at the domain root. `frontend/vite.config.ts` picks the base path: `VITE_BASE` if set, otherwise `/` when Vercel's `VERCEL` env var is present, otherwise `/musd-pocket/` for Pages. `frontend/vercel.json` holds the Vercel config (framework Vite, `npm ci`, `npm run build`, output `dist`, SPA rewrite, and the public build env). To set it up, import the repo in Vercel and set Root Directory to `frontend`; everything else comes from `vercel.json`. You can also add `VITE_WC_PROJECT_ID` under Project Settings > Environment Variables if you want to use a different Reown project id.
-
-## Network
+## Network (testnet)
 
 - Chain ID `31611` · RPC `https://rpc.test.mezo.org`
-- MUSD `0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503`
-- MUSDPocket `0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8`
+- MUSD `0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503` (18 decimals)
+- MUSDPocket v2 `0xEC03F758219746b6e773f107a05cF17b66E7D460`
 - Explorer https://explorer.test.mezo.org
-- Faucet https://faucet.test.mezo.org (test BTC and MEZO, CAPTCHA)
-- Get MUSD: swap BTC→MUSD at https://testnet.mezo.org/feature/swap, or borrow at https://testnet.mezo.org/feature/borrow (minimum loan 1,800 MUSD; [guide](https://mezo.org/docs/users/borrow/mint-musd/))
-
-See [NOTES.md](./NOTES.md) and [SUBMISSION.md](./SUBMISSION.md).
+- Faucet https://faucet.test.mezo.org
+- Borrow https://testnet.mezo.org/feature/borrow (min 1,800 MUSD + 200 gas deposit)
 
 ## Pitch
+
 - Pitch deck (PDF): [docs/MUSD-Pocket-Pitch-Deck.pdf](docs/MUSD-Pocket-Pitch-Deck.pdf)
 - Pitch video (2 min): https://youtu.be/v9pkZ0W2YDE
