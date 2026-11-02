@@ -69,5 +69,5 @@ Hosted on Vercel with Root Directory `frontend` (see `frontend/vercel.json`). Pa
 
 ## Pitch
 
-- Pitch deck (PDF): [docs/MUSD-Pocket-Pitch-Deck.pdf](docs/MUSD-Pocket-Pitch-Deck.pdf)
+- Pitch deck (PDF): [docs/MUSD-Pocket-Wave2-Deck.pdf](docs/MUSD-Pocket-Wave2-Deck.pdf)
 - Pitch video (2 min): https://youtu.be/v9pkZ0W2YDE

@@ -296,7 +296,7 @@ function Hero({ balance, loading, connected, goals, onStart, onView, onGuide }: 
           <m.ul className="hero-facts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.6 }}>
             <li><IconBitcoin /> Backed by Bitcoin</li>
             <li><IconShield /> Self-custody vault</li>
-            <li><IconCode /> Open source, 61 tests, Slither-reviewed</li>
+            <li><IconCode /> Open source, 69 tests, Slither-reviewed</li>
           </m.ul>
         </div>
 
