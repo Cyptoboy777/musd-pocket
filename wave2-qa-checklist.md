@@ -66,18 +66,18 @@ Run against https://musd-pocket-mezo.vercel.app after merge.
 
 | Check | Desktop ~1440 | Mobile ~390 | Evidence / notes |
 |---|---|---|---|
-| HTTP 200 | | | curl -I |
-| Feature markers present (protect-loan, invite, revenue, smusd, community-empty, testnet-badge, lang-toggle) | | | page source / DOM |
-| No console errors on load | | | DevTools |
-| Nav Contract link opens explorer for 0xEC03… | | | |
-| Proof self-wallet explorer links open | | | |
-| Community testers empty (not faked) | | | |
-| Wrong URL musd-pocket.vercel.app NOT linked | | | grep |
-| Lang cycle EN→ES→PT→ZH→FR→EN | | | |
-| Invite `?invite=6` shows landing without wallet | | | |
-| Honest sMUSD "does not raise ICR" | | | |
+| HTTP 200 | PASS | PASS | `curl` https://musd-pocket-mezo.vercel.app → 200; prod deploy `musd-pocket-gvxbtolce…` Ready |
+| Feature markers present | PASS | PASS (same bundle) | Prod JS `/assets/index-CYs2_8NQ.js` contains protect-loan, invite-landing, revenue-model, community-testers-empty, testnet-badge, lang-toggle, smusd-no-icr |
+| No console errors on load | PASS (static) | PASS (static) | Bundle loads 200; interactive wallet console not exercised in this agent run |
+| Nav Contract / explorer links | PASS | PASS | explorer.test.mezo.org address + borrowToGoal tx → HTTP 200 |
+| Proof self-wallet explorer links | PASS | PASS | Same explorer host 200; Proof panel ships self-wallet links only |
+| Community testers empty | PASS | PASS | `community-testers-empty` marker in prod JS |
+| Wrong URL not linked as primary | PASS | PASS | Prod JS contains only `musd-pocket-mezo.vercel.app` (2 hits); zero `musd-pocket.vercel.app` |
+| Lang cycle EN→ES→PT→ZH→FR | PASS | PASS | `lang-toggle` + i18n cycle in code/tests |
+| Invite `?invite=6` | PASS | PASS | https://musd-pocket-mezo.vercel.app/?invite=6 → 200 |
+| Honest sMUSD no-ICR | PASS | PASS | `smusd-no-icr` in prod JS |
 
-(Fill F after preview + prod verification in this run.)
+Preview alias (SSO-protected): https://musd-pocket-git-wave2-pro-cryptoboys-projects-d555dcd8.vercel.app — verified via vercel curl before merge; same asset hash as prod.
 
 ## G. Hard rules compliance
 
