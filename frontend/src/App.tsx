@@ -19,8 +19,12 @@ import { COMFORT, POCKET_FLOOR, BAND_COPY, band, liquidationPrice, maxBorrowAt, 
 import { BitcoinPanel } from "./components/BitcoinPanel";
 import { SavingsVaultPanel } from "./components/SavingsVaultPanel";
 import { ProofPanel } from "./components/ProofPanel";
+import { ProtectLoanPanel } from "./components/ProtectLoanPanel";
+import { RevenuePanel } from "./components/RevenuePanel";
+import { InviteLanding, InviteCopyButton, useIsInvite } from "./components/InvitePanel";
 import { Coach, type Draft } from "./components/Coach";
 import { LIVE_APP } from "./lib/proof";
+import { cycleLang, LANG_META, loadLang, saveLang, t as tr, type Lang } from "./lib/i18n";
 import { useAsyncTx } from "./hooks/useAsyncTx";
 import { LogoMark, Wordmark } from "./components/Logo";
 import { Guilloche } from "./components/Guilloche";
@@ -75,8 +79,15 @@ export default function App() {
   const chainId = useChainId();
   const [tab, setTab] = useState<Tab>("goals");
   const [draft, setDraft] = useState<(Draft & { n: number }) | null>(null);
+  const [lang, setLang] = useState<Lang>(() => (typeof window !== "undefined" ? loadLang() : "en"));
+  const showInvite = useIsInvite();
   const pos = useMezoPosition();
   const deployed = POCKET_ADDRESS !== zeroAddress;
+  const toggleLang = () => {
+    const next = cycleLang(lang);
+    setLang(next);
+    saveLang(next);
+  };
 
   const { data: musdBal, isLoading: balLoading } = useReadContract({
     address: MUSD_ADDRESS,
@@ -121,14 +132,17 @@ export default function App() {
             <Wordmark />
           </a>
           <nav className="nav-links" aria-label="Sections">
-            <a href="#how">How it works</a>
-            <a href="#start">Get test MUSD</a>
-            <a href="#app">Pockets</a>
-            <a href="#proof">Proof</a>
+            <a href="#how">{tr(lang, "navHow")}</a>
+            <a href="#start">{tr(lang, "navStart")}</a>
+            <a href="#app">{tr(lang, "navPockets")}</a>
+            <a href="#proof">{tr(lang, "navProof")}</a>
             <a href={`${EXPLORER}/address/${POCKET_ADDRESS}`} target="_blank" rel="noreferrer">
               Contract <IconExternal width={14} height={14} />
             </a>
           </nav>
+          <button type="button" className="lang-toggle" onClick={toggleLang} aria-label={tr(lang, "langToggleAria")} data-feature="lang-toggle" title={LANG_META.find((m) => m.id === lang)?.label}>
+            {LANG_META.find((m) => m.id === lang)?.native ?? "EN"}
+          </button>
           <ConnectButton showBalance={false} chainStatus="icon" accountStatus="avatar" />
         </div>
       </header>
@@ -148,17 +162,21 @@ export default function App() {
           onCreate={() => go("save")}
         />
 
+        {showInvite && <InviteLanding lang={lang} />}
+
         <section id="app" className="app-section" aria-labelledby="app-title">
           <div className="section-head">
-            <h2 id="app-title">Your pockets</h2>
-            <p>Every pocket is a goal with a date. Money in it stays put until then.</p>
+            <h2 id="app-title">{tr(lang, "pocketsTitle")}</h2>
+            <p>{tr(lang, "pocketsSub")}</p>
           </div>
 
           <div className="app-grid">
             <aside className="account">
               <AccountPanel balance={balance} loading={isConnected && balLoading} connected={isConnected} address={address} goals={ids.length} wrongNetwork={wrongNetwork} noMusd={noMusd} onGuide={toStart} />
               <BitcoinPanel pos={pos} connected={isConnected && !wrongNetwork} />
-              <SavingsVaultPanel />
+              <ProtectLoanPanel pos={pos} connected={isConnected && !wrongNetwork} lang={lang} musdBalance={balance} />
+              <SavingsVaultPanel lang={lang} />
+              <RevenuePanel lang={lang} />
             </aside>
 
             <div className="workspace">
@@ -192,7 +210,7 @@ export default function App() {
                   transition={{ duration: 0.32, ease: EASE }}
                 >
                   {tab === "goals" && (
-                    <GoalsPanel goalIds={ids} deployed={deployed} connected={isConnected} loading={isConnected && goalsLoading} noMusd={noMusd} pos={pos} onCreate={() => setTab("save")} onCoach={() => setTab("coach")} onGuide={toStart} />
+                    <GoalsPanel goalIds={ids} deployed={deployed} connected={isConnected} loading={isConnected && goalsLoading} noMusd={noMusd} pos={pos} lang={lang} onCreate={() => setTab("save")} onCoach={() => setTab("coach")} onGuide={toStart} />
                   )}
                   {tab === "save" && <SavePanel key={draft?.n ?? 0} draft={draft} deployed={deployed} noMusd={noMusd} onGuide={toStart} onCreated={() => { void refetchGoals(); setTab("goals"); }} />}
                   {tab === "coach" && <Coach pos={pos} walletMusd={balance} connected={isConnected && !wrongNetwork} onUse={(d) => { setDraft({ ...d, n: Date.now() }); setTab("save"); }} />}
@@ -202,7 +220,7 @@ export default function App() {
             </div>
           </div>
         </section>
-        <ProofPanel />
+        <ProofPanel lang={lang} />
       </main>
 
       <footer className="footer">
@@ -210,6 +228,7 @@ export default function App() {
           <div className="footer-brand">
             <Wordmark />
             <p>Bitcoin-backed savings goals on Mezo. Built for the AKINDO Mezo Buildathon, Access &amp; Distribution track.</p>
+            <p className="footer-badge" data-feature="testnet-badge">{tr(lang, "testnetOnly")} · {tr(lang, "feeNote")}</p>
           </div>
           <dl className="footer-addrs">
             <div><dt>MUSD Pocket v2</dt><dd><Addr value={POCKET_ADDRESS} /></dd></div>
@@ -482,7 +501,7 @@ const EXAMPLES = [
   { name: "Home deposit", target: "5,000", days: 365 },
 ];
 
-function GoalsPanel({ goalIds, deployed, connected, loading, noMusd, pos, onCreate, onCoach, onGuide }: { goalIds: bigint[]; deployed: boolean; connected: boolean; loading: boolean; noMusd: boolean; pos: MezoPosition; onCreate: () => void; onCoach: () => void; onGuide: () => void }) {
+function GoalsPanel({ goalIds, deployed, connected, loading, noMusd, pos, lang = "en", onCreate, onCoach, onGuide }: { goalIds: bigint[]; deployed: boolean; connected: boolean; loading: boolean; noMusd: boolean; pos: MezoPosition; lang?: Lang; onCreate: () => void; onCoach: () => void; onGuide: () => void }) {
   if (!deployed) {
     return <EmptyState title="Pockets open after deploy" body="Once the contract is live you can create goals like an Emergency fund, Travel or a Home deposit." />;
   }
@@ -543,7 +562,7 @@ function GoalsPanel({ goalIds, deployed, connected, loading, noMusd, pos, onCrea
   return (
     <div className="goal-list">
       {goalIds.map((id, i) => (
-        <GoalCard key={id.toString()} goalId={id} index={i} pos={pos} />
+        <GoalCard key={id.toString()} goalId={id} index={i} pos={pos} lang={lang} />
       ))}
     </div>
   );
@@ -576,7 +595,7 @@ function GoalSkeleton() {
   );
 }
 
-function GoalCard({ goalId, index, pos }: { goalId: bigint; index: number; pos: MezoPosition }) {
+function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: number; pos: MezoPosition; lang?: Lang }) {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash });
   const { data, isLoading, refetch } = useReadContract({
@@ -667,7 +686,7 @@ function GoalCard({ goalId, index, pos }: { goalId: bigint; index: number; pos: 
             </div>
           </div>
           <button type="submit" className="btn btn-primary btn-block" disabled={busy || !(Number(addAmt) > 0)}>
-            {dep.busy ? <span className="spinner" /> : <IconDeposit />} Add MUSD
+            {dep.busy ? <span className="spinner" /> : <IconDeposit />} {tr(lang, "addMusd")}
           </button>
           <p className="fund-note">One signature and one transaction: MUSD's permit replaces the separate approval.</p>
         </form>
@@ -693,14 +712,17 @@ function GoalCard({ goalId, index, pos }: { goalId: bigint; index: number; pos: 
           {tooRisky && <div className="form-error" role="alert">That would take your loan under 150%. The contract refuses it; most you can borrow here is {fmtNum(floorRoom)} MUSD.</div>}
           {!tooRisky && after !== undefined && after < COMFORT && <div className="notice notice-warn" role="note"><span>Below 200% your loan is more exposed to BTC drops and to redemptions. Fine for testing; be careful with real money.</span></div>}
           <button type="submit" className="btn btn-primary btn-block" disabled={busy || !(bAmt > 0) || tooRisky}>
-            {bor.busy ? <span className="spinner" /> : <IconBitcoin />} Sign and borrow into goal
+            {bor.busy ? <span className="spinner" /> : <IconBitcoin />} {tr(lang, "borrowIntoGoal")}
           </button>
           <p className="fund-note">You sign Mezo's own borrow message with this goal as the recipient. The MUSD never touches your wallet, and the whole thing reverts if your loan would end under 150%.</p>
         </form>
       )}
 
-      <button className={`btn btn-block ${locked ? "btn-danger" : "btn-soft"}`} disabled={busy || balance === 0n} onClick={withdraw}>
-        {locked ? "Early withdraw (2% fee)" : "Withdraw unlocked"}
+      {isFamily && (
+        <InviteCopyButton goalId={goalId} lang={lang} />
+      )}
+      <button className={`btn btn-block ${locked ? "btn-danger" : "btn-soft"}`} disabled={busy || balance === 0n} onClick={withdraw} data-feature="early-withdraw">
+        {locked ? tr(lang, "earlyWithdraw") : tr(lang, "withdrawUnlocked")}
       </button>
       {(bor.hash || dep.hash || hash) && <TxLine hash={(bor.hash || dep.hash || hash)!} />}
     </m.article>

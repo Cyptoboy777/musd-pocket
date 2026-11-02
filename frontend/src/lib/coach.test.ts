@@ -24,7 +24,7 @@ describe("risk math (Mezo MUSD loans)", () => {
 
 describe("parseGoal", () => {
   it("amount + month", () => {
-    const p = parseGoal("I want to save 1,200 for a trip to Goa by March", NOW);
+    const p = parseGoal("I want to save 1,200 for a trip to Lisbon by March", NOW);
     expect(p.name).toBe("Travel");
     expect(p.target).toBe(1200);
     expect(p.days).toBe(128); // 24 Oct → 1 Mar

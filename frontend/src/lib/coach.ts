@@ -1,5 +1,5 @@
 /**
- * Pocket Coach: turns a sentence like "save 1,200 for a trip to Goa by March" into a dated
+ * Pocket Coach: turns a sentence like "save 1,200 for a trip to Lisbon by March" into a dated
  * MUSD goal and a plan to fund it, using the wallet's real MUSD balance and Mezo loan.
  *
  * It is deliberately rules-based and runs entirely in the browser: no API key, no server,

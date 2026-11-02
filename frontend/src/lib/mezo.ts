@@ -1,5 +1,5 @@
 import { useAccount, useBalance, usePublicClient, useReadContracts, useSignTypedData, useWriteContract } from "wagmi";
-import { formatUnits, parseSignature, parseUnits, type Hex } from "viem";
+import { formatUnits, parseSignature, parseUnits, type Address, type Hex } from "viem";
 import { MEZO, MEZO_TOKEN, MUSD_ADDRESS, POCKET_ADDRESS, mezoTestnet } from "./chains";
 import { musdPocketAbi } from "./abi";
 import type { Trove } from "./risk";
@@ -42,6 +42,51 @@ export const sortedTrovesAbi = [
     outputs: [{ type: "address" }, { type: "address" }],
   },
 ] as const;
+
+
+export const borrowerOperationsAbi = [
+  {
+    type: "function", name: "addColl", stateMutability: "payable",
+    inputs: [{ name: "_upperHint", type: "address" }, { name: "_lowerHint", type: "address" }],
+    outputs: [],
+  },
+  {
+    type: "function", name: "repayMUSD", stateMutability: "nonpayable",
+    inputs: [
+      { name: "_amount", type: "uint256" },
+      { name: "_upperHint", type: "address" },
+      { name: "_lowerHint", type: "address" },
+    ],
+    outputs: [],
+  },
+  { type: "function", name: "closeTrove", stateMutability: "nonpayable", inputs: [], outputs: [] },
+] as const;
+
+/** Compute SortedTroves insert hints for a projected NICR. */
+type ReadClient = {
+  readContract: (args: any) => Promise<any>;
+};
+
+export async function computeHints(
+  client: ReadClient,
+  collWei: bigint,
+  debtWei: bigint,
+): Promise<{ upper: Address; lower: Address; nicr: bigint }> {
+  if (debtWei === 0n) {
+    const zero = "0x0000000000000000000000000000000000000000" as Address;
+    return { upper: zero, lower: zero, nicr: 0n };
+  }
+  const nicr = (collWei * 10n ** 20n) / debtWei;
+  const [hint] = await client.readContract({
+    address: MEZO.hintHelpers, abi: hintHelpersAbi, functionName: "getApproxHint",
+    args: [nicr, 15n, BigInt(Math.floor(Math.random() * 1e9))],
+  });
+  const [upper, lower] = await client.readContract({
+    address: MEZO.sortedTroves, abi: sortedTrovesAbi, functionName: "findInsertPosition",
+    args: [nicr, hint, hint],
+  });
+  return { upper, lower, nicr };
+}
 
 export const permitAbi = [
   { type: "function", name: "nonces", stateMutability: "view", inputs: [{ name: "owner", type: "address" }], outputs: [{ type: "uint256" }] },
@@ -211,5 +256,59 @@ export function useMezoActions() {
     });
   }
 
-  return { depositWithPermit, sendWithPermit, borrowToGoal };
+  /**
+   * One-click addColl via BorrowerOperations with SortedTroves hints.
+   * `btcStr` is BTC amount sent as msg.value (18 decimals on Mezo).
+   */
+  async function addCollateral(btcStr: string, trove: Trove): Promise<Hex> {
+    if (!address || !client) throw new Error("Connect a wallet first.");
+    const value = parseUnits(btcStr, 18);
+    if (value <= 0n) throw new Error("Enter a BTC amount greater than zero.");
+    const collWei = parseUnits((trove.coll + Number(btcStr)).toFixed(18), 18);
+    const debtWei = parseUnits(trove.debt.toFixed(18), 18);
+    const { upper, lower } = await computeHints(client, collWei, debtWei);
+    return writeContractAsync({
+      address: MEZO.borrowerOperations, abi: borrowerOperationsAbi, functionName: "addColl",
+      args: [upper, lower], value, chainId: mezoTestnet.id,
+    });
+  }
+
+  /** Repay MUSD against the caller's trove (must approve MUSD to BorrowerOperations first if needed). */
+  async function repayLoan(amountStr: string, trove: Trove): Promise<Hex> {
+    if (!address || !client) throw new Error("Connect a wallet first.");
+    const amount = parseUnits(amountStr, 18);
+    if (amount <= 0n) throw new Error("Enter a MUSD amount greater than zero.");
+    const collWei = parseUnits(trove.coll.toFixed(18), 18);
+    const newDebt = Math.max(0, trove.debt - Number(amountStr));
+    const debtWei = parseUnits(newDebt.toFixed(18), 18);
+    const { upper, lower } = await computeHints(client, collWei, debtWei === 0n ? 1n : debtWei);
+    // Ensure allowance for BorrowerOperations
+    const allowanceAbi = [{ type: "function", name: "allowance", stateMutability: "view", inputs: [{ type: "address" }, { type: "address" }], outputs: [{ type: "uint256" }] },
+      { type: "function", name: "approve", stateMutability: "nonpayable", inputs: [{ type: "address" }, { type: "uint256" }], outputs: [{ type: "bool" }] }] as const;
+    const allowance = await client.readContract({
+      address: MUSD_ADDRESS, abi: allowanceAbi, functionName: "allowance",
+      args: [address, MEZO.borrowerOperations],
+    });
+    if ((allowance as bigint) < amount) {
+      await writeContractAsync({
+        address: MUSD_ADDRESS, abi: allowanceAbi, functionName: "approve",
+        args: [MEZO.borrowerOperations, amount], chainId: mezoTestnet.id,
+      });
+    }
+    return writeContractAsync({
+      address: MEZO.borrowerOperations, abi: borrowerOperationsAbi, functionName: "repayMUSD",
+      args: [amount, upper, lower], chainId: mezoTestnet.id,
+    });
+  }
+
+  /** Close the caller's trove. Needs enough MUSD in wallet to cover outstanding debt. */
+  async function closeLoan(): Promise<Hex> {
+    if (!address) throw new Error("Connect a wallet first.");
+    return writeContractAsync({
+      address: MEZO.borrowerOperations, abi: borrowerOperationsAbi, functionName: "closeTrove",
+      chainId: mezoTestnet.id,
+    });
+  }
+
+  return { depositWithPermit, sendWithPermit, borrowToGoal, addCollateral, repayLoan, closeLoan };
 }
