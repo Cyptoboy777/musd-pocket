@@ -1,0 +1,1 @@
+MUSD Pocket Wave 2: global Bitcoin-backed savings goals on Mezo testnet. Verified borrow-into-goal 0xEC03…D460 with live ICR/liq, Protect addColl/repay, invite chip-in, honest sMUSD flag, 2% early fee shown in-app. Live https://musd-pocket-mezo.vercel.app (not musd-pocket.vercel.app). Testnet only. Docs + tester guide ready for real friends.

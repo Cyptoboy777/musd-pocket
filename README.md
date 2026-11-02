@@ -2,9 +2,9 @@
 
 # MUSD Pocket
 
-> Money that keeps its promises. Lock MUSD, Mezo's Bitcoin-backed dollar, into savings goals with a date. Withdraw on time, or early for a 2% fee. Borrow against your BTC straight into a goal. Send MUSD to anyone with an on-chain memo.
+> Money that keeps its promises. Lock MUSD, Mezo's Bitcoin-backed dollar, into savings goals with a date. Withdraw on time, or early for a 2% fee. Borrow against your BTC straight into a goal. Invite friends worldwide to chip in. Send MUSD to anyone with an on-chain memo.
 
-India-first **goal savings + memo payments** app for [Mezo](https://mezo.org)’s Bitcoin-backed **MUSD**.
+Global **goal savings + memo payments** app for [Mezo](https://mezo.org)’s Bitcoin-backed **MUSD**.
 Built for the [AKINDO Mezo Buildathon](https://app.akindo.io/wave-hacks/OVOO0gdrVU8379D10) · Access & Distribution track · `@Cryptoboy_777`.
 
 **Everything below is Mezo testnet (chain 31611) unless a line says mainnet.**
@@ -14,13 +14,15 @@ Built for the [AKINDO Mezo Buildathon](https://app.akindo.io/wave-hacks/OVOO0gdr
 - **Live app (primary):** https://musd-pocket-mezo.vercel.app
 - Also: https://musd-pocket-wheat.vercel.app · GitHub Pages: https://cyptoboy777.github.io/musd-pocket/
 - **Do not use** `musd-pocket.vercel.app` (another team's app).
-- **MUSDPocket v2 (verified):** [`0xEC03F758219746b6e773f107a05cF17b66E7D460`](https://explorer.test.mezo.org/address/0xEC03F758219746b6e773f107a05cF17b66E7D460) · deploy [`0xa58ddba9…64f6`](https://explorer.test.mezo.org/tx/0xa58ddba9e9c1fb87ee211016f729491806bf74e06ce23fa38a97fe0d092d64f6)
-- **Borrow-into-goal:** one Mezo `WithdrawMUSD` signature, recipient = Pocket; live ICR, liquidation price, and a max-safe recompute right before send. Contract reverts under 150% ICR.
-- **Loan readiness:** Mezo minimum is 1,800 MUSD principal + 200 MUSD gas deposit (about 2,000 MUSD total debt at open). Small savers keep the plain MUSD deposit path; borrow-into-goal only enables with a valid trove.
-- **Savings Vault (sMUSD):** documented on mainnet at `0xb4D498029af77680cD1eF828b967f010d06C51CC`. `eth_getCode` on that address on testnet 31611 returns empty, so the app labels it documented-but-not-live. sMUSD does **not** raise trove ICR.
-- **Proof:** I only have my own test wallets so far. The in-app Proof section lists them with explorer tx links and labels them as my own (deployer, Wave 1 second key, and three Wave 2 generated wallets funded from the deployer). No third-party users yet. Details in [docs/onchain-activity.md](docs/onchain-activity.md).
-
-![MUSD Pocket landing](docs/redesign-desktop-landing.png)
+- **MUSDPocket v2 (verified):** [`0xEC03F758219746b6e773f107a05cF17b66E7D460`](https://explorer.test.mezo.org/address/0xEC03F758219746b6e773f107a05cF17b66E7D460)
+- **Full loan lifecycle in-app:** borrow-into-goal, repay, add collateral (Protect), early-withdraw fee path; close trove control wired.
+- **Protect my loan:** warns as ICR approaches danger; one-click addColl / repay via BorrowerOperations with hints; previews ICR and liquidation price before send.
+- **Shared-goal invite link:** friends can open without a wallet first, then guided onboarding (add network, faucet, connect, chip in).
+- **Loan readiness:** Mezo minimum ~1,800 MUSD principal + 200 MUSD gas deposit ≈ 2,000 MUSD total debt at open. Small savers keep the plain deposit path.
+- **Savings Vault (sMUSD):** feature-flagged; activates only if vault bytecode exists on the connected chain. On testnet 31611 code is empty (honest panel). sMUSD does **not** raise trove ICR.
+- **Revenue:** early-unlock fee 2% (cap 5%), chip-in 0% — shown in-product and in docs.
+- **i18n:** English default; optional ES / PT / ZH / FR for key CTAs. Global audience copy.
+- **Proof:** self-owned test wallets labelled honestly; empty Community testers section ready for real third parties. See [docs/ONCHAIN-ACTIVITY.md](docs/ONCHAIN-ACTIVITY.md) and [docs/TESTER-GUIDE.md](docs/TESTER-GUIDE.md).
 
 ## Design
 
@@ -33,7 +35,7 @@ Type: Gloock + Geist. Tokens in `frontend/src/styles/tokens.css`.
 - **MUSDPocket v2 (Mezo testnet, verified):** [`0xEC03…D460`](https://explorer.test.mezo.org/address/0xEC03F758219746b6e773f107a05cF17b66E7D460)
 - **v1 (Wave 1):** [`0x2d5f…A1C8`](https://explorer.test.mezo.org/address/0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8)
 - **Repo:** https://github.com/Cyptoboy777/musd-pocket
-- **On-chain activity:** [docs/onchain-activity.md](docs/onchain-activity.md) · **Security:** [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md)
+- **On-chain activity:** [docs/ONCHAIN-ACTIVITY.md](docs/ONCHAIN-ACTIVITY.md) · **Tester guide:** [docs/TESTER-GUIDE.md](docs/TESTER-GUIDE.md) · **Security:** [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md)
 
 ## Quick start
 
@@ -42,10 +44,7 @@ Type: Gloock + Geist. Tokens in `frontend/src/styles/tokens.css`.
 ```bash
 export PATH="$HOME/.foundry/bin:$PATH"
 cd contracts
-forge test -vv
-# bytecode match for the deployed v2:
-# forge verify-bytecode 0xEC03F758219746b6e773f107a05cF17b66E7D460 src/MUSDPocketV2.sol:MUSDPocketV2 \
-#   --constructor-args <MUSD> <BOS> <TroveManager> <PriceFeed> <owner> --rpc-url https://rpc.test.mezo.org
+forge test
 ```
 
 ### Frontend
@@ -53,6 +52,7 @@ forge test -vv
 ```bash
 cd frontend
 npm install
+npm test
 npm run build
 ```
 

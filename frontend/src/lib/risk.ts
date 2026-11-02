@@ -85,3 +85,28 @@ export function btcNeededFor(debt: number, price: number, target = COMFORT): num
 export function btcNeededForMinLoan(price: number, target = COMFORT): number {
   return btcNeededFor(MIN_TOTAL_DEBT_AT_OPEN, price, target);
 }
+
+
+/** Ratio after adding `btc` more collateral (no debt change). */
+export function ratioAfterAddColl(t: Trove, price: number, btc: number): number {
+  return ratio({ coll: t.coll + Math.max(0, btc), debt: t.debt }, price);
+}
+
+/** Ratio after repaying `amount` MUSD (debt never below zero). */
+export function ratioAfterRepay(t: Trove, price: number, amount: number): number {
+  return ratio({ coll: t.coll, debt: Math.max(0, t.debt - Math.max(0, amount)) }, price);
+}
+
+/** True when ICR is in watch/risky/liquidatable — surface Protect CTA. */
+export function needsProtection(r: number | undefined): boolean {
+  if (r === undefined || !Number.isFinite(r)) return false;
+  return r < COMFORT;
+}
+
+/** Warning level for Protect panel copy. */
+export function protectLevel(r: number | undefined): "none" | "ok" | "watch" | "danger" {
+  if (r === undefined || !Number.isFinite(r)) return "none";
+  if (r >= COMFORT) return "ok";
+  if (r >= CCR) return "watch";
+  return "danger";
+}
