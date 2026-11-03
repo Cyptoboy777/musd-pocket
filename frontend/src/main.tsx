@@ -27,6 +27,14 @@ theme.colors.modalBorder = "rgba(230, 194, 122, 0.16)";
 theme.colors.connectButtonBackground = "#10261E";
 theme.colors.actionButtonBorder = "rgba(230, 194, 122, 0.18)";
 
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {
+      /* installable PWA is best-effort; never block the app */
+    });
+  });
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <WagmiProvider config={config}>

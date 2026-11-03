@@ -5,6 +5,9 @@ import {
 import { parseInvite, buildInviteUrl, isInviteLanding } from "./invite";
 import { hasBytecode } from "./vault";
 import { cycleLang, loadLang, t, type Lang } from "./i18n";
+import {
+  earlyFeeAmount, earlyFeePreview, isTeamTestWallet, shareIntents, TEAM_TEST_WALLETS,
+} from "./stats";
 
 describe("protect math", () => {
   const t0 = { coll: 0.04, debt: 2000 };
@@ -64,5 +67,49 @@ describe("global i18n", () => {
   });
   it("loadLang falls back to en without storage noise", () => {
     expect(["en", "es", "pt", "zh", "fr"]).toContain(loadLang());
+  });
+});
+
+describe("early fee math", () => {
+  it("matches contract bps division", () => {
+    expect(earlyFeeAmount(1000n * 10n ** 18n, 200)).toBe(20n * 10n ** 18n);
+    expect(earlyFeeAmount(0n, 200)).toBe(0n);
+    const p = earlyFeePreview(1000, 200);
+    expect(p.fee).toBeCloseTo(20, 8);
+    expect(p.net).toBeCloseTo(980, 8);
+    expect(p.pct).toBe(2);
+  });
+});
+
+describe("team test wallet labels", () => {
+  it("labels known builder wallets only", () => {
+    expect(TEAM_TEST_WALLETS.length).toBeGreaterThanOrEqual(5);
+    expect(isTeamTestWallet("0xA8F5Ce266d62430f4B83C94fC5ADfb737948d1EA")).toBe(true);
+    expect(isTeamTestWallet("0xA8F5Ce266d62430f4B83C94fC5ADfb737948d1EA".toLowerCase())).toBe(true);
+    expect(isTeamTestWallet("0x0000000000000000000000000000000000000001")).toBe(false);
+  });
+});
+
+describe("share intents", () => {
+  it("builds X Telegram WhatsApp and copy entries", () => {
+    const intents = shareIntents("https://musd-pocket-mezo.vercel.app/?invite=6", "Chip in");
+    expect(intents.map((i) => i.id)).toEqual(["x", "telegram", "whatsapp", "copy", "native"]);
+    expect(intents.find((i) => i.id === "x")?.href).toContain("twitter.com/intent/tweet");
+    expect(intents.find((i) => i.id === "telegram")?.href).toContain("t.me/share");
+    expect(intents.find((i) => i.id === "whatsapp")?.href).toContain("wa.me");
+  });
+});
+
+describe("i18n wave2 upgrade keys", () => {
+  it("covers tabs empty states stats and fee preview in all langs", () => {
+    const langs: Lang[] = ["en", "es", "pt", "zh", "fr"];
+    for (const lang of langs) {
+      expect(t(lang, "tabPockets").length).toBeGreaterThan(0);
+      expect(t(lang, "emptyConnectTitle").length).toBeGreaterThan(0);
+      expect(t(lang, "earlyFeePreview").length).toBeGreaterThan(0);
+      expect(t(lang, "statsTitle").length).toBeGreaterThan(0);
+      expect(t(lang, "closeNeedMusd").length).toBeGreaterThan(0);
+      expect(t(lang, "heroExample").length).toBeGreaterThan(0);
+    }
   });
 });

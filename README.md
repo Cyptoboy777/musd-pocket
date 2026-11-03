@@ -21,7 +21,12 @@ Built for the [AKINDO Mezo Buildathon](https://app.akindo.io/wave-hacks/OVOO0gdr
 - **Loan readiness:** Mezo minimum ~1,800 MUSD principal + 200 MUSD gas deposit ≈ 2,000 MUSD total debt at open. Small savers keep the plain deposit path.
 - **Savings Vault (sMUSD):** feature-flagged; activates only if vault bytecode exists on the connected chain. On testnet 31611 code is empty (honest panel). sMUSD does **not** raise trove ICR.
 - **Revenue:** early-unlock fee 2% (cap 5%), chip-in 0% — shown in-product and in docs.
-- **i18n:** English default; optional ES / PT / ZH / FR for key CTAs. Global audience copy.
+- **i18n:** English default; optional ES / PT / ZH / FR for key CTAs (tabs, empty states, fee preview, stats). Global audience copy.
+- **/stats:** Public on-chain stats (goal count, TVL, deposits, fee pool, recent events with explorer links). Team test wallets labelled.
+- **Shareable goal card:** Invite `?invite=N` shows progress; Web Share + copy + X/Telegram/WhatsApp intents; static `og.jpg` OG fallback (dynamic `/api/og` via `@vercel/og` not supported as Edge Function in this Vite project).
+- **UX:** Early-withdraw fee preview + confirm; Protect close-trove confirm + insufficient-MUSD pre-check; hero sample clearly labelled example-only.
+- **PWA:** `manifest.webmanifest` + light app-shell service worker (no stale chain data).
+- **Mezo Passport:** Not bundled — `@mezo-org/passport@0.17.2` fails clean ESM import (directory imports without package exports) and peers pin React 18 / RainbowKit 2.0.2 while this app uses React 19 / RainbowKit 2.2.x. RainbowKit EVM connect kept intact.
 - **Proof:** self-owned test wallets labelled honestly; empty Community testers section ready for real third parties. See [docs/ONCHAIN-ACTIVITY.md](docs/ONCHAIN-ACTIVITY.md) and [docs/TESTER-GUIDE.md](docs/TESTER-GUIDE.md).
 
 ## Design
@@ -48,6 +53,8 @@ forge test
 ```
 
 ### Frontend
+
+Tests: **47 Foundry** + **26 vitest** (Wave 2 upgrade).
 
 ```bash
 cd frontend

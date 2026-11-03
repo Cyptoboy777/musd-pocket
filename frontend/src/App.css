@@ -645,3 +645,63 @@ button { font: inherit; color: inherit; }
   .section-head, .invite-section, .proof-section, .app-section { padding-left: 16px; padding-right: 16px; }
   .panel { border-radius: 18px; }
 }
+
+/* Confirm dialog */
+.confirm-backdrop {
+  position: fixed; inset: 0; z-index: 80;
+  background: rgba(4, 12, 9, 0.72);
+  backdrop-filter: blur(6px);
+  display: grid; place-items: center;
+  padding: 20px;
+}
+.confirm-dialog {
+  width: min(420px, 100%);
+  display: grid; gap: 14px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+}
+.confirm-dialog h3 {
+  font-family: var(--font-display);
+  font-weight: 400; font-size: 1.45rem; letter-spacing: -0.02em;
+}
+.confirm-body { color: var(--muted); display: grid; gap: 10px; }
+.confirm-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* Stats */
+.stats-section {
+  max-width: var(--maxw); margin: 0 auto;
+  padding: clamp(32px, 6vh, 64px) 28px 8px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.stats-card { display: grid; gap: 6px; padding: 20px; }
+.stats-label { color: var(--muted); font-size: var(--fs-sm); }
+.stats-value { font-family: var(--font-display); font-size: 1.6rem; font-weight: 400; letter-spacing: -0.02em; }
+.stats-hint { color: var(--muted); font-size: var(--fs-sm); }
+.stats-team, .stats-events { margin-top: 14px; display: grid; gap: 10px; }
+.stats-wallet-list, .stats-event-list {
+  list-style: none; margin: 0; padding: 0; display: grid; gap: 10px;
+}
+.stats-wallet-list li, .stats-event-list li {
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 10px 0; border-bottom: 1px solid var(--line);
+}
+.tag-team {
+  margin-left: 6px; font-size: 11px; color: var(--gold-500);
+  border: 1px solid rgba(230,194,122,0.35); border-radius: 999px; padding: 1px 8px;
+}
+.share-row { display: grid; gap: 8px; margin-top: 12px; }
+.share-intents { display: flex; flex-wrap: wrap; gap: 8px; }
+.float-example-note {
+  display: block; margin-top: 4px; font-size: 11px; color: var(--muted); max-width: 16em;
+}
+@media (max-width: 860px) {
+  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .stats-section { padding-left: 16px; padding-right: 16px; }
+}
