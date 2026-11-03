@@ -8,6 +8,7 @@ import { useAsyncTx } from "../hooks/useAsyncTx";
 import { IconBitcoin, IconShield } from "./Icons";
 import type { Lang } from "../lib/i18n";
 import { t } from "../lib/i18n";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 const num = (n: number, d = 2) => n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 const usd = (n: number) => "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -29,6 +30,7 @@ export function ProtectLoanPanel({
   const [mode, setMode] = useState<"add" | "repay">("add");
   const [btcAmt, setBtcAmt] = useState("0.001");
   const [repayAmt, setRepayAmt] = useState("50");
+  const [closeOpen, setCloseOpen] = useState(false);
   const addTx = useAsyncTx("protect-add", "Added collateral");
   const repayTx = useAsyncTx("protect-repay", "Repaid MUSD");
   const closeTx = useAsyncTx("protect-close", "Closed trove");
@@ -37,6 +39,8 @@ export function ProtectLoanPanel({
   const level = protectLevel(r);
   const btcN = Number(btcAmt) || 0;
   const repayN = Number(repayAmt) || 0;
+  const debtNeeded = trove ? trove.debt : 0;
+  const canClose = musdBalance + 1e-9 >= debtNeeded && debtNeeded > 0;
 
   const preview = useMemo(() => {
     if (!trove || !price) return null;
@@ -155,11 +159,18 @@ export function ProtectLoanPanel({
         </form>
       )}
 
+      {!canClose && (
+        <div className="notice notice-warn" role="note" data-feature="close-need-musd">
+          <span>{t(lang, "closeNeedMusd")} Need about {num(debtNeeded, 0)} MUSD; wallet has {num(musdBalance)}.</span>
+        </div>
+      )}
+
       <button
         type="button"
         className="btn btn-soft btn-block"
         disabled={busy}
-        onClick={() => void closeTx.run(() => actions.closeLoan())}
+        data-feature="close-trove"
+        onClick={() => setCloseOpen(true)}
       >
         {closeTx.busy ? <span className="spinner" /> : t(lang, "protectClose")}
       </button>
@@ -169,6 +180,32 @@ export function ProtectLoanPanel({
           tx: {(addTx.hash || repayTx.hash || closeTx.hash)!.slice(0, 10)}…
         </a>
       )}
+
+      <ConfirmDialog
+        open={closeOpen}
+        title={t(lang, "closeConfirmTitle")}
+        danger
+        busy={closeTx.busy}
+        confirmLabel={t(lang, "closeConfirm")}
+        cancelLabel="Cancel"
+        onCancel={() => setCloseOpen(false)}
+        onConfirm={() => {
+          if (!canClose) return;
+          setCloseOpen(false);
+          void closeTx.run(() => actions.closeLoan());
+        }}
+        body={
+          <>
+            <p>{t(lang, "closeConfirmBody")}</p>
+            <dl className="account-meta">
+              <div><dt>Debt</dt><dd className="tnum">{num(debtNeeded)} MUSD</dd></div>
+              <div><dt>Wallet</dt><dd className="tnum">{num(musdBalance)} MUSD</dd></div>
+              <div><dt>Collateral</dt><dd className="tnum">{num(trove.coll, 4)} BTC</dd></div>
+            </dl>
+            {!canClose && <p className="form-error" role="alert">{t(lang, "closeNeedMusd")}</p>}
+          </>
+        }
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { musdPocketAbi } from "../lib/abi";
 import { POCKET_ADDRESS, mezoTestnet } from "../lib/chains";
 import { useMezoActions } from "../lib/mezo";
 import { parseInvite, buildInviteUrl } from "../lib/invite";
+import { canNativeShare, shareIntents } from "../lib/stats";
 import { useAsyncTx } from "../hooks/useAsyncTx";
 import { useTxFeedback } from "../hooks/useTxFeedback";
 import { IconCheck, IconCopy, IconExternal, IconUsers } from "./Icons";
@@ -24,6 +25,11 @@ const CHAIN_PARAMS = {
 
 function fmt(n: bigint | undefined) {
   if (n === undefined) return "—";
+  return Number(formatUnits(n, 18)).toLocaleString("en-US", { maximumFractionDigits: 2 });
+}
+
+function fmtShort(n: bigint | undefined) {
+  if (n === undefined) return "0";
   return Number(formatUnits(n, 18)).toLocaleString("en-US", { maximumFractionDigits: 2 });
 }
 
@@ -58,6 +64,12 @@ export function InviteLanding({ lang = "en" }: { lang?: Lang }) {
   const unlocked = unlockTime !== undefined ? new Date(Number(unlockTime) * 1000).toLocaleDateString() : "—";
   const canChip = !!isConnected && !!isFamily && (!!isMember || address?.toLowerCase() === (owner as string | undefined)?.toLowerCase());
   const isOwner = !!address && !!owner && address.toLowerCase() === (owner as string).toLowerCase();
+  const pct = target && target > 0n ? Math.min(100, Number((balance as bigint) * 10000n / (target as bigint)) / 100) : 0;
+  const shareUrl = buildInviteUrl(
+    typeof window !== "undefined" ? window.location.origin + window.location.pathname : "https://musd-pocket-mezo.vercel.app/",
+    goalId!,
+  );
+  const ogImage = `https://musd-pocket-mezo.vercel.app/api/og?invite=${goalId}&name=${encodeURIComponent(String(name || "Savings goal"))}&saved=${encodeURIComponent(fmtShort(balance as bigint | undefined))}&target=${encodeURIComponent(fmtShort(target as bigint | undefined))}&pct=${pct.toFixed(0)}`;
 
   async function addNetwork() {
     const eth = (window as unknown as { ethereum?: { request: (a: { method: string; params?: unknown[] }) => Promise<unknown> } }).ethereum;
@@ -86,7 +98,7 @@ export function InviteLanding({ lang = "en" }: { lang?: Lang }) {
       </div>
 
       <div className="invite-grid">
-        <article className="panel invite-card">
+        <article className="panel invite-card" data-feature="shareable-goal-card">
           {isLoading ? (
             <span className="skeleton" style={{ height: 96 }} />
           ) : error || !goal || !active ? (
@@ -103,9 +115,14 @@ export function InviteLanding({ lang = "en" }: { lang?: Lang }) {
                 <div><dt>Owner</dt><dd className="tnum">{(owner as string).slice(0, 6)}…{(owner as string).slice(-4)}</dd></div>
                 <div><dt>Goal #</dt><dd className="tnum">{goalId!.toString()}</dd></div>
               </dl>
+              <div className="progress" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
+                <div className="bar bar-lg"><i style={{ transform: `scaleX(${pct / 100})` }} /></div>
+                <div className="progress-legend"><span className="tnum">{pct.toFixed(0)}%</span></div>
+              </div>
               {!isFamily && (
                 <p className="btc-copy faint">This goal is not marked shared. Only the owner can deposit. Ask them to create a shared goal.</p>
               )}
+              <ShareRow url={shareUrl} lang={lang} title={`Chip in to ${(name as string) || "my"} MUSD Pocket on Mezo`} ogImage={ogImage} />
             </>
           )}
         </article>
@@ -203,25 +220,60 @@ function OwnerAddMember({ goalId }: { goalId: bigint }) {
   );
 }
 
-/** Copy-invite control for shared goal owners (used inside GoalCard). */
-export function InviteCopyButton({ goalId, owner, lang = "en" }: { goalId: bigint; owner?: string; lang?: Lang }) {
+function ShareRow({ url, lang, title, ogImage }: { url: string; lang: Lang; title: string; ogImage?: string }) {
   const [copied, setCopied] = useState(false);
+  const intents = shareIntents(url, title);
+  const native = canNativeShare();
+
+  async function onNative() {
+    try {
+      await navigator.share({ title: "MUSD Pocket", text: title, url });
+    } catch { /* user cancelled */ }
+  }
+
+  function onCopy() {
+    void navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    });
+  }
+
+  return (
+    <div className="share-row" data-feature="share-intents">
+      {native && (
+        <button type="button" className="btn btn-primary btn-block" onClick={() => void onNative()}>
+          {t(lang, "shareNative")}
+        </button>
+      )}
+      <div className="share-intents">
+        <button type="button" className="btn btn-ghost" onClick={onCopy}>
+          {copied ? <IconCheck width={14} height={14} /> : <IconCopy width={14} height={14} />}
+          {copied ? t(lang, "inviteCopied") : t(lang, "inviteCopy")}
+        </button>
+        {intents.filter((i) => i.href).map((i) => (
+          <a key={i.id} className="btn btn-soft" href={i.href} target="_blank" rel="noreferrer">
+            {i.id === "x" ? t(lang, "shareX") : i.id === "telegram" ? t(lang, "shareTelegram") : t(lang, "shareWhatsApp")}
+          </a>
+        ))}
+      </div>
+      {ogImage && (
+        <p className="fund-note faint">
+          Preview image: <a href={ogImage} target="_blank" rel="noreferrer">/api/og</a> (static <code>og.jpg</code> fallback for crawlers that skip SPA).
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Copy-invite + share controls for shared goal owners (used inside GoalCard). */
+export function InviteCopyButton({ goalId, owner, lang = "en", goalName }: { goalId: bigint; owner?: string; lang?: Lang; goalName?: string }) {
   const url = buildInviteUrl(typeof window !== "undefined" ? window.location.origin + window.location.pathname : "https://musd-pocket-mezo.vercel.app/", goalId, owner);
   return (
-    <button
-      type="button"
-      className="btn btn-ghost btn-block"
-      data-feature="invite-copy"
-      onClick={() => {
-        void navigator.clipboard.writeText(url).then(() => {
-          setCopied(true);
-          window.setTimeout(() => setCopied(false), 1600);
-        });
-      }}
-    >
-      {copied ? <IconCheck width={14} height={14} /> : <IconCopy width={14} height={14} />}
-      {copied ? t(lang, "inviteCopied") : t(lang, "inviteCopy")}
-    </button>
+    <ShareRow
+      url={url}
+      lang={lang}
+      title={`Chip in to ${goalName || "my"} MUSD Pocket savings goal on Mezo testnet`}
+    />
   );
 }
 
@@ -233,4 +285,3 @@ export function useIsInvite(): boolean {
   }, []);
   return yes;
 }
-

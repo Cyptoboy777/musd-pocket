@@ -22,9 +22,12 @@ import { ProofPanel } from "./components/ProofPanel";
 import { ProtectLoanPanel } from "./components/ProtectLoanPanel";
 import { RevenuePanel } from "./components/RevenuePanel";
 import { InviteLanding, InviteCopyButton, useIsInvite } from "./components/InvitePanel";
+import { StatsPanel } from "./components/StatsPanel";
+import { ConfirmDialog } from "./components/ConfirmDialog";
 import { Coach, type Draft } from "./components/Coach";
 import { LIVE_APP } from "./lib/proof";
 import { cycleLang, LANG_META, loadLang, saveLang, t as tr, type Lang } from "./lib/i18n";
+import { earlyFeePreview } from "./lib/stats";
 import { useAsyncTx } from "./hooks/useAsyncTx";
 import { LogoMark, Wordmark } from "./components/Logo";
 import { Guilloche } from "./components/Guilloche";
@@ -37,11 +40,11 @@ import {
 } from "./components/Icons";
 
 type Tab = "goals" | "save" | "coach" | "send";
-const TABS: { id: Tab; label: string }[] = [
-  { id: "goals", label: "Pockets" },
-  { id: "save", label: "New goal" },
-  { id: "coach", label: "Coach" },
-  { id: "send", label: "Send" },
+const TAB_KEYS: { id: Tab; key: "tabPockets" | "tabNewGoal" | "tabCoach" | "tabSend" }[] = [
+  { id: "goals", key: "tabPockets" },
+  { id: "save", key: "tabNewGoal" },
+  { id: "coach", key: "tabCoach" },
+  { id: "send", key: "tabSend" },
 ];
 const EXPLORER = mezoTestnet.blockExplorers.default.url;
 const REPO = "https://github.com/Cyptoboy777/musd-pocket";
@@ -81,6 +84,14 @@ export default function App() {
   const [draft, setDraft] = useState<(Draft & { n: number }) | null>(null);
   const [lang, setLang] = useState<Lang>(() => (typeof window !== "undefined" ? loadLang() : "en"));
   const showInvite = useIsInvite();
+  const [showStats, setShowStats] = useState(() =>
+    typeof window !== "undefined" && (window.location.pathname.replace(/\/$/, "") === "/stats" || window.location.hash === "#stats")
+  );
+  useEffect(() => {
+    if (!showStats) return;
+    const t = window.setTimeout(() => document.getElementById("stats")?.scrollIntoView({ behavior: "smooth" }), 200);
+    return () => window.clearTimeout(t);
+  }, [showStats]);
   const pos = useMezoPosition();
   const deployed = POCKET_ADDRESS !== zeroAddress;
   const toggleLang = () => {
@@ -136,6 +147,7 @@ export default function App() {
             <a href="#start">{tr(lang, "navStart")}</a>
             <a href="#app">{tr(lang, "navPockets")}</a>
             <a href="#proof">{tr(lang, "navProof")}</a>
+            <a href="/stats" onClick={(e) => { e.preventDefault(); setShowStats(true); window.history.pushState({}, "", "/stats"); document.getElementById("stats")?.scrollIntoView({ behavior: "smooth" }); }}>{tr(lang, "navStats")}</a>
             <a href={`${EXPLORER}/address/${POCKET_ADDRESS}`} target="_blank" rel="noreferrer">
               Contract <IconExternal width={14} height={14} />
             </a>
@@ -160,6 +172,7 @@ export default function App() {
           musdLoading={isConnected && balLoading}
           goals={ids.length}
           onCreate={() => go("save")}
+          lang={lang}
         />
 
         {showInvite && <InviteLanding lang={lang} />}
@@ -196,7 +209,7 @@ export default function App() {
                 </div>
               )}
 
-              <Tabs tab={tab} setTab={setTab} />
+              <Tabs tab={tab} setTab={setTab} lang={lang} />
 
               <AnimatePresence mode="wait" initial={false}>
                 <m.div
@@ -220,6 +233,7 @@ export default function App() {
             </div>
           </div>
         </section>
+        <StatsPanel lang={lang} />
         <ProofPanel lang={lang} />
       </main>
 
@@ -241,6 +255,7 @@ export default function App() {
             <a href={LIVE_APP} target="_blank" rel="noreferrer">Live app <IconExternal width={14} height={14} /></a>
             <a href={EXPLORER} target="_blank" rel="noreferrer">Explorer <IconExternal width={14} height={14} /></a>
             <a href={REPO} target="_blank" rel="noreferrer">Source <IconExternal width={14} height={14} /></a>
+            <a href="/stats">Live stats</a>
             <a href={`${REPO}/blob/master/docs/onchain-activity.md`} target="_blank" rel="noreferrer">On-chain activity <IconExternal width={14} height={14} /></a>
             <a href={`${REPO}/blob/master/docs/SECURITY_REVIEW.md`} target="_blank" rel="noreferrer">Security review <IconExternal width={14} height={14} /></a>
             <a href={LINKS.faucet} target="_blank" rel="noreferrer">Faucet <IconExternal width={14} height={14} /></a>
@@ -296,7 +311,7 @@ function Hero({ balance, loading, connected, goals, onStart, onView, onGuide }: 
           <m.ul className="hero-facts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.6 }}>
             <li><IconBitcoin /> Backed by Bitcoin</li>
             <li><IconShield /> Self-custody vault</li>
-            <li><IconCode /> Open source, 69 tests, Slither-reviewed</li>
+            <li><IconCode /> Open source, 73 tests, Slither-reviewed</li>
           </m.ul>
         </div>
 
@@ -306,9 +321,10 @@ function Hero({ balance, loading, connected, goals, onStart, onView, onGuide }: 
           <m.div className="float-pocket" aria-hidden="true" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: EASE, delay: 0.9 }}>
             <ProgressRing pct={62} />
             <div>
-              <span className="float-label">Example pocket</span>
+              <span className="float-label" data-feature="hero-example">Example only</span>
               <strong>Emergency fund</strong>
               <span className="float-meta tnum">620 of 1,000 MUSD, 41 days left</span>
+              <span className="float-example-note">Sample illustration — not your wallet</span>
             </div>
           </m.div>
           <m.div className="float-lock" aria-hidden="true" initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: EASE, delay: 1.05 }}>
@@ -461,20 +477,20 @@ function AccountPanel({ balance, loading, connected, address, goals, wrongNetwor
 
 /* ───────────────────────── Tabs ───────────────────────── */
 
-function Tabs({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
-  const idx = TABS.findIndex((t) => t.id === tab);
+function Tabs({ tab, setTab, lang = "en" }: { tab: Tab; setTab: (t: Tab) => void; lang?: Lang }) {
+  const idx = TAB_KEYS.findIndex((t) => t.id === tab);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const onKey = (e: KeyboardEvent) => {
     if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
     e.preventDefault();
-    const n = (idx + (e.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length;
-    setTab(TABS[n].id);
+    const n = (idx + (e.key === "ArrowRight" ? 1 : TAB_KEYS.length - 1)) % TAB_KEYS.length;
+    setTab(TAB_KEYS[n].id);
     refs.current[n]?.focus();
   };
   return (
-    <div className="tabs" role="tablist" aria-label="Pocket actions" onKeyDown={onKey} style={{ "--i": idx, "--n": TABS.length } as CSSProperties}>
+    <div className="tabs" role="tablist" aria-label="Pocket actions" onKeyDown={onKey} style={{ "--i": idx, "--n": TAB_KEYS.length } as CSSProperties}>
       <span className="tabs-indicator" aria-hidden="true" />
-      {TABS.map((t, i) => (
+      {TAB_KEYS.map((t, i) => (
         <button
           key={t.id}
           ref={(el) => { refs.current[i] = el; }}
@@ -486,7 +502,7 @@ function Tabs({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
           className={`tab ${tab === t.id ? "active" : ""}`}
           onClick={() => setTab(t.id)}
         >
-          {t.label}
+          {tr(lang, t.key)}
         </button>
       ))}
     </div>
@@ -503,14 +519,14 @@ const EXAMPLES = [
 
 function GoalsPanel({ goalIds, deployed, connected, loading, noMusd, pos, lang = "en", onCreate, onCoach, onGuide }: { goalIds: bigint[]; deployed: boolean; connected: boolean; loading: boolean; noMusd: boolean; pos: MezoPosition; lang?: Lang; onCreate: () => void; onCoach: () => void; onGuide: () => void }) {
   if (!deployed) {
-    return <EmptyState title="Pockets open after deploy" body="Once the contract is live you can create goals like an Emergency fund, Travel or a Home deposit." />;
+    return <EmptyState title={tr(lang, "emptyDeployTitle")} body={tr(lang, "emptyDeployBody")} />;
   }
   if (!connected) {
     return (
       <div className="empty">
         <div className="empty-copy">
-          <h3>Connect a wallet to see your pockets</h3>
-          <p>Each pocket is a goal with a target and an unlock date. Here are a few people start with.</p>
+          <h3>{tr(lang, "emptyConnectTitle")}</h3>
+          <p>{tr(lang, "emptyConnectBody")}</p>
         </div>
         <ul className="examples" aria-label="Example goals">
           {EXAMPLES.map((e, i) => (
@@ -522,7 +538,7 @@ function GoalsPanel({ goalIds, deployed, connected, loading, noMusd, pos, lang =
             </li>
           ))}
         </ul>
-        <div className="empty-cta"><ConnectCta label="Connect wallet to start" /></div>
+        <div className="empty-cta"><ConnectCta label={tr(lang, "connectStart")} /></div>
         <p className="empty-foot">No wallet or no MUSD yet? <button type="button" className="link-btn" onClick={onGuide}>Follow the four-step guide</button>.</p>
       </div>
     );
@@ -537,8 +553,8 @@ function GoalsPanel({ goalIds, deployed, connected, loading, noMusd, pos, lang =
   if (!goalIds.length) {
     return noMusd ? (
       <EmptyState
-        title="Get some test MUSD first"
-        body="Pockets hold MUSD, and this wallet has none yet. The guide above gets you free test MUSD in about five minutes. You can create a goal now and fill it later."
+        title={tr(lang, "emptyNoMusdTitle")}
+        body={tr(lang, "emptyNoMusdBody")}
         action={
           <div className="empty-actions">
             <button className="btn btn-primary" onClick={onGuide}>Get test MUSD</button>
@@ -548,8 +564,8 @@ function GoalsPanel({ goalIds, deployed, connected, loading, noMusd, pos, lang =
       />
     ) : (
       <EmptyState
-        title="No pockets yet"
-        body="Create your first goal: pick a name, a target and an unlock date. It takes one transaction."
+        title={tr(lang, "emptyNoGoalsTitle")}
+        body={tr(lang, "emptyNoGoalsBody")}
         action={
           <div className="empty-actions">
             <button className="btn btn-primary" onClick={onCreate}><IconPlus /> Create a goal</button>
@@ -604,10 +620,16 @@ function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: 
     functionName: "getGoal",
     args: [goalId],
   });
+  const { data: feeBpsData } = useReadContract({
+    address: POCKET_ADDRESS,
+    abi: musdPocketAbi,
+    functionName: "earlyFeeBps",
+  });
   const actions = useMezoActions();
   const [addAmt, setAddAmt] = useState("");
   const [borrowAmt, setBorrowAmt] = useState("");
   const [mode, setMode] = useState<"add" | "borrow">("add");
+  const [earlyOpen, setEarlyOpen] = useState(false);
   const dep = useAsyncTx(`dep-${goalId}`, `Added ${addAmt || "MUSD"} MUSD`);
   const bor = useAsyncTx(`bor-${goalId}`, `Borrowed ${borrowAmt || ""} MUSD into the goal`);
 
@@ -638,8 +660,16 @@ function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: 
   const tooRisky = after !== undefined && after < POCKET_FLOOR;
   const liqAfter = t && bAmt > 0 ? liquidationPrice({ coll: t.coll, debt: t.debt + bAmt * 1.001 }) : undefined;
 
+  const feeBps = typeof feeBpsData === "number" ? feeBpsData : Number(feeBpsData ?? 200);
+  const feePrev = earlyFeePreview(toNum(balance), feeBps);
+
   function withdraw() {
     writeContract({ address: POCKET_ADDRESS, abi: musdPocketAbi, functionName: locked ? "earlyWithdraw" : "withdraw", args: [goalId] });
+  }
+
+  function onWithdrawClick() {
+    if (locked) setEarlyOpen(true);
+    else withdraw();
   }
 
   return (
@@ -719,12 +749,36 @@ function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: 
       )}
 
       {isFamily && (
-        <InviteCopyButton goalId={goalId} lang={lang} />
+        <InviteCopyButton goalId={goalId} lang={lang} goalName={name} />
       )}
-      <button className={`btn btn-block ${locked ? "btn-danger" : "btn-soft"}`} disabled={busy || balance === 0n} onClick={withdraw} data-feature="early-withdraw">
+      <button className={`btn btn-block ${locked ? "btn-danger" : "btn-soft"}`} disabled={busy || balance === 0n} onClick={onWithdrawClick} data-feature="early-withdraw">
         {locked ? tr(lang, "earlyWithdraw") : tr(lang, "withdrawUnlocked")}
       </button>
+      {locked && balance > 0n && (
+        <p className="fund-note" data-feature="early-fee-hint">
+          {tr(lang, "earlyFeePreview")}: {fmtNum(feePrev.fee)} MUSD ({feePrev.pct.toFixed(2)}%) · {tr(lang, "earlyFeeYouGet")} {fmtNum(feePrev.net)} MUSD
+        </p>
+      )}
       {(bor.hash || dep.hash || hash) && <TxLine hash={(bor.hash || dep.hash || hash)!} />}
+      <ConfirmDialog
+        open={earlyOpen}
+        title={tr(lang, "earlyFeeConfirm")}
+        danger
+        confirmLabel={tr(lang, "earlyFeeConfirm")}
+        cancelLabel={tr(lang, "earlyFeeCancel")}
+        onCancel={() => setEarlyOpen(false)}
+        onConfirm={() => { setEarlyOpen(false); withdraw(); }}
+        body={
+          <>
+            <p>{tr(lang, "earlyFeePreview")}</p>
+            <dl className="account-meta">
+              <div><dt>Locked</dt><dd className="tnum">{fmt(balance)} MUSD</dd></div>
+              <div><dt>{tr(lang, "earlyFeeYouPay")}</dt><dd className="tnum">{fmtNum(feePrev.fee)} MUSD ({feePrev.pct.toFixed(2)}%)</dd></div>
+              <div><dt>{tr(lang, "earlyFeeYouGet")}</dt><dd className="tnum">{fmtNum(feePrev.net)} MUSD</dd></div>
+            </dl>
+          </>
+        }
+      />
     </m.article>
   );
 }
@@ -894,9 +948,9 @@ function SendPanel({ deployed, noMusd, onGuide }: { deployed: boolean; noMusd: b
 
 type StepState = "done" | "todo" | "loading";
 
-function GetStarted({ connected, address, wrongNetwork, btc, btcLoading, musd, musdLoading, goals, onCreate }: {
+function GetStarted({ connected, address, wrongNetwork, btc, btcLoading, musd, musdLoading, goals, onCreate, lang = "en" }: {
   connected: boolean; address?: string; wrongNetwork: boolean; btc: number; btcLoading: boolean;
-  musd: number; musdLoading: boolean; goals: number; onCreate: () => void;
+  musd: number; musdLoading: boolean; goals: number; onCreate: () => void; lang?: Lang;
 }) {
   const { switchChain, isPending: switching } = useSwitchChain();
   const { watchAsset } = useWatchAsset();
@@ -921,7 +975,7 @@ function GetStarted({ connected, address, wrongNetwork, btc, btcLoading, musd, m
 
   const steps: { title: string; body: ReactNode; status: string; actions: ReactNode }[] = [
     {
-      title: "Connect a wallet on Mezo Testnet",
+      title: tr(lang, "connectGuideTitle"),
       body: (
         <>
           Any browser wallet works: MetaMask, Rabby, Brave, OKX or Coinbase Wallet. We add the Mezo Testnet network for you.
