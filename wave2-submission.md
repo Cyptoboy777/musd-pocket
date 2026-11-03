@@ -27,5 +27,8 @@ Key Wave 2 txs (explorer.test.mezo.org)
 - repayMUSD: 0x6bc4369125d44ec9863927812d96f3599accc976e17466383c4ca854e652fe5e
 - helper chip-in: 0x834398190a083850ce1fa341dc5767fb8d1376a6805a7990b58d52c96eead63f
 
-Tests: 47 Foundry + 22 vitest passing.
-Materials still needed from builder: refreshed deck + new video ≤2:15 showing borrow-into-goal with ICR panel, invite chip-in, debt-floor honesty, and Proof. Recruit 3-5 real outside testers using docs/TESTER-GUIDE.md.
+Tests: 47 Foundry + 29 vitest passing.
+Demo video: https://youtu.be/eWAqu1FZ-40
+Pitch deck: docs/MUSD-Pocket-Wave2-Deck.pdf
+Mezo Passport: Unisat / Xverse / OKX via OrangeKit inside RainbowKit (testnet).
+Still recruiting 3-5 real outside testers using docs/TESTER-GUIDE.md.

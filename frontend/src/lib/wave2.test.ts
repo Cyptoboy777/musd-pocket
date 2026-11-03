@@ -8,6 +8,14 @@ import { cycleLang, loadLang, t, type Lang } from "./i18n";
 import {
   earlyFeeAmount, earlyFeePreview, isTeamTestWallet, shareIntents, TEAM_TEST_WALLETS,
 } from "./stats";
+import {
+  MEZO_PASSPORT_GROUP,
+  PASSPORT_BTC_WALLET_IDS,
+  getPassportWalletGroup,
+  isPassportBtcWalletId,
+  mezoPassportConnectorConfig,
+  passportSupportedWalletNames,
+} from "./passportWallets";
 
 describe("protect math", () => {
   const t0 = { coll: 0.04, debt: 2000 };
@@ -111,5 +119,26 @@ describe("i18n wave2 upgrade keys", () => {
       expect(t(lang, "closeNeedMusd").length).toBeGreaterThan(0);
       expect(t(lang, "heroExample").length).toBeGreaterThan(0);
     }
+  });
+});
+
+
+describe("passport wallets", () => {
+  it("targets Mezo testnet without a relay key", () => {
+    const cfg = mezoPassportConnectorConfig();
+    expect(cfg.chainId).toBe(31611);
+    expect(cfg.rpcUrl).toContain("test.mezo.org");
+  });
+  it("exposes Unisat, Xverse, and OKX (no Leather in OrangeKit)", () => {
+    expect(passportSupportedWalletNames()).toEqual(["Unisat", "Xverse", "OKX"]);
+    expect(PASSPORT_BTC_WALLET_IDS).toHaveLength(3);
+    expect(isPassportBtcWalletId("orangekit-unisat")).toBe(true);
+    expect(isPassportBtcWalletId("leather")).toBe(false);
+  });
+  it("builds a RainbowKit wallet group with factory fns", () => {
+    const group = getPassportWalletGroup();
+    expect(group.groupName).toBe(MEZO_PASSPORT_GROUP);
+    expect(group.wallets).toHaveLength(3);
+    for (const w of group.wallets) expect(typeof w).toBe("function");
   });
 });

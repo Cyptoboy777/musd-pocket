@@ -26,7 +26,7 @@ Built for the [AKINDO Mezo Buildathon](https://app.akindo.io/wave-hacks/OVOO0gdr
 - **Shareable goal card:** Invite `?invite=N` shows progress; Web Share + copy + X/Telegram/WhatsApp intents; static `og.jpg` OG fallback (dynamic `/api/og` via `@vercel/og` not supported as Edge Function in this Vite project).
 - **UX:** Early-withdraw fee preview + confirm; Protect close-trove confirm + insufficient-MUSD pre-check; hero sample clearly labelled example-only.
 - **PWA:** `manifest.webmanifest` + light app-shell service worker (no stale chain data).
-- **Mezo Passport:** Not bundled — `@mezo-org/passport@0.17.2` fails clean ESM import (directory imports without package exports) and peers pin React 18 / RainbowKit 2.0.2 while this app uses React 19 / RainbowKit 2.2.x. RainbowKit EVM connect kept intact.
+- **Mezo Passport (BTC wallets):** Unisat, Xverse, and OKX via `@mezo-org/orangekit` connector factories inside RainbowKit (Vite alias maps `orangekit-smart-account/src` → `dist`). Leather is not exported by OrangeKit/Passport. EVM connect unchanged. Testnet only — BTC wallet signing needs the extension installed; no mainnet/user funds.
 - **Proof:** self-owned test wallets labelled honestly; empty Community testers section ready for real third parties. See [docs/ONCHAIN-ACTIVITY.md](docs/ONCHAIN-ACTIVITY.md) and [docs/TESTER-GUIDE.md](docs/TESTER-GUIDE.md).
 
 ## Design
@@ -37,6 +37,7 @@ Type: Gloock + Geist. Tokens in `frontend/src/styles/tokens.css`.
 ## Links
 
 - **Live demo:** https://musd-pocket-mezo.vercel.app
+- **Demo video:** https://youtu.be/eWAqu1FZ-40
 - **MUSDPocket v2 (Mezo testnet, verified):** [`0xEC03…D460`](https://explorer.test.mezo.org/address/0xEC03F758219746b6e773f107a05cF17b66E7D460)
 - **v1 (Wave 1):** [`0x2d5f…A1C8`](https://explorer.test.mezo.org/address/0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8)
 - **Repo:** https://github.com/Cyptoboy777/musd-pocket
@@ -54,7 +55,7 @@ forge test
 
 ### Frontend
 
-Tests: **47 Foundry** + **26 vitest** (Wave 2 upgrade).
+Tests: **47 Foundry** + **29 vitest** (Wave 2 + Passport).
 
 ```bash
 cd frontend
@@ -77,4 +78,4 @@ Hosted on Vercel with Root Directory `frontend` (see `frontend/vercel.json`). Pa
 ## Pitch
 
 - Pitch deck (PDF): [docs/MUSD-Pocket-Wave2-Deck.pdf](docs/MUSD-Pocket-Wave2-Deck.pdf)
-- Pitch video (2 min): https://youtu.be/v9pkZ0W2YDE
+- Pitch video (Wave 2 demo): https://youtu.be/eWAqu1FZ-40

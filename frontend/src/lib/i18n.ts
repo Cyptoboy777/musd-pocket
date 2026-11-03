@@ -99,7 +99,7 @@ export const STRINGS = {
     statsTeamBody: "These addresses are the builder's own test wallets. They are not third-party users.",
     statsRecent: "Recent events",
     statsEmpty: "No events found yet on this contract.",
-    passportNote: "EVM wallets via RainbowKit. Mezo Passport (BTC wallets) not bundled — see README.",
+    passportNote: "Connect Unisat, Xverse, or OKX (Mezo Passport / OrangeKit) alongside EVM wallets. Testnet only.",
   },
   es: {
     langToggleAria: "Cambiar idioma",
@@ -189,7 +189,7 @@ export const STRINGS = {
     statsTeamBody: "Estas direcciones son del builder. No son usuarios de terceros.",
     statsRecent: "Eventos recientes",
     statsEmpty: "Aún no hay eventos en este contrato.",
-    passportNote: "Carteras EVM con RainbowKit. Mezo Passport (BTC) no incluido — ver README.",
+    passportNote: "Conecta Unisat, Xverse u OKX (Mezo Passport / OrangeKit) junto a carteras EVM. Solo testnet.",
   },
   pt: {
     langToggleAria: "Mudar idioma",
@@ -279,7 +279,7 @@ export const STRINGS = {
     statsTeamBody: "Estes endereços são do builder. Não são usuários de terceiros.",
     statsRecent: "Eventos recentes",
     statsEmpty: "Ainda sem eventos neste contrato.",
-    passportNote: "Carteiras EVM via RainbowKit. Mezo Passport (BTC) não incluso — ver README.",
+    passportNote: "Conecte Unisat, Xverse ou OKX (Mezo Passport / OrangeKit) junto às carteiras EVM. Somente testnet.",
   },
   zh: {
     langToggleAria: "切换语言",
@@ -369,7 +369,7 @@ export const STRINGS = {
     statsTeamBody: "这些地址属于构建者本人，不是第三方用户。",
     statsRecent: "最近事件",
     statsEmpty: "此合约尚无事件。",
-    passportNote: "通过 RainbowKit 连接 EVM 钱包。未捆绑 Mezo Passport（BTC）— 见 README。",
+    passportNote: "可通过 Mezo Passport / OrangeKit 连接 Unisat、Xverse 或 OKX，并与 EVM 钱包并用。仅测试网。",
   },
   fr: {
     langToggleAria: "Changer de langue",
@@ -459,7 +459,7 @@ export const STRINGS = {
     statsTeamBody: "Ces adresses appartiennent au builder. Ce ne sont pas des utilisateurs tiers.",
     statsRecent: "Événements récents",
     statsEmpty: "Aucun événement sur ce contrat pour l'instant.",
-    passportNote: "Portefeuilles EVM via RainbowKit. Mezo Passport (BTC) non inclus — voir README.",
+    passportNote: "Connectez Unisat, Xverse ou OKX (Mezo Passport / OrangeKit) avec les portefeuilles EVM. Testnet uniquement.",
   },
 } as const;
 

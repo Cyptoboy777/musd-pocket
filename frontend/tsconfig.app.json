@@ -10,6 +10,11 @@
 
     /* Bundler mode */
     "moduleResolution": "bundler",
+    "paths": {
+      "@mezo-org/orangekit-smart-account/src/*": [
+        "./node_modules/@mezo-org/orangekit-smart-account/dist/src/*"
+      ]
+    },
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
