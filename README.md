@@ -23,7 +23,7 @@ Built for the [AKINDO Mezo Buildathon](https://app.akindo.io/wave-hacks/OVOO0gdr
 - **Revenue:** early-unlock fee 2% (cap 5%), chip-in 0% — shown in-product and in docs.
 - **i18n:** English default; optional ES / PT / ZH / FR for key CTAs (tabs, empty states, fee preview, stats). Global audience copy.
 - **/stats:** Public on-chain stats (goal count, TVL, deposits, fee pool, recent events with explorer links). Team test wallets labelled.
-- **Shareable goal card:** Invite `?invite=N` shows progress; Web Share + copy + X/Telegram/WhatsApp intents; dynamic `/api/og` image on Vercel with static `og.jpg` fallback.
+- **Shareable goal card:** Invite `?invite=N` shows progress; Web Share + copy + X/Telegram/WhatsApp intents; static `og.jpg` OG fallback (dynamic `/api/og` via `@vercel/og` not supported as Edge Function in this Vite project).
 - **UX:** Early-withdraw fee preview + confirm; Protect close-trove confirm + insufficient-MUSD pre-check; hero sample clearly labelled example-only.
 - **PWA:** `manifest.webmanifest` + light app-shell service worker (no stale chain data).
 - **Mezo Passport:** Not bundled — `@mezo-org/passport@0.17.2` fails clean ESM import (directory imports without package exports) and peers pin React 18 / RainbowKit 2.0.2 while this app uses React 19 / RainbowKit 2.2.x. RainbowKit EVM connect kept intact.

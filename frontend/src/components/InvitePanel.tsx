@@ -28,11 +28,6 @@ function fmt(n: bigint | undefined) {
   return Number(formatUnits(n, 18)).toLocaleString("en-US", { maximumFractionDigits: 2 });
 }
 
-function fmtShort(n: bigint | undefined) {
-  if (n === undefined) return "0";
-  return Number(formatUnits(n, 18)).toLocaleString("en-US", { maximumFractionDigits: 2 });
-}
-
 /** Invite landing + chip-in. Works without a wallet first. */
 export function InviteLanding({ lang = "en" }: { lang?: Lang }) {
   const invite = useMemo(() => parseInvite(typeof window !== "undefined" ? window.location.search : ""), []);
@@ -69,7 +64,7 @@ export function InviteLanding({ lang = "en" }: { lang?: Lang }) {
     typeof window !== "undefined" ? window.location.origin + window.location.pathname : "https://musd-pocket-mezo.vercel.app/",
     goalId!,
   );
-  const ogImage = `https://musd-pocket-mezo.vercel.app/api/og?invite=${goalId}&name=${encodeURIComponent(String(name || "Savings goal"))}&saved=${encodeURIComponent(fmtShort(balance as bigint | undefined))}&target=${encodeURIComponent(fmtShort(target as bigint | undefined))}&pct=${pct.toFixed(0)}`;
+  // Dynamic OG edge image was not feasible on this Vite+Vercel setup (@vercel/og unsupported in Edge Function for this project). Static og.jpg fallback.
 
   async function addNetwork() {
     const eth = (window as unknown as { ethereum?: { request: (a: { method: string; params?: unknown[] }) => Promise<unknown> } }).ethereum;
@@ -122,7 +117,7 @@ export function InviteLanding({ lang = "en" }: { lang?: Lang }) {
               {!isFamily && (
                 <p className="btc-copy faint">This goal is not marked shared. Only the owner can deposit. Ask them to create a shared goal.</p>
               )}
-              <ShareRow url={shareUrl} lang={lang} title={`Chip in to ${(name as string) || "my"} MUSD Pocket on Mezo`} ogImage={ogImage} />
+              <ShareRow url={shareUrl} lang={lang} title={`Chip in to ${(name as string) || "my"} MUSD Pocket on Mezo`} />
             </>
           )}
         </article>
@@ -220,7 +215,7 @@ function OwnerAddMember({ goalId }: { goalId: bigint }) {
   );
 }
 
-function ShareRow({ url, lang, title, ogImage }: { url: string; lang: Lang; title: string; ogImage?: string }) {
+function ShareRow({ url, lang, title }: { url: string; lang: Lang; title: string }) {
   const [copied, setCopied] = useState(false);
   const intents = shareIntents(url, title);
   const native = canNativeShare();
@@ -256,11 +251,7 @@ function ShareRow({ url, lang, title, ogImage }: { url: string; lang: Lang; titl
           </a>
         ))}
       </div>
-      {ogImage && (
-        <p className="fund-note faint">
-          Preview image: <a href={ogImage} target="_blank" rel="noreferrer">/api/og</a> (static <code>og.jpg</code> fallback for crawlers that skip SPA).
-        </p>
-      )}
+      <p className="fund-note faint">Share preview uses static <code>/og.jpg</code> (dynamic OG edge function not supported on this Vite deploy).</p>
     </div>
   );
 }
