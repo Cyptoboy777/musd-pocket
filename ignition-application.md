@@ -51,6 +51,9 @@ https://github.com/Cyptoboy777/musd-pocket
 Pitchdeck link
 https://github.com/Cyptoboy777/musd-pocket/blob/master/docs/MUSD-Pocket-Wave2-Deck.pdf
 
+Demo / pitch video
+https://youtu.be/eWAqu1FZ-40
+
 How did you hear about the program?
 Through the Mezo / AKINDO buildathon path and the Supernormal Foundation Mezo Ignition page while preparing Wave 2 and looking for a testnet-to-mainnet runway.
 
@@ -73,3 +76,6 @@ No fake users. No mainnet claims. Primary live URL is https://musd-pocket-mezo.v
 
 Builder
 Narendra Varma · GitHub Cyptoboy777 · Telegram @Cryptoboy_777 · global positioning, EN/ES/PT/ZH/FR UI
+
+
+Note after merge: share previews use static /og.jpg. Dynamic Edge OG was dropped because Vercel rejected @vercel/og in this Vite project.

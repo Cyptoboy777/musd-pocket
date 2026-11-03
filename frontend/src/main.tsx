@@ -1,3 +1,9 @@
+import { Buffer } from "buffer";
+// OrangeKit / bitcoin libs expect Node Buffer in the browser.
+if (!(globalThis as unknown as { Buffer?: typeof Buffer }).Buffer) {
+  (globalThis as unknown as { Buffer: typeof Buffer }).Buffer = Buffer;
+}
+
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { WagmiProvider } from "wagmi";

@@ -243,6 +243,7 @@ export default function App() {
             <Wordmark />
             <p>Bitcoin-backed savings goals on Mezo. Built for the AKINDO Mezo Buildathon, Access &amp; Distribution track.</p>
             <p className="footer-badge" data-feature="testnet-badge">{tr(lang, "testnetOnly")} · {tr(lang, "feeNote")}</p>
+            <p className="footer-badge faint" data-feature="mezo-passport-btc">{tr(lang, "passportNote")}</p>
           </div>
           <dl className="footer-addrs">
             <div><dt>MUSD Pocket v2</dt><dd><Addr value={POCKET_ADDRESS} /></dd></div>
