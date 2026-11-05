@@ -99,6 +99,7 @@ export const STRINGS = {
     statsTeamBody: "These addresses are the builder's own test wallets. They are not third-party users.",
     statsRecent: "Recent events",
     statsEmpty: "No events found yet on this contract.",
+    statsEventsError: "Recent events could not be loaded. Contract totals above are still live.",
     passportNote: "Connect Unisat, Xverse, or OKX (Mezo Passport / OrangeKit) alongside EVM wallets. Testnet only.",
   },
   es: {
@@ -189,6 +190,7 @@ export const STRINGS = {
     statsTeamBody: "Estas direcciones son del builder. No son usuarios de terceros.",
     statsRecent: "Eventos recientes",
     statsEmpty: "Aún no hay eventos en este contrato.",
+    statsEventsError: "No se pudieron cargar los eventos recientes. Los totales del contrato siguen en vivo.",
     passportNote: "Conecta Unisat, Xverse u OKX (Mezo Passport / OrangeKit) junto a carteras EVM. Solo testnet.",
   },
   pt: {
@@ -279,6 +281,7 @@ export const STRINGS = {
     statsTeamBody: "Estes endereços são do builder. Não são usuários de terceiros.",
     statsRecent: "Eventos recentes",
     statsEmpty: "Ainda sem eventos neste contrato.",
+    statsEventsError: "Não foi possível carregar os eventos recentes. Os totais do contrato continuam ao vivo.",
     passportNote: "Conecte Unisat, Xverse ou OKX (Mezo Passport / OrangeKit) junto às carteiras EVM. Somente testnet.",
   },
   zh: {
@@ -369,6 +372,7 @@ export const STRINGS = {
     statsTeamBody: "这些地址属于构建者本人，不是第三方用户。",
     statsRecent: "最近事件",
     statsEmpty: "此合约尚无事件。",
+    statsEventsError: "最近事件暂时无法加载。上方的合约总计仍然是实时的。",
     passportNote: "可通过 Mezo Passport / OrangeKit 连接 Unisat、Xverse 或 OKX，并与 EVM 钱包并用。仅测试网。",
   },
   fr: {
@@ -459,6 +463,7 @@ export const STRINGS = {
     statsTeamBody: "Ces adresses appartiennent au builder. Ce ne sont pas des utilisateurs tiers.",
     statsRecent: "Événements récents",
     statsEmpty: "Aucun événement sur ce contrat pour l'instant.",
+    statsEventsError: "Les événements récents n'ont pas pu être chargés. Les totaux du contrat restent en direct.",
     passportNote: "Connectez Unisat, Xverse ou OKX (Mezo Passport / OrangeKit) avec les portefeuilles EVM. Testnet uniquement.",
   },
 } as const;
