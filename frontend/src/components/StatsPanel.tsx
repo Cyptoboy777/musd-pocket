@@ -3,7 +3,13 @@ import { formatUnits, parseAbiItem } from "viem";
 import { usePublicClient, useReadContracts } from "wagmi";
 import { musdPocketAbi } from "../lib/abi";
 import { POCKET_ADDRESS, mezoTestnet } from "../lib/chains";
-import { isTeamTestWallet, labelWallet, type StatsEvent } from "../lib/stats";
+import {
+  fetchInBlockChunks,
+  isTeamTestWallet,
+  labelWallet,
+  recentEventsFromBlock,
+  type StatsEvent,
+} from "../lib/stats";
 import { PROOF_WALLETS } from "../lib/proof";
 import type { Lang } from "../lib/i18n";
 import { t } from "../lib/i18n";
@@ -33,7 +39,7 @@ export function StatsPanel({ lang = "en" }: { lang?: Lang }) {
   const client = usePublicClient({ chainId: mezoTestnet.id });
   const [events, setEvents] = useState<StatsEvent[]>([]);
   const [evLoading, setEvLoading] = useState(true);
-  const [evError, setEvError] = useState<string | null>(null);
+  const [eventsFailed, setEventsFailed] = useState(false);
 
   const reads = useReadContracts({
     contracts: [
@@ -56,73 +62,85 @@ export function StatsPanel({ lang = "en" }: { lang?: Lang }) {
     async function load() {
       if (!client) return;
       setEvLoading(true);
-      setEvError(null);
+      setEventsFailed(false);
       try {
         const latest = await client.getBlockNumber();
-        // Mezo RPC often rejects huge eth_getLogs ranges; scan a recent window (~200k blocks).
-        const window = 200_000n;
-        const fromBlock = latest > window ? latest - window : 0n;
-        const [created, deposited, early, borrowed, withdrawn] = await Promise.all([
-          client.getLogs({ address: POCKET_ADDRESS, event: EVENTS[0], fromBlock, toBlock: latest }),
-          client.getLogs({ address: POCKET_ADDRESS, event: EVENTS[1], fromBlock, toBlock: latest }),
-          client.getLogs({ address: POCKET_ADDRESS, event: EVENTS[2], fromBlock, toBlock: latest }),
-          client.getLogs({ address: POCKET_ADDRESS, event: EVENTS[3], fromBlock, toBlock: latest }),
-          client.getLogs({ address: POCKET_ADDRESS, event: EVENTS[4], fromBlock, toBlock: latest }),
-        ]);
+        const fromBlock = recentEventsFromBlock(latest);
+        // One eth_getLogs per <=10_000-block page. A single 200k span is rejected.
+        const logs = await fetchInBlockChunks(fromBlock, latest, (range) =>
+          client.getLogs({
+            address: POCKET_ADDRESS,
+            events: EVENTS,
+            fromBlock: range.fromBlock,
+            toBlock: range.toBlock,
+          }),
+        );
         const mapped: StatsEvent[] = [];
-        for (const l of created) {
-          mapped.push({
-            kind: "GoalCreated",
-            goalId: (l.args.goalId as bigint).toString(),
-            from: l.args.owner as string,
-            txHash: l.transactionHash!,
-            blockNumber: l.blockNumber!,
-          });
-        }
-        for (const l of deposited) {
-          mapped.push({
-            kind: "Deposited",
-            goalId: (l.args.goalId as bigint).toString(),
-            from: l.args.from as string,
-            amount: formatUnits(l.args.amount as bigint, 18),
-            txHash: l.transactionHash!,
-            blockNumber: l.blockNumber!,
-          });
-        }
-        for (const l of early) {
-          mapped.push({
-            kind: "EarlyWithdrawn",
-            goalId: (l.args.goalId as bigint).toString(),
-            from: l.args.to as string,
-            amount: formatUnits(l.args.net as bigint, 18),
-            txHash: l.transactionHash!,
-            blockNumber: l.blockNumber!,
-          });
-        }
-        for (const l of borrowed) {
-          mapped.push({
-            kind: "BorrowedToGoal",
-            goalId: (l.args.goalId as bigint).toString(),
-            from: l.args.borrower as string,
-            amount: formatUnits(l.args.amount as bigint, 18),
-            txHash: l.transactionHash!,
-            blockNumber: l.blockNumber!,
-          });
-        }
-        for (const l of withdrawn) {
-          mapped.push({
-            kind: "Withdrawn",
-            goalId: (l.args.goalId as bigint).toString(),
-            from: l.args.to as string,
-            amount: formatUnits(l.args.amount as bigint, 18),
-            txHash: l.transactionHash!,
-            blockNumber: l.blockNumber!,
-          });
+        for (const l of logs) {
+          if (!l.transactionHash || l.blockNumber == null || l.args.goalId == null) continue;
+          const goalId = l.args.goalId.toString();
+          const txHash = l.transactionHash;
+          const blockNumber = l.blockNumber;
+          switch (l.eventName) {
+            case "GoalCreated":
+              mapped.push({ kind: "GoalCreated", goalId, from: l.args.owner, txHash, blockNumber });
+              break;
+            case "Deposited":
+              if (l.args.amount == null) break;
+              mapped.push({
+                kind: "Deposited",
+                goalId,
+                from: l.args.from,
+                amount: formatUnits(l.args.amount, 18),
+                txHash,
+                blockNumber,
+              });
+              break;
+            case "EarlyWithdrawn":
+              if (l.args.net == null) break;
+              mapped.push({
+                kind: "EarlyWithdrawn",
+                goalId,
+                from: l.args.to,
+                amount: formatUnits(l.args.net, 18),
+                txHash,
+                blockNumber,
+              });
+              break;
+            case "BorrowedToGoal":
+              if (l.args.amount == null) break;
+              mapped.push({
+                kind: "BorrowedToGoal",
+                goalId,
+                from: l.args.borrower,
+                amount: formatUnits(l.args.amount, 18),
+                txHash,
+                blockNumber,
+              });
+              break;
+            case "Withdrawn":
+              if (l.args.amount == null) break;
+              mapped.push({
+                kind: "Withdrawn",
+                goalId,
+                from: l.args.to,
+                amount: formatUnits(l.args.amount, 18),
+                txHash,
+                blockNumber,
+              });
+              break;
+            default:
+              break;
+          }
         }
         mapped.sort((a, b) => (a.blockNumber < b.blockNumber ? 1 : -1));
         if (!cancelled) setEvents(mapped.slice(0, 24));
       } catch (e) {
-        if (!cancelled) setEvError(e instanceof Error ? e.message : "Failed to load events");
+        console.error("Recent events failed", e);
+        if (!cancelled) {
+          setEvents([]);
+          setEventsFailed(true);
+        }
       } finally {
         if (!cancelled) setEvLoading(false);
       }
@@ -165,8 +183,8 @@ export function StatsPanel({ lang = "en" }: { lang?: Lang }) {
         </article>
         <article className="panel stats-card">
           <span className="stats-label">{t(lang, "statsDeposits")}</span>
-          <strong className="stats-value tnum">{evLoading ? "…" : depositCount}</strong>
-          <span className="stats-hint">{t(lang, "statsChipIns")}: {evLoading ? "…" : chipInApprox}</span>
+          <strong className="stats-value tnum">{evLoading ? "…" : eventsFailed ? "—" : depositCount}</strong>
+          <span className="stats-hint">{t(lang, "statsChipIns")}: {evLoading ? "…" : eventsFailed ? "—" : chipInApprox}</span>
         </article>
         <article className="panel stats-card">
           <span className="stats-label">{t(lang, "statsFeePool")}</span>
@@ -195,8 +213,10 @@ export function StatsPanel({ lang = "en" }: { lang?: Lang }) {
       <div className="panel stats-events">
         <h3>{t(lang, "statsRecent")}</h3>
         {evLoading && <span className="skeleton" style={{ height: 72 }} />}
-        {evError && <p className="form-error" role="alert">{evError}</p>}
-        {!evLoading && !evError && events.length === 0 && (
+        {eventsFailed && (
+          <p className="form-error" role="alert">{t(lang, "statsEventsError")}</p>
+        )}
+        {!evLoading && !eventsFailed && events.length === 0 && (
           <p className="btc-copy">{t(lang, "statsEmpty")}</p>
         )}
         <ul className="stats-event-list">

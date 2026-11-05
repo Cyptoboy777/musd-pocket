@@ -58,3 +58,64 @@ export type StatsEvent = {
   txHash: `0x${string}`;
   blockNumber: bigint;
 };
+
+/**
+ * Mezo testnet `eth_getLogs` accepts `toBlock - fromBlock <= 10_000`.
+ * A distance of 10_001 is rejected with "maximum [from, to] blocks distance: 10000".
+ */
+export const MEZO_LOG_BLOCK_DISTANCE = 10_000n;
+
+/** Recent-events lookback. Wider than one RPC page, so reads are chunked. */
+export const RECENT_EVENTS_LOOKBACK = 200_000n;
+
+export type BlockRange = { fromBlock: bigint; toBlock: bigint };
+
+/** Inclusive, non-overlapping ranges whose block distance stays within `maxDistance`. */
+export function chunkBlockRange(
+  fromBlock: bigint,
+  toBlock: bigint,
+  maxDistance: bigint = MEZO_LOG_BLOCK_DISTANCE,
+): BlockRange[] {
+  if (maxDistance < 0n) throw new Error("maxDistance must be non-negative");
+  if (toBlock < fromBlock) return [];
+  const ranges: BlockRange[] = [];
+  let start = fromBlock;
+  while (start <= toBlock) {
+    const room = toBlock - start;
+    const end = start + (room > maxDistance ? maxDistance : room);
+    ranges.push({ fromBlock: start, toBlock: end });
+    if (end === toBlock) break;
+    start = end + 1n;
+  }
+  return ranges;
+}
+
+export function recentEventsFromBlock(
+  latest: bigint,
+  lookback: bigint = RECENT_EVENTS_LOOKBACK,
+): bigint {
+  return latest > lookback ? latest - lookback : 0n;
+}
+
+/** Run one `eth_getLogs`-sized read per chunk. A single Mezo page is 10_000 blocks. */
+export async function fetchInBlockChunks<T>(
+  fromBlock: bigint,
+  toBlock: bigint,
+  fetchRange: (range: BlockRange) => Promise<readonly T[]>,
+  options?: { maxDistance?: bigint; concurrency?: number },
+): Promise<T[]> {
+  const ranges = chunkBlockRange(fromBlock, toBlock, options?.maxDistance);
+  if (ranges.length === 0) return [];
+  const concurrency = Math.max(1, Math.min(options?.concurrency ?? 4, ranges.length));
+  const batches: T[][] = new Array(ranges.length);
+  let cursor = 0;
+  async function worker() {
+    for (;;) {
+      const index = cursor++;
+      if (index >= ranges.length) return;
+      batches[index] = [...(await fetchRange(ranges[index]!))];
+    }
+  }
+  await Promise.all(Array.from({ length: concurrency }, () => worker()));
+  return batches.flat();
+}

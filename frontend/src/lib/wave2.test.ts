@@ -6,7 +6,16 @@ import { parseInvite, buildInviteUrl, isInviteLanding } from "./invite";
 import { hasBytecode } from "./vault";
 import { cycleLang, loadLang, t, type Lang } from "./i18n";
 import {
-  earlyFeeAmount, earlyFeePreview, isTeamTestWallet, shareIntents, TEAM_TEST_WALLETS,
+  chunkBlockRange,
+  earlyFeeAmount,
+  earlyFeePreview,
+  fetchInBlockChunks,
+  isTeamTestWallet,
+  MEZO_LOG_BLOCK_DISTANCE,
+  recentEventsFromBlock,
+  RECENT_EVENTS_LOOKBACK,
+  shareIntents,
+  TEAM_TEST_WALLETS,
 } from "./stats";
 import {
   MEZO_PASSPORT_GROUP,
@@ -116,12 +125,55 @@ describe("i18n wave2 upgrade keys", () => {
       expect(t(lang, "emptyConnectTitle").length).toBeGreaterThan(0);
       expect(t(lang, "earlyFeePreview").length).toBeGreaterThan(0);
       expect(t(lang, "statsTitle").length).toBeGreaterThan(0);
+      expect(t(lang, "statsEventsError").length).toBeGreaterThan(0);
+      expect(t(lang, "statsEventsError")).not.toMatch(/eth_getLogs|viem|Missing or invalid/i);
       expect(t(lang, "closeNeedMusd").length).toBeGreaterThan(0);
       expect(t(lang, "heroExample").length).toBeGreaterThan(0);
     }
   });
 });
 
+
+describe("mezo log ranges", () => {
+  it("keeps every eth_getLogs span within the 10_000-block limit", () => {
+    expect(chunkBlockRange(0n, 10_000n)).toEqual([{ fromBlock: 0n, toBlock: 10_000n }]);
+    expect(chunkBlockRange(0n, 10_001n)).toEqual([
+      { fromBlock: 0n, toBlock: 10_000n },
+      { fromBlock: 10_001n, toBlock: 10_001n },
+    ]);
+    const latest = 16_589_540n;
+    const from = recentEventsFromBlock(latest);
+    expect(from).toBe(latest - RECENT_EVENTS_LOOKBACK);
+    const ranges = chunkBlockRange(from, latest);
+    expect(ranges.length).toBeGreaterThan(1);
+    expect(ranges[0]?.fromBlock).toBe(from);
+    expect(ranges.at(-1)?.toBlock).toBe(latest);
+    for (let i = 0; i < ranges.length; i++) {
+      const range = ranges[i]!;
+      expect(range.toBlock - range.fromBlock <= MEZO_LOG_BLOCK_DISTANCE).toBe(true);
+      if (i > 0) expect(range.fromBlock).toBe(ranges[i - 1]!.toBlock + 1n);
+    }
+  });
+
+  it("fetches a wide window as legal pages and keeps chunk order", async () => {
+    const seen: bigint[] = [];
+    const rows = await fetchInBlockChunks(0n, 25_000n, async (range) => {
+      if (range.toBlock - range.fromBlock > MEZO_LOG_BLOCK_DISTANCE) {
+        throw new Error("range exceeds Mezo eth_getLogs limit");
+      }
+      seen.push(range.fromBlock);
+      return [range.fromBlock];
+    });
+    expect(seen).toEqual([0n, 10_001n, 20_002n]);
+    expect(rows).toEqual(seen);
+  });
+
+  it("returns nothing when the window is inverted", async () => {
+    expect(chunkBlockRange(5n, 4n)).toEqual([]);
+    expect(recentEventsFromBlock(100n, 200n)).toBe(0n);
+    await expect(fetchInBlockChunks(5n, 4n, async () => ["x"])).resolves.toEqual([]);
+  });
+});
 
 describe("passport wallets", () => {
   it("targets Mezo testnet without a relay key", () => {
