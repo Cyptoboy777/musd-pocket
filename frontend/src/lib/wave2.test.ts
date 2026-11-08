@@ -1,4 +1,7 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { ProofPanel } from "../components/ProofPanel";
 import {
   ratioAfterAddColl, ratioAfterRepay, needsProtection, protectLevel, ratio, liquidationPrice,
 } from "./risk";
@@ -17,6 +20,7 @@ import {
   shareIntents,
   TEAM_TEST_WALLETS,
 } from "./stats";
+import { COMMUNITY_TESTERS, PROOF_WALLETS } from "./proof";
 import {
   MEZO_PASSPORT_GROUP,
   PASSPORT_BTC_WALLET_IDS,
@@ -104,6 +108,34 @@ describe("team test wallet labels", () => {
     expect(isTeamTestWallet("0xA8F5Ce266d62430f4B83C94fC5ADfb737948d1EA")).toBe(true);
     expect(isTeamTestWallet("0xA8F5Ce266d62430f4B83C94fC5ADfb737948d1EA".toLowerCase())).toBe(true);
     expect(isTeamTestWallet("0x0000000000000000000000000000000000000001")).toBe(false);
+  });
+
+  it("lists one outside community tester apart from team wallets", () => {
+    const addr = "0x63EfDF0633a5Cf057103CcB7dd657C9bd7AEd2d1";
+    const createGoal = "0x25051be7bd23ca4751d13723410bcc16e983614ec6327545f26efbed2ed73fc2";
+    expect(COMMUNITY_TESTERS).toHaveLength(1);
+    expect(COMMUNITY_TESTERS[0]?.label).toBe("Community tester");
+    expect(COMMUNITY_TESTERS[0]?.address).toBe(addr);
+    expect(COMMUNITY_TESTERS[0]?.txs).toEqual([
+      { label: "createGoal #10 Emergency fund", hash: createGoal },
+    ]);
+    expect(isTeamTestWallet(addr)).toBe(false);
+    expect(PROOF_WALLETS.some((w) => w.address.toLowerCase() === addr.toLowerCase())).toBe(false);
+    expect(TEAM_TEST_WALLETS.some((w) => w.toLowerCase() === addr.toLowerCase())).toBe(false);
+  });
+
+  it("shows the community tester on the Proof page and hides the empty state", () => {
+    const html = renderToStaticMarkup(createElement(ProofPanel));
+    expect(html).toContain("Community testers");
+    expect(html).toContain("Community tester");
+    expect(html).toContain("Emergency fund");
+    expect(html).toContain("https://explorer.test.mezo.org/address/0x63EfDF0633a5Cf057103CcB7dd657C9bd7AEd2d1");
+    expect(html).toContain("https://explorer.test.mezo.org/tx/0x25051be7bd23ca4751d13723410bcc16e983614ec6327545f26efbed2ed73fc2");
+    expect(html).toContain("createGoal #10 Emergency fund");
+    expect(html).toContain('data-feature="community-testers"');
+    expect(html).not.toContain("No third-party testers yet");
+    expect(html).not.toContain("community-testers-empty");
+    expect(html).toContain("My own test wallets");
   });
 });
 

@@ -1,4 +1,4 @@
-/** Mezo testnet wallets that used MUSD Pocket. All entries below are my own test wallets. */
+/** Mezo testnet wallets that used MUSD Pocket. Builder keys and outside testers are separate lists. */
 export const LIVE_APP = "https://musd-pocket-mezo.vercel.app";
 export const EXPLORER = "https://explorer.test.mezo.org";
 
@@ -17,9 +17,9 @@ export const SAVINGS_VAULT = {
 };
 
 /**
- * Honest proof list: I only have my own test wallets so far.
- * No third-party users yet. Wallets 3-5 were generated and funded from the deployer
- * during Wave 2 to exercise the v2 contract; wallet 2 is my Wave 1 second test wallet.
+ * Builder-owned test wallets only. Outside testers belong in COMMUNITY_TESTERS.
+ * Wallets 3-5 were generated and funded from the deployer during Wave 2.
+ * Wallet 2 is the Wave 1 second test wallet.
  */
 export const PROOF_WALLETS: ProofWallet[] = [
   {
@@ -65,6 +65,21 @@ export const PROOF_WALLETS: ProofWallet[] = [
     txs: [
       { label: "createGoal", hash: "0x5cc2f40dafc78fbdc74cdea2de1bb9f5b1aac31868863f5080da414833105eb3" },
       { label: "deposit", hash: "0x94e6caf48516b383c50d291c2a3f69eb793aecac9e8191a2597d1ce2a059dd64" },
+    ],
+  },
+];
+
+/** Outside wallets with a real MUSDPocket transaction. One confirmed tester. */
+export const COMMUNITY_TESTERS: ProofWallet[] = [
+  {
+    label: "Community tester",
+    address: "0x63EfDF0633a5Cf057103CcB7dd657C9bd7AEd2d1",
+    note: "Outside tester. Created goal #10, Emergency fund, with a 1,000 MUSD target on 4 Nov 2026.",
+    txs: [
+      {
+        label: "createGoal #10 Emergency fund",
+        hash: "0x25051be7bd23ca4751d13723410bcc16e983614ec6327545f26efbed2ed73fc2",
+      },
     ],
   },
 ];
