@@ -12,7 +12,13 @@ const REPAY = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 const ONE = parseUnits("1", 18);
 const DEBT = [ONE, parseUnits("2000", 18), 0n, 0n, 0n, 0n] as const;
 
-function harness(opts?: { chain?: number; allowance?: bigint; receipt?: { status: "success" | "reverted" } | "throw"; flipChainOnSign?: boolean }) {
+function harness(opts?: {
+  chain?: number;
+  allowance?: bigint;
+  receipt?: { status: "success" | "reverted" } | "throw";
+  flipChainOnSign?: boolean;
+  repayError?: Error;
+}) {
   let chain = opts?.chain ?? mezoTestnet.id;
   const writes: PocketWrite[] = [];
   const reads: string[] = [];
@@ -37,6 +43,7 @@ function harness(opts?: { chain?: number; allowance?: bigint; receipt?: { status
     },
     writeContract: async (args) => {
       writes.push(args);
+      if (args.functionName === "repayMUSD" && opts?.repayError) throw opts.repayError;
       return args.functionName === "approve" ? APPROVE : REPAY;
     },
     waitForReceipt: async () => {
@@ -121,6 +128,26 @@ describe("pocket action dispatch", () => {
     });
     await actions.repayLoan("10", trove);
     expect(order).toEqual([`write:approve`, `receipt:${APPROVE}`, "write:repayMUSD"]);
+  });
+
+  it("keeps the submitted approval in view if the repayment prompt is declined", async () => {
+    const h = harness({ allowance: 0n, repayError: new Error("User rejected the request.") });
+    await expect(h.actions.repayLoan("10", trove)).rejects.toThrow(/REPAY_AFTER_APPROVAL/);
+    expect(h.writes.map((w) => w.functionName)).toEqual(["approve", "repayMUSD"]);
+    const copy = walletErrorCopy(new Error("REPAY_AFTER_APPROVAL User rejected the request."));
+    expect(copy.notSubmitted).toBe(false);
+    expect(copy.body).toMatch(/approval was submitted/i);
+    expect(copy.body).not.toMatch(/Nothing was sent/);
+  });
+
+  it("keeps the submitted approval in view if repayment lacks gas", async () => {
+    const h = harness({ allowance: 0n, repayError: new Error("insufficient funds for gas * price + value") });
+    await expect(h.actions.repayLoan("10", trove)).rejects.toThrow(/REPAY_AFTER_APPROVAL/);
+    expect(h.writes.map((w) => w.functionName)).toEqual(["approve", "repayMUSD"]);
+    const copy = walletErrorCopy(new Error("REPAY_AFTER_APPROVAL insufficient funds for gas * price + value"));
+    expect(copy.notSubmitted).toBe(false);
+    expect(copy.body).toMatch(/approval was submitted/i);
+    expect(copy.body).not.toMatch(/Nothing was sent|failed/i);
   });
 
   it("does not submit repay when the approval receipt reverts or never confirms", async () => {

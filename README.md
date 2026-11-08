@@ -55,7 +55,7 @@ forge test
 
 ### Frontend
 
-Tests: **47 Foundry** (`forge test`) and **43 Vitest** (`npm test`).
+Tests: **47 Foundry** (`forge test`) and **45 Vitest** (`npm test`).
 
 ```bash
 cd frontend

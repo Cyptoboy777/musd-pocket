@@ -7,6 +7,13 @@ export type WalletErrorCopy = { title: string; body: string; notSubmitted: boole
 /** User-facing copy. "Nothing was sent" only when this app knows it did not broadcast. */
 export function walletErrorCopy(err: unknown): WalletErrorCopy {
   const msg = (err as { shortMessage?: string; message?: string })?.shortMessage || (err as Error)?.message || "";
+  if (/REPAY_AFTER_APPROVAL/i.test(msg)) {
+    return {
+      title: "Check your wallet",
+      body: "The approval was submitted. Check your wallet before trying the repayment again.",
+      notSubmitted: false,
+    };
+  }
   if (/user rejected|denied|rejected the request/i.test(msg)) {
     return { title: "Not sent", body: "You declined the request in your wallet. Nothing was sent.", notSubmitted: true };
   }

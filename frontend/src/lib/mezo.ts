@@ -323,7 +323,8 @@ export function createPocketActions(deps: PocketActionDeps) {
       address: MUSD_ADDRESS, abi: allowanceAbi, functionName: "allowance",
       args: [address, MEZO.borrowerOperations],
     });
-    if ((allowance as bigint) < amount) {
+    const needsApproval = (allowance as bigint) < amount;
+    if (needsApproval) {
       requireTestnet(deps);
       const approveHash = await deps.writeContract({
         address: MUSD_ADDRESS, abi: allowanceAbi, functionName: "approve",
@@ -338,11 +339,17 @@ export function createPocketActions(deps: PocketActionDeps) {
       if (receipt.status !== "success") throw new Error("APPROVAL_REVERTED");
       requireTestnet(deps, true);
     }
-    requireTestnet(deps, (allowance as bigint) < amount);
-    return deps.writeContract({
-      address: MEZO.borrowerOperations, abi: borrowerOperationsAbi, functionName: "repayMUSD",
-      args: [amount, upper, lower], chainId: mezoTestnet.id,
-    });
+    requireTestnet(deps, needsApproval);
+    try {
+      return await deps.writeContract({
+        address: MEZO.borrowerOperations, abi: borrowerOperationsAbi, functionName: "repayMUSD",
+        args: [amount, upper, lower], chainId: mezoTestnet.id,
+      });
+    } catch (err) {
+      if (!needsApproval) throw err;
+      const detail = err instanceof Error ? err.message : "";
+      throw new Error(`REPAY_AFTER_APPROVAL ${detail}`);
+    }
   }
 
   /** Close the caller's trove. Needs enough MUSD in wallet to cover outstanding debt. */
