@@ -49,7 +49,7 @@ Github link
 https://github.com/Cyptoboy777/musd-pocket
 
 Pitchdeck link
-https://github.com/Cyptoboy777/musd-pocket/blob/master/docs/MUSD-Pocket-Wave2-Deck.pdf
+https://github.com/Cyptoboy777/musd-pocket/blob/master/docs/MUSD-Pocket-Wave2-Final.pdf
 
 Demo / pitch video
 https://youtu.be/eWAqu1FZ-40

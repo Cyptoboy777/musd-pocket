@@ -2,13 +2,49 @@ import { useEffect, useRef } from "react";
 import { useToast } from "../components/Toasts";
 import { mezoTestnet } from "../lib/chains";
 
-export function humanizeError(err: unknown): string {
+export type WalletErrorCopy = { title: string; body: string; notSubmitted: boolean };
+
+/** User-facing copy. "Nothing was sent" only when this app knows it did not broadcast. */
+export function walletErrorCopy(err: unknown): WalletErrorCopy {
   const msg = (err as { shortMessage?: string; message?: string })?.shortMessage || (err as Error)?.message || "";
-  if (/user rejected|denied|rejected the request/i.test(msg)) return "You declined the request in your wallet. Nothing was sent.";
-  if (/insufficient funds/i.test(msg)) return "Not enough BTC for gas. Top up from the Mezo testnet faucet and try again.";
-  if (/allowance|exceeds allowance/i.test(msg)) return "Approve MUSD first, then try again.";
-  if (/chain|network/i.test(msg)) return "Switch your wallet to Mezo Testnet (chain 31611) and try again.";
-  return msg.split("\n")[0].slice(0, 160) || "The transaction could not be sent.";
+  if (/REPAY_AFTER_APPROVAL/i.test(msg)) {
+    return {
+      title: "Check your wallet",
+      body: "The approval was submitted. Check your wallet before trying the repayment again.",
+      notSubmitted: false,
+    };
+  }
+  if (/user rejected|denied|rejected the request/i.test(msg)) {
+    return { title: "Not sent", body: "You declined the request in your wallet. Nothing was sent.", notSubmitted: true };
+  }
+  if (/POCKET_TESTNET_ONLY/i.test(msg)) {
+    return { title: "Not sent", body: "Savings goals are on Mezo testnet. Nothing was sent.", notSubmitted: true };
+  }
+  if (/insufficient funds/i.test(msg)) {
+    return { title: "Not sent", body: "Not enough BTC for gas. Nothing was sent.", notSubmitted: true };
+  }
+  if (/APPROVAL_REVERTED/i.test(msg)) {
+    return { title: "Approval did not succeed", body: "The approval did not succeed, so repayment was not submitted.", notSubmitted: false };
+  }
+  if (/APPROVAL_UNCONFIRMED|CHAIN_CHANGED/i.test(msg)) {
+    return {
+      title: "Check your wallet",
+      body: "An earlier step was submitted and is not confirmed here. The next step was not submitted.",
+      notSubmitted: false,
+    };
+  }
+  if (/LoanTooRisky|StillLocked|NotContributor|NotGoalOwner|BadAmount|BadLock/i.test(msg)) {
+    return { title: "Not completed", body: "The contract declined this action.", notSubmitted: false };
+  }
+  return {
+    title: "Check your wallet",
+    body: "This could not be completed. Check your wallet before trying again.",
+    notSubmitted: false,
+  };
+}
+
+export function humanizeError(err: unknown): string {
+  return walletErrorCopy(err).body;
 }
 
 export const txUrl = (hash: string) => `${mezoTestnet.blockExplorers.default.url}/tx/${hash}`;
@@ -38,6 +74,9 @@ export function useTxFeedback(opts: {
     if (state === "pending") push({ id: key, kind: "pending", title: "Confirm in your wallet…" });
     else if (state.startsWith("confirming")) push({ id: key, kind: "pending", title: "Submitted. Waiting for a block…", href: txUrl(hash!) });
     else if (state.startsWith("success")) push({ id: key, kind: "success", title: doneTitle, href: txUrl(hash!) });
-    else push({ id: key, kind: "error", title: "Transaction not sent", body: humanizeError(error) });
+    else {
+      const copy = walletErrorCopy(error);
+      push({ id: key, kind: "error", title: copy.title, body: copy.body });
+    }
   }, [key, isPending, hash, confirming, success, error, doneTitle, push]);
 }

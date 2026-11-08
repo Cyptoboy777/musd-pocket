@@ -29,6 +29,6 @@ Key Wave 2 txs (explorer.test.mezo.org)
 
 Tests: 47 Foundry + 29 vitest passing.
 Demo video: https://youtu.be/eWAqu1FZ-40
-Pitch deck: docs/MUSD-Pocket-Wave2-Deck.pdf
+Pitch deck: docs/MUSD-Pocket-Wave2-Final.pdf
 Mezo Passport: Unisat / Xverse / OKX via OrangeKit inside RainbowKit (testnet).
 Still recruiting 3-5 real outside testers using docs/TESTER-GUIDE.md.

@@ -15,7 +15,7 @@ No mainnet funds. Times below are Asia/Calcutta.
 | TroveManager | [0xE47c80e8c23f6B4A1aE41c34837a0599D5D16bb0](https://explorer.test.mezo.org/address/0xE47c80e8c23f6B4A1aE41c34837a0599D5D16bb0) | Live ICR inputs |
 | PriceFeed | [0x86bCF0841622a5dAC14A313a15f96A95421b9366](https://explorer.test.mezo.org/address/0x86bCF0841622a5dAC14A313a15f96A95421b9366) | BTC price |
 | HintHelpers / SortedTroves | [0x4e4c…BCF6](https://explorer.test.mezo.org/address/0x4e4cBA3779d56386ED43631b4dCD6d8EacEcBCF6) / [0x722E…68fA](https://explorer.test.mezo.org/address/0x722E4D24FD6Ff8b0AC679450F3D91294607268fA) | Hints for adjust paths |
-| sMUSD Savings Vault (documented mainnet) | 0xb4D498029af77680cD1eF828b967f010d06C51CC | eth_getCode empty on 31611 — honest empty panel in app |
+| sMUSD Savings Vault (Mezo mainnet, separate product) | [0xb4D498029af77680cD1eF828b967f010d06C51CC](https://explorer.mezo.org/address/0xb4D498029af77680cD1eF828b967f010d06C51CC) | Not used by Pocket on testnet. Does not raise a loan's collateral ratio. Pocket itself is not deployed on mainnet. |
 
 ## Wallets
 
@@ -58,7 +58,7 @@ closeTrove: UI wired in Protect my loan. Not re-exercised in this run because de
 | Integration L2: plain ERC-20 only | Verified v2 compose into BorrowerOperationsSignatures WithdrawMUSD (borrow-into-goal) + live TroveManager/PriceFeed ICR & liq price + Protect addColl/repay |
 | Borrow-into-goal unverified / unused in app | Contract verified; wired in UI; exercised on-chain (tx above) |
 | Wrong live link collision | Primary URL https://musd-pocket-mezo.vercel.app only |
-| Vault not considered | Honest sMUSD panel; feature flag activates only if vault bytecode exists on connected chain; does not raise ICR |
+| Vault not considered | Separate mainnet savings vault; not part of the testnet Pocket flow; does not raise ICR |
 | Only two wallets / need real users | Builder wallets stay labelled as such. One outside community tester is listed with their createGoal. Invite and tester guide remain for further testers |
 | Debt floor clarity (dsh_agent) | Loan readiness panel: 1,800 + 200 ≈ 2,000 MUSD |
 | Testnet vs mainnet labelling | Footer + README + tester guide state testnet-only |
@@ -73,4 +73,4 @@ Early unlock fee 2% (contract max 5%), fee pool on-chain. Chip-in and on-time un
 App additions that read the same verified v2 contract (no new deploy):
 - Public `/stats` page reads `nextGoalId`, `totalLocked`, `feePool`, `earlyFeeBps` and recent logs.
 - Team test wallets listed above remain labelled as builder-owned. The community tester is the outside wallet in the section above.
-- Share card uses static `og.jpg` OG fallback (dynamic Edge OG not supported on this Vite+Vercel project).
+- Share cards use the site preview image.

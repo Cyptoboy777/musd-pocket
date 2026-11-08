@@ -23,7 +23,7 @@ export function BitcoinPanel({ pos, connected }: { pos: MezoPosition; connected:
     <div className="panel btc-panel" aria-labelledby="btc-title">
       <div className="account-row">
         <h3 id="btc-title" className="btc-title"><IconBitcoin width={16} height={16} /> Your Bitcoin on Mezo</h3>
-        {price !== undefined && <span className="status status-ok tnum" title="From Mezo's PriceFeed on testnet">BTC {usd(price)}</span>}
+        {price !== undefined && <span className="status status-ok tnum" title="Mezo BTC price">BTC {usd(price)}</span>}
       </div>
 
       {!connected ? (

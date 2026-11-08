@@ -157,7 +157,7 @@ export function StatsPanel({ lang = "en" }: { lang?: Lang }) {
   }, [events]);
 
   const loading = reads.isLoading;
-  const error = reads.isError ? "Could not read contract stats from Mezo testnet." : null;
+  const error = reads.isError ? t(lang, "statsReadError") : null;
 
   return (
     <section id="stats" className="stats-section" data-feature="public-stats" aria-labelledby="stats-title">
@@ -168,7 +168,7 @@ export function StatsPanel({ lang = "en" }: { lang?: Lang }) {
 
       {error && (
         <div className="notice notice-warn" role="alert">
-          <span>{error} Refresh or check RPC https://rpc.test.mezo.org.</span>
+          <span>{error}</span>
         </div>
       )}
 
@@ -248,7 +248,7 @@ export function StatsPanel({ lang = "en" }: { lang?: Lang }) {
           <a href={`${EXPLORER}/address/${POCKET_ADDRESS}`} target="_blank" rel="noreferrer">
             {short(POCKET_ADDRESS)}
           </a>{" "}
-          · Mezo testnet 31611 · live reads, not mocked.
+          · {t(lang, "statsFoot")}
         </p>
       </div>
     </section>

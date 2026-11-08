@@ -17,6 +17,14 @@ export const mezoTestnet = defineChain({
   testnet: true,
 });
 
+/** Mezo mainnet chain id. Pocket is not deployed there; writes stay on testnet. */
+export const MEZO_MAINNET_CHAIN_ID = 31612;
+
+/** Savings transactions are allowed only on Mezo testnet. */
+export function pocketWritesAllowed(chainId: number | undefined): boolean {
+  return chainId === mezoTestnet.id;
+}
+
 /** Canonical MUSD on Mezo testnet */
 export const MUSD_ADDRESS = "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503" as const;
 

@@ -1,6 +1,7 @@
 # MUSD Pocket Wave 2 QA checklist (zero Wave 1 repeats)
 
 Date: 2026-11-03 Asia/Calcutta  
+Historical snapshot. The current deck is `docs/MUSD-Pocket-Wave2-Final.pdf`, not the earlier PDFs named in the table below.  
 Primary URL: https://musd-pocket-mezo.vercel.app  
 Branch: wave2-pro → master  
 Contract: 0xEC03F758219746b6e773f107a05cF17b66E7D460 (Mezo testnet 31611)
