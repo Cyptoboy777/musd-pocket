@@ -1,6 +1,6 @@
-import { useAccount, useBalance, usePublicClient, useReadContracts, useSignTypedData, useWriteContract } from "wagmi";
+import { useAccount, useBalance, useChainId, usePublicClient, useReadContracts, useSignTypedData, useWriteContract } from "wagmi";
 import { formatUnits, parseSignature, parseUnits, type Address, type Hex } from "viem";
-import { MEZO, MEZO_TOKEN, MUSD_ADDRESS, POCKET_ADDRESS, mezoTestnet } from "./chains";
+import { MEZO, MEZO_TOKEN, MUSD_ADDRESS, POCKET_ADDRESS, mezoTestnet, pocketWritesAllowed } from "./chains";
 import { musdPocketAbi } from "./abi";
 import type { Trove } from "./risk";
 
@@ -161,12 +161,18 @@ const EIP712_DEADLINE = () => BigInt(Math.floor(Date.now() / 1000) + 20 * 60);
 
 export function useMezoActions() {
   const { address } = useAccount();
+  const chainId = useChainId();
   const client = usePublicClient({ chainId: mezoTestnet.id });
   const { signTypedDataAsync } = useSignTypedData();
   const { writeContractAsync } = useWriteContract();
 
+  function assertTestnetWrite() {
+    if (!pocketWritesAllowed(chainId)) throw new Error("POCKET_TESTNET_ONLY");
+  }
+
   /** EIP-2612 permit for exactly `amount`, signed off-chain (no gas, no approval tx). */
   async function permit(amount: bigint) {
+    assertTestnetWrite();
     if (!address || !client) throw new Error("Connect a wallet first.");
     const nonce = await client.readContract({ address: MUSD_ADDRESS, abi: permitAbi, functionName: "nonces", args: [address] });
     const deadline = EIP712_DEADLINE();
@@ -208,6 +214,7 @@ export function useMezoActions() {
    * 3. MUSD Pocket submits it, credits the goal and reverts if the loan would end under 150%.
    */
   async function borrowToGoal(goalId: bigint, amountStr: string, trove: Trove): Promise<Hex> {
+    assertTestnetWrite();
     if (!address || !client) throw new Error("Connect a wallet first.");
     const amount = parseUnits(amountStr, 18);
     // Re-read trove + price at send time: BTC moves, and stale UI math can understate debt.
@@ -261,6 +268,7 @@ export function useMezoActions() {
    * `btcStr` is BTC amount sent as msg.value (18 decimals on Mezo).
    */
   async function addCollateral(btcStr: string, trove: Trove): Promise<Hex> {
+    assertTestnetWrite();
     if (!address || !client) throw new Error("Connect a wallet first.");
     const value = parseUnits(btcStr, 18);
     if (value <= 0n) throw new Error("Enter a BTC amount greater than zero.");
@@ -275,6 +283,7 @@ export function useMezoActions() {
 
   /** Repay MUSD against the caller's trove (must approve MUSD to BorrowerOperations first if needed). */
   async function repayLoan(amountStr: string, trove: Trove): Promise<Hex> {
+    assertTestnetWrite();
     if (!address || !client) throw new Error("Connect a wallet first.");
     const amount = parseUnits(amountStr, 18);
     if (amount <= 0n) throw new Error("Enter a MUSD amount greater than zero.");
@@ -303,6 +312,7 @@ export function useMezoActions() {
 
   /** Close the caller's trove. Needs enough MUSD in wallet to cover outstanding debt. */
   async function closeLoan(): Promise<Hex> {
+    assertTestnetWrite();
     if (!address) throw new Error("Connect a wallet first.");
     return writeContractAsync({
       address: MEZO.borrowerOperations, abi: borrowerOperationsAbi, functionName: "closeTrove",

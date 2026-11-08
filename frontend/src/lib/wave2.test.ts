@@ -21,6 +21,8 @@ import {
   TEAM_TEST_WALLETS,
 } from "./stats";
 import { COMMUNITY_TESTERS, PROOF_WALLETS } from "./proof";
+import { MEZO_MAINNET_CHAIN_ID, mezoTestnet, pocketWritesAllowed } from "./chains";
+import { humanizeError } from "../hooks/useTxFeedback";
 import {
   MEZO_PASSPORT_GROUP,
   PASSPORT_BTC_WALLET_IDS,
@@ -63,6 +65,21 @@ describe("invite links", () => {
     expect(u).toContain("invite=7");
     expect(u).toContain("#invite");
     expect(isInviteLanding("?invite=7")).toBe(true);
+  });
+});
+
+describe("network gate", () => {
+  it("allows savings writes only on Mezo testnet", () => {
+    expect(pocketWritesAllowed(mezoTestnet.id)).toBe(true);
+    expect(pocketWritesAllowed(MEZO_MAINNET_CHAIN_ID)).toBe(false);
+    expect(pocketWritesAllowed(1)).toBe(false);
+    expect(pocketWritesAllowed(undefined)).toBe(false);
+  });
+  it("keeps wallet errors free of internal detail", () => {
+    const raw = humanizeError(new Error("viem ContractFunctionExecutionError https://rpc.test.mezo.org eth_call"));
+    expect(raw).not.toMatch(/viem|eth_|rpc\.|https?:/i);
+    expect(humanizeError(new Error("POCKET_TESTNET_ONLY"))).toMatch(/Mezo testnet/);
+    expect(humanizeError(new Error("User rejected the request."))).toMatch(/declined/);
   });
 });
 
@@ -159,6 +176,9 @@ describe("i18n wave2 upgrade keys", () => {
       expect(t(lang, "statsTitle").length).toBeGreaterThan(0);
       expect(t(lang, "statsEventsError").length).toBeGreaterThan(0);
       expect(t(lang, "statsEventsError")).not.toMatch(/eth_getLogs|viem|Missing or invalid/i);
+      expect(t(lang, "vaultNotLive")).not.toMatch(/eth_getCode|bytecode|honest empty|no code/i);
+      expect(t(lang, "networkMainnet").length).toBeGreaterThan(0);
+      expect(t(lang, "statsReadError")).not.toMatch(/rpc\.|https?:/i);
       expect(t(lang, "closeNeedMusd").length).toBeGreaterThan(0);
       expect(t(lang, "heroExample").length).toBeGreaterThan(0);
     }

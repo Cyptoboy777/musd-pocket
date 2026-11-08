@@ -5,10 +5,12 @@ import { mezoTestnet } from "../lib/chains";
 export function humanizeError(err: unknown): string {
   const msg = (err as { shortMessage?: string; message?: string })?.shortMessage || (err as Error)?.message || "";
   if (/user rejected|denied|rejected the request/i.test(msg)) return "You declined the request in your wallet. Nothing was sent.";
+  if (/POCKET_TESTNET_ONLY/i.test(msg)) return "Savings goals are on Mezo testnet. Nothing was sent.";
   if (/insufficient funds/i.test(msg)) return "Not enough BTC for gas. Top up from the Mezo testnet faucet and try again.";
   if (/allowance|exceeds allowance/i.test(msg)) return "Approve MUSD first, then try again.";
-  if (/chain|network/i.test(msg)) return "Switch your wallet to Mezo Testnet (chain 31611) and try again.";
-  return msg.split("\n")[0].slice(0, 160) || "The transaction could not be sent.";
+  if (/chain|network/i.test(msg)) return "Switch your wallet to Mezo testnet and try again.";
+  if (/LoanTooRisky|StillLocked|NotContributor|NotGoalOwner|BadAmount|BadLock/i.test(msg)) return "The contract declined this action. Nothing was sent.";
+  return "The action could not be completed. Nothing was sent.";
 }
 
 export const txUrl = (hash: string) => `${mezoTestnet.blockExplorers.default.url}/tx/${hash}`;

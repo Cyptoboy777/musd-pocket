@@ -7,7 +7,7 @@
 Global **goal savings + memo payments** app for [Mezo](https://mezo.org)’s Bitcoin-backed **MUSD**.
 Built for the [AKINDO Mezo Buildathon](https://app.akindo.io/wave-hacks/OVOO0gdrVU8379D10) · Access & Distribution track · `@Cryptoboy_777`.
 
-**Everything below is Mezo testnet (chain 31611) unless a line says mainnet.**
+**The working app is Mezo testnet (chain 31611).** Mezo mainnet is not a Pocket deployment. One outside community tester created goal #10; that record is goal creation only.
 
 ## Wave 2
 
@@ -19,7 +19,7 @@ Built for the [AKINDO Mezo Buildathon](https://app.akindo.io/wave-hacks/OVOO0gdr
 - **Protect my loan:** warns as ICR approaches danger; one-click addColl / repay via BorrowerOperations with hints; previews ICR and liquidation price before send.
 - **Shared-goal invite link:** friends can open without a wallet first, then guided onboarding (add network, faucet, connect, chip in).
 - **Loan readiness:** Mezo minimum ~1,800 MUSD principal + 200 MUSD gas deposit ≈ 2,000 MUSD total debt at open. Small savers keep the plain deposit path.
-- **Savings Vault (sMUSD):** feature-flagged; activates only if vault bytecode exists on the connected chain. On testnet 31611 code is empty (honest panel). sMUSD does **not** raise trove ICR.
+- **Savings Vault (sMUSD):** a separate Mezo mainnet product. Pocket does not use it on testnet, and it does not raise trove ICR. Pocket itself is not deployed on Mezo mainnet; the app refuses savings transactions unless the wallet is on Mezo testnet.
 - **Revenue:** early-unlock fee 2% (cap 5%), chip-in 0% — shown in-product and in docs.
 - **i18n:** English default; optional ES / PT / ZH / FR for key CTAs (tabs, empty states, fee preview, stats). Global audience copy.
 - **/stats:** Public on-chain stats (goal count, TVL, deposits, fee pool, recent events with explorer links). Team test wallets labelled.
@@ -55,7 +55,7 @@ forge test
 
 ### Frontend
 
-Tests: **47 Foundry** + **29 vitest** (Wave 2 + Passport).
+Tests: **47 Foundry** (`forge test`) and **36 Vitest** (`npm test`).
 
 ```bash
 cd frontend

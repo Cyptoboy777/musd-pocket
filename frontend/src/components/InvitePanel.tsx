@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount, useReadContract, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAccount, useChainId, useReadContract, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { formatUnits, isAddress } from "viem";
 import { musdPocketAbi } from "../lib/abi";
-import { POCKET_ADDRESS, mezoTestnet } from "../lib/chains";
+import { POCKET_ADDRESS, mezoTestnet, pocketWritesAllowed } from "../lib/chains";
 import { useMezoActions } from "../lib/mezo";
 import { parseInvite, buildInviteUrl } from "../lib/invite";
 import { canNativeShare, shareIntents } from "../lib/stats";
@@ -32,6 +32,8 @@ function fmt(n: bigint | undefined) {
 export function InviteLanding({ lang = "en" }: { lang?: Lang }) {
   const invite = useMemo(() => parseInvite(typeof window !== "undefined" ? window.location.search : ""), []);
   const { address, isConnected } = useAccount();
+  const chainId = useChainId();
+  const canWrite = pocketWritesAllowed(chainId);
   const { switchChain } = useSwitchChain();
   const actions = useMezoActions();
   const [amount, setAmount] = useState("10");
@@ -144,7 +146,7 @@ export function InviteLanding({ lang = "en" }: { lang?: Lang }) {
               ) : canChip ? (
                 <form className="fund" onSubmit={(e) => {
                   e.preventDefault();
-                  if (Number(amount) > 0 && goalId !== undefined) {
+                  if (canWrite && Number(amount) > 0 && goalId !== undefined) {
                     void chip.run(() => actions.depositWithPermit(goalId, amount));
                   }
                 }}>
@@ -155,7 +157,7 @@ export function InviteLanding({ lang = "en" }: { lang?: Lang }) {
                       <span className="suffix">MUSD</span>
                     </div>
                   </div>
-                  <button type="submit" className="btn btn-primary btn-block" disabled={chip.busy || !(Number(amount) > 0)} data-feature="invite-chip">
+                  <button type="submit" className="btn btn-primary btn-block" disabled={!canWrite || chip.busy || !(Number(amount) > 0)} data-feature="invite-chip">
                     {chip.busy ? <span className="spinner" /> : <>{t(lang, "inviteChip")}</>}
                   </button>
                   {chip.hash && (
@@ -186,6 +188,8 @@ export function InviteLanding({ lang = "en" }: { lang?: Lang }) {
 }
 
 function OwnerAddMember({ goalId }: { goalId: bigint }) {
+  const chainId = useChainId();
+  const canWrite = pocketWritesAllowed(chainId);
   const [member, setMember] = useState("");
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash });
@@ -195,7 +199,7 @@ function OwnerAddMember({ goalId }: { goalId: bigint }) {
   return (
     <form className="fund" onSubmit={(e) => {
       e.preventDefault();
-      if (!isAddress(member)) return;
+      if (!canWrite || !isAddress(member)) return;
       writeContract({
         address: POCKET_ADDRESS, abi: musdPocketAbi, functionName: "setFamilyMember",
         args: [goalId, member as `0x${string}`, true], chainId: mezoTestnet.id,
@@ -207,7 +211,7 @@ function OwnerAddMember({ goalId }: { goalId: bigint }) {
         <input id="member" value={member} onChange={(e) => setMember(e.target.value.trim())} placeholder="0x…" spellCheck={false} aria-invalid={bad} />
         {bad && <span className="field-error">Invalid address</span>}
       </div>
-      <button type="submit" className="btn btn-primary btn-block" disabled={isPending || confirming || !isAddress(member)}>
+      <button type="submit" className="btn btn-primary btn-block" disabled={!canWrite || isPending || confirming || !isAddress(member)}>
         {(isPending || confirming) ? <span className="spinner" /> : "Add contributor"}
       </button>
       {hash && <a className="txline tnum" href={`${EXPLORER}/tx/${hash}`} target="_blank" rel="noreferrer">tx: {hash.slice(0, 10)}…</a>}

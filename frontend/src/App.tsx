@@ -13,7 +13,7 @@ import {
 import { formatUnits, parseUnits, isAddress, zeroAddress } from "viem";
 import { AnimatePresence, m } from "motion/react";
 import { musdPocketAbi, erc20Abi } from "./lib/abi";
-import { MUSD_ADDRESS, POCKET_ADDRESS, POCKET_V1_ADDRESS, MEZO, mezoTestnet } from "./lib/chains";
+import { MUSD_ADDRESS, MEZO_MAINNET_CHAIN_ID, POCKET_ADDRESS, POCKET_V1_ADDRESS, MEZO, mezoTestnet, pocketWritesAllowed } from "./lib/chains";
 import { useMezoActions, useMezoPosition, type MezoPosition } from "./lib/mezo";
 import { COMFORT, POCKET_FLOOR, BAND_COPY, band, liquidationPrice, maxBorrowAt, ratio, ratioAfterBorrow } from "./lib/risk";
 import { BitcoinPanel } from "./components/BitcoinPanel";
@@ -32,7 +32,7 @@ import { useAsyncTx } from "./hooks/useAsyncTx";
 import { LogoMark, Wordmark } from "./components/Logo";
 import { Guilloche } from "./components/Guilloche";
 import { useCountUp } from "./hooks/useCountUp";
-import { txUrl, useTxFeedback } from "./hooks/useTxFeedback";
+import { humanizeError, txUrl, useTxFeedback } from "./hooks/useTxFeedback";
 import { walletConnectEnabled } from "./wagmi";
 import {
   IconBitcoin, IconCheck, IconClock, IconCode, IconCopy, IconExternal, IconLock,
@@ -122,7 +122,9 @@ export default function App() {
     query: { enabled: !!address },
   });
 
-  const wrongNetwork = isConnected && chainId !== mezoTestnet.id;
+  const canWrite = pocketWritesAllowed(chainId);
+  const onMainnet = isConnected && chainId === MEZO_MAINNET_CHAIN_ID;
+  const wrongNetwork = isConnected && !canWrite;
   const ids = (goalIds as bigint[] | undefined) || [];
   const balance = isConnected ? toNum(musdBal as bigint | undefined) : 0;
   const btc = isConnected && btcBal ? Number(formatUnits(btcBal.value, 18)) : 0;
@@ -166,6 +168,7 @@ export default function App() {
           connected={isConnected}
           address={address}
           wrongNetwork={wrongNetwork}
+          onMainnet={onMainnet}
           btc={btc}
           btcLoading={isConnected && btcLoading}
           musd={balance}
@@ -185,7 +188,7 @@ export default function App() {
 
           <div className="app-grid">
             <aside className="account">
-              <AccountPanel balance={balance} loading={isConnected && balLoading} connected={isConnected} address={address} goals={ids.length} wrongNetwork={wrongNetwork} noMusd={noMusd} onGuide={toStart} />
+              <AccountPanel balance={balance} loading={isConnected && balLoading} connected={isConnected} address={address} goals={ids.length} wrongNetwork={wrongNetwork} onMainnet={onMainnet} noMusd={noMusd} onGuide={toStart} />
               <BitcoinPanel pos={pos} connected={isConnected && !wrongNetwork} />
               <ProtectLoanPanel pos={pos} connected={isConnected && !wrongNetwork} lang={lang} musdBalance={balance} />
               <SavingsVaultPanel lang={lang} />
@@ -196,16 +199,13 @@ export default function App() {
               {!deployed && (
                 <div className="notice" role="note">
                   <IconInfo2 />
-                  <span>
-                    Contract not deployed yet. Fund the deployer with testnet BTC from{" "}
-                    <a href="https://faucet.test.mezo.org" target="_blank" rel="noreferrer">faucet.test.mezo.org</a>, then redeploy. UI + ABIs are ready for Mezo testnet MUSD.
-                  </span>
+                  <span>Savings goals are not available on this network yet.</span>
                 </div>
               )}
               {wrongNetwork && (
                 <div className="notice notice-warn" role="alert">
                   <IconInfo2 />
-                  <span>Switch your wallet to <strong>Mezo Testnet (chain 31611)</strong> to continue.</span>
+                  <span>{onMainnet ? tr(lang, "networkMainnet") : tr(lang, "networkOther")}</span>
                 </div>
               )}
 
@@ -250,7 +250,7 @@ export default function App() {
             <div><dt>v1 (Wave 1 start)</dt><dd><Addr value={POCKET_V1_ADDRESS} /></dd></div>
             <div><dt>Mezo borrow signatures</dt><dd><Addr value={MEZO.borrowerOpsSignatures} /></dd></div>
             <div><dt>MUSD token</dt><dd><Addr value={MUSD_ADDRESS} /></dd></div>
-            <div><dt>Network</dt><dd>Mezo Testnet, chain 31611</dd></div>
+            <div><dt>Network</dt><dd>Mezo testnet</dd></div>
           </dl>
           <div className="footer-links">
             <a href={LIVE_APP} target="_blank" rel="noreferrer">Live app <IconExternal width={14} height={14} /></a>
@@ -311,8 +311,8 @@ function Hero({ balance, loading, connected, goals, onStart, onView, onGuide }: 
           </m.p>
           <m.ul className="hero-facts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.6 }}>
             <li><IconBitcoin /> Backed by Bitcoin</li>
-            <li><IconShield /> Self-custody vault</li>
-            <li><IconCode /> Open source, 73 tests, Slither-reviewed</li>
+            <li><IconShield /> Self-custody</li>
+            <li><IconCode /> Open source</li>
           </m.ul>
         </div>
 
@@ -443,7 +443,7 @@ function HowItWorks() {
 
 /* ───────────────────────── Account ───────────────────────── */
 
-function AccountPanel({ balance, loading, connected, address, goals, wrongNetwork, noMusd, onGuide }: { balance: number; loading: boolean; connected: boolean; address?: string; goals: number; wrongNetwork: boolean; noMusd: boolean; onGuide: () => void }) {
+function AccountPanel({ balance, loading, connected, address, goals, wrongNetwork, onMainnet, noMusd, onGuide }: { balance: number; loading: boolean; connected: boolean; address?: string; goals: number; wrongNetwork: boolean; onMainnet: boolean; noMusd: boolean; onGuide: () => void }) {
   const shown = useCountUp(balance, 900);
   return (
     <div className="panel account-panel">
@@ -451,7 +451,7 @@ function AccountPanel({ balance, loading, connected, address, goals, wrongNetwor
         <span className="muted">MUSD balance</span>
         <span className={`status ${connected ? (wrongNetwork ? "status-warn" : "status-ok") : ""}`}>
           <i aria-hidden="true" />
-          {connected ? (wrongNetwork ? "Wrong network" : "Mezo Testnet") : "Not connected"}
+          {connected ? (onMainnet ? "Mezo mainnet" : wrongNetwork ? "Other network" : "Mezo testnet") : "Not connected"}
         </span>
       </div>
       <div className="account-amount">
@@ -613,6 +613,8 @@ function GoalSkeleton() {
 }
 
 function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: number; pos: MezoPosition; lang?: Lang }) {
+  const chainId = useChainId();
+  const canWrite = pocketWritesAllowed(chainId);
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash });
   const { data, isLoading, refetch } = useReadContract({
@@ -665,7 +667,14 @@ function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: 
   const feePrev = earlyFeePreview(toNum(balance), feeBps);
 
   function withdraw() {
-    writeContract({ address: POCKET_ADDRESS, abi: musdPocketAbi, functionName: locked ? "earlyWithdraw" : "withdraw", args: [goalId] });
+    if (!canWrite) return;
+    writeContract({
+      address: POCKET_ADDRESS,
+      abi: musdPocketAbi,
+      functionName: locked ? "earlyWithdraw" : "withdraw",
+      args: [goalId],
+      chainId: mezoTestnet.id,
+    });
   }
 
   function onWithdrawClick() {
@@ -716,7 +725,7 @@ function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: 
               <span className="suffix">MUSD</span>
             </div>
           </div>
-          <button type="submit" className="btn btn-primary btn-block" disabled={busy || !(Number(addAmt) > 0)}>
+          <button type="submit" className="btn btn-primary btn-block" disabled={!canWrite || busy || !(Number(addAmt) > 0)}>
             {dep.busy ? <span className="spinner" /> : <IconDeposit />} {tr(lang, "addMusd")}
           </button>
           <p className="fund-note">One signature and one transaction: MUSD's permit replaces the separate approval.</p>
@@ -742,7 +751,7 @@ function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: 
           </div>
           {tooRisky && <div className="form-error" role="alert">That would take your loan under 150%. The contract refuses it; most you can borrow here is {fmtNum(floorRoom)} MUSD.</div>}
           {!tooRisky && after !== undefined && after < COMFORT && <div className="notice notice-warn" role="note"><span>Below 200% your loan is more exposed to BTC drops and to redemptions. Fine for testing; be careful with real money.</span></div>}
-          <button type="submit" className="btn btn-primary btn-block" disabled={busy || !(bAmt > 0) || tooRisky}>
+          <button type="submit" className="btn btn-primary btn-block" disabled={!canWrite || busy || !(bAmt > 0) || tooRisky}>
             {bor.busy ? <span className="spinner" /> : <IconBitcoin />} {tr(lang, "borrowIntoGoal")}
           </button>
           <p className="fund-note">You sign Mezo's own borrow message with this goal as the recipient. The MUSD never touches your wallet, and the whole thing reverts if your loan would end under 150%.</p>
@@ -752,7 +761,7 @@ function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: 
       {isFamily && (
         <InviteCopyButton goalId={goalId} lang={lang} goalName={name} />
       )}
-      <button className={`btn btn-block ${locked ? "btn-danger" : "btn-soft"}`} disabled={busy || balance === 0n} onClick={onWithdrawClick} data-feature="early-withdraw">
+      <button className={`btn btn-block ${locked ? "btn-danger" : "btn-soft"}`} disabled={!canWrite || busy || balance === 0n} onClick={onWithdrawClick} data-feature="early-withdraw">
         {locked ? tr(lang, "earlyWithdraw") : tr(lang, "withdrawUnlocked")}
       </button>
       {locked && balance > 0n && (
@@ -803,6 +812,8 @@ const PRESETS = [
 ];
 
 function SavePanel({ deployed, noMusd, onGuide, draft, onCreated }: { deployed: boolean; noMusd: boolean; onGuide: () => void; draft: Draft | null; onCreated: () => void }) {
+  const chainId = useChainId();
+  const canWrite = pocketWritesAllowed(chainId);
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash });
   const [name, setName] = useState(draft?.name ?? "Emergency fund");
@@ -826,7 +837,7 @@ function SavePanel({ deployed, noMusd, onGuide, draft, onCreated }: { deployed: 
   const badDays = days !== "" && (!Number.isFinite(daysN) || daysN < 1 || daysN > 730);
 
   function create() {
-    if (!deployed || badDays) return;
+    if (!canWrite || !deployed || badDays) return;
     // +2 min so a slow wallet confirmation can't push a 1-day lock under the contract's minimum
     const unlock = BigInt(Math.floor(Date.now() / 1000) + Math.round(daysN * 86400) + 120);
     writeContract({
@@ -834,6 +845,7 @@ function SavePanel({ deployed, noMusd, onGuide, draft, onCreated }: { deployed: 
       abi: musdPocketAbi,
       functionName: "createGoal",
       args: [name, parseUnits(target || "0", 18), unlock, family],
+      chainId: mezoTestnet.id,
     });
   }
 
@@ -886,11 +898,11 @@ function SavePanel({ deployed, noMusd, onGuide, draft, onCreated }: { deployed: 
         <span>Unlocks around <strong>{unlockPreview}</strong></span>
       </div>
       {noMusd && <MusdHint onGuide={onGuide} text="Creating a goal only costs a little test BTC for gas. Fill it later with MUSD, or borrow into it from a Mezo loan." />}
-      <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={!deployed || busy || badDays}>
+      <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={!canWrite || !deployed || busy || badDays}>
         {busy ? (<><span className="spinner" /> Confirm in wallet…</>) : (<><IconCheck /> Create goal</>)}
       </button>
       {hash && <TxLine hash={hash} />}
-      {error && <div className="form-error" role="alert">{error.message.split("\n")[0]}</div>}
+      {error && <div className="form-error" role="alert">{humanizeError(error)}</div>}
     </form>
   );
 }
@@ -898,6 +910,8 @@ function SavePanel({ deployed, noMusd, onGuide, draft, onCreated }: { deployed: 
 /* ───────────────────────── Send ───────────────────────── */
 
 function SendPanel({ deployed, noMusd, onGuide }: { deployed: boolean; noMusd: boolean; onGuide: () => void }) {
+  const chainId = useChainId();
+  const canWrite = pocketWritesAllowed(chainId);
   const actions = useMezoActions();
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("50");
@@ -905,7 +919,7 @@ function SendPanel({ deployed, noMusd, onGuide }: { deployed: boolean; noMusd: b
   const tx = useAsyncTx("send", `Sent ${amount} MUSD`);
 
   function send() {
-    if (!deployed || !isAddress(to) || !(Number(amount) > 0)) return;
+    if (!canWrite || !deployed || !isAddress(to) || !(Number(amount) > 0)) return;
     void tx.run(() => actions.sendWithPermit(to as `0x${string}`, amount, memo));
   }
 
@@ -936,7 +950,7 @@ function SendPanel({ deployed, noMusd, onGuide }: { deployed: boolean; noMusd: b
         </div>
       </div>
       {noMusd && <MusdHint onGuide={onGuide} text="You need MUSD to send. This wallet has none yet." />}
-      <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={!deployed || tx.busy || !isAddress(to)}>
+      <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={!canWrite || !deployed || tx.busy || !isAddress(to)}>
         {tx.busy ? <span className="spinner" /> : <IconSend />} Sign and send
       </button>
       <p className="fund-note">One signature authorises exactly this amount (MUSD permit), then one transaction sends it with the memo.</p>
@@ -949,8 +963,8 @@ function SendPanel({ deployed, noMusd, onGuide }: { deployed: boolean; noMusd: b
 
 type StepState = "done" | "todo" | "loading";
 
-function GetStarted({ connected, address, wrongNetwork, btc, btcLoading, musd, musdLoading, goals, onCreate, lang = "en" }: {
-  connected: boolean; address?: string; wrongNetwork: boolean; btc: number; btcLoading: boolean;
+function GetStarted({ connected, address, wrongNetwork, onMainnet, btc, btcLoading, musd, musdLoading, goals, onCreate, lang = "en" }: {
+  connected: boolean; address?: string; wrongNetwork: boolean; onMainnet: boolean; btc: number; btcLoading: boolean;
   musd: number; musdLoading: boolean; goals: number; onCreate: () => void; lang?: Lang;
 }) {
   const { switchChain, isPending: switching } = useSwitchChain();
@@ -983,7 +997,7 @@ function GetStarted({ connected, address, wrongNetwork, btc, btcLoading, musd, m
           {!walletConnectEnabled && <> On a phone, open this page in your wallet app's built-in browser.</>}
         </>
       ),
-      status: !connected ? "Not connected" : wrongNetwork ? "Wrong network" : `Connected as ${short(address)}`,
+      status: !connected ? "Not connected" : onMainnet ? "Mezo mainnet" : wrongNetwork ? "Other network" : `Connected as ${short(address)}`,
       actions: !connected ? (
         <ConnectCta label="Connect wallet" size="md" />
       ) : wrongNetwork ? (
