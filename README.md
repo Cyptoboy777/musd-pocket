@@ -23,7 +23,7 @@ Built for the [AKINDO Mezo Buildathon](https://app.akindo.io/wave-hacks/OVOO0gdr
 - **Revenue:** early-unlock fee 2% (cap 5%), chip-in 0% — shown in-product and in docs.
 - **i18n:** English default; optional ES / PT / ZH / FR for key CTAs (tabs, empty states, fee preview, stats). Global audience copy.
 - **/stats:** Public on-chain stats (goal count, TVL, deposits, fee pool, recent events with explorer links). Team test wallets labelled.
-- **Shareable goal card:** Invite `?invite=N` shows progress; Web Share + copy + X/Telegram/WhatsApp intents; static `og.jpg` OG fallback (dynamic `/api/og` via `@vercel/og` not supported as Edge Function in this Vite project).
+- **Shareable goal card:** Invite `?invite=N` shows progress; Web Share + copy + X/Telegram/WhatsApp intents.
 - **UX:** Early-withdraw fee preview + confirm; Protect close-trove confirm + insufficient-MUSD pre-check; hero sample clearly labelled example-only.
 - **PWA:** `manifest.webmanifest` + light app-shell service worker (no stale chain data).
 - **Mezo Passport (BTC wallets):** Unisat, Xverse, and OKX via `@mezo-org/orangekit` connector factories inside RainbowKit (Vite alias maps `orangekit-smart-account/src` → `dist`). Leather is not exported by OrangeKit/Passport. EVM connect unchanged. Testnet only — BTC wallet signing needs the extension installed; no mainnet/user funds.
@@ -55,7 +55,7 @@ forge test
 
 ### Frontend
 
-Tests: **47 Foundry** (`forge test`) and **36 Vitest** (`npm test`).
+Tests: **47 Foundry** (`forge test`) and **43 Vitest** (`npm test`).
 
 ```bash
 cd frontend
@@ -74,6 +74,7 @@ Hosted on Vercel with Root Directory `frontend` (see `frontend/vercel.json`). Pa
 - Explorer https://explorer.test.mezo.org
 - Faucet https://faucet.test.mezo.org
 - Borrow https://testnet.mezo.org/feature/borrow (min 1,800 MUSD + 200 gas deposit)
+- Mainnet deploy is not part of this release. Unsigned steps, if you later choose to fund one: [docs/MAINNET-DEPLOY.md](docs/MAINNET-DEPLOY.md)
 
 ## Pitch
 

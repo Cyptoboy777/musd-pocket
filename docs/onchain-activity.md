@@ -73,4 +73,4 @@ Early unlock fee 2% (contract max 5%), fee pool on-chain. Chip-in and on-time un
 App additions that read the same verified v2 contract (no new deploy):
 - Public `/stats` page reads `nextGoalId`, `totalLocked`, `feePool`, `earlyFeeBps` and recent logs.
 - Team test wallets listed above remain labelled as builder-owned. The community tester is the outside wallet in the section above.
-- Share card uses static `og.jpg` OG fallback (dynamic Edge OG not supported on this Vite+Vercel project).
+- Share cards use the site preview image.

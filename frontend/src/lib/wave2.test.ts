@@ -80,6 +80,7 @@ describe("network gate", () => {
     expect(raw).not.toMatch(/viem|eth_|rpc\.|https?:/i);
     expect(humanizeError(new Error("POCKET_TESTNET_ONLY"))).toMatch(/Mezo testnet/);
     expect(humanizeError(new Error("User rejected the request."))).toMatch(/declined/);
+    expect(humanizeError(new Error("viem TransactionExecutionError"))).not.toMatch(/Nothing was sent/);
   });
 });
 

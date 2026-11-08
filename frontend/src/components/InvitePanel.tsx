@@ -66,7 +66,6 @@ export function InviteLanding({ lang = "en" }: { lang?: Lang }) {
     typeof window !== "undefined" ? window.location.origin + window.location.pathname : "https://musd-pocket-mezo.vercel.app/",
     goalId!,
   );
-  // Dynamic OG edge image was not feasible on this Vite+Vercel setup (@vercel/og unsupported in Edge Function for this project). Static og.jpg fallback.
 
   async function addNetwork() {
     const eth = (window as unknown as { ethereum?: { request: (a: { method: string; params?: unknown[] }) => Promise<unknown> } }).ethereum;
@@ -255,7 +254,6 @@ function ShareRow({ url, lang, title }: { url: string; lang: Lang; title: string
           </a>
         ))}
       </div>
-      <p className="fund-note faint">Share preview uses static <code>/og.jpg</code> (dynamic OG edge function not supported on this Vite deploy).</p>
     </div>
   );
 }
