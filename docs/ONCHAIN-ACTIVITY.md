@@ -27,7 +27,12 @@ No mainnet funds. Times below are Asia/Calcutta.
 | Wave 2 generated (self) | [0xF02F…bb29](https://explorer.test.mezo.org/address/0xF02F7c394713DCECfB94D993BB584b8cA5D4bb29), [0xa482…2985](https://explorer.test.mezo.org/address/0xa4824D70514a6a2a78CECe3d7D25549F0b472985), [0x77eb…c580](https://explorer.test.mezo.org/address/0x77eb4E81c9B9be068b2aE3fbA7545fFb28C2c580) |
 
 ### Community testers
-Empty on purpose until real third-party addresses with explorer txs are available. No fake users.
+
+One outside wallet. The recorded activity is goal creation.
+
+| Role | Address | Transaction |
+|---|---|---|
+| Community tester | [0x63EfDF0633a5Cf057103CcB7dd657C9bd7AEd2d1](https://explorer.test.mezo.org/address/0x63EfDF0633a5Cf057103CcB7dd657C9bd7AEd2d1) | [createGoal #10, Emergency fund](https://explorer.test.mezo.org/tx/0x25051be7bd23ca4751d13723410bcc16e983614ec6327545f26efbed2ed73fc2) on 4 Nov 2026, 19:08 IST. Target 1,000 MUSD. |
 
 ## Wave 2 lifecycle txs (exercised 3 Nov 2026, Asia/Calcutta)
 
@@ -54,7 +59,7 @@ closeTrove: UI wired in Protect my loan. Not re-exercised in this run because de
 | Borrow-into-goal unverified / unused in app | Contract verified; wired in UI; exercised on-chain (tx above) |
 | Wrong live link collision | Primary URL https://musd-pocket-mezo.vercel.app only |
 | Vault not considered | Honest sMUSD panel; feature flag activates only if vault bytecode exists on connected chain; does not raise ICR |
-| Only two wallets / need real users | Self wallets labelled honestly; Community testers section empty until real third parties; invite + tester guide ready |
+| Only two wallets / need real users | Builder wallets stay labelled as such. One outside community tester is listed with their createGoal. Invite and tester guide remain for further testers |
 | Debt floor clarity (dsh_agent) | Loan readiness panel: 1,800 + 200 ≈ 2,000 MUSD |
 | Testnet vs mainnet labelling | Footer + README + tester guide state testnet-only |
 
@@ -67,5 +72,5 @@ Early unlock fee 2% (contract max 5%), fee pool on-chain. Chip-in and on-time un
 
 App additions that read the same verified v2 contract (no new deploy):
 - Public `/stats` page reads `nextGoalId`, `totalLocked`, `feePool`, `earlyFeeBps` and recent logs.
-- Team test wallets listed above remain labelled as builder-owned; Community testers still empty.
+- Team test wallets listed above remain labelled as builder-owned. The community tester is the outside wallet in the section above.
 - Share card uses static `og.jpg` OG fallback (dynamic Edge OG not supported on this Vite+Vercel project).

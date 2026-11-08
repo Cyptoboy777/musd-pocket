@@ -27,7 +27,7 @@ Built for the [AKINDO Mezo Buildathon](https://app.akindo.io/wave-hacks/OVOO0gdr
 - **UX:** Early-withdraw fee preview + confirm; Protect close-trove confirm + insufficient-MUSD pre-check; hero sample clearly labelled example-only.
 - **PWA:** `manifest.webmanifest` + light app-shell service worker (no stale chain data).
 - **Mezo Passport (BTC wallets):** Unisat, Xverse, and OKX via `@mezo-org/orangekit` connector factories inside RainbowKit (Vite alias maps `orangekit-smart-account/src` → `dist`). Leather is not exported by OrangeKit/Passport. EVM connect unchanged. Testnet only — BTC wallet signing needs the extension installed; no mainnet/user funds.
-- **Proof:** self-owned test wallets labelled honestly; empty Community testers section ready for real third parties. See [docs/ONCHAIN-ACTIVITY.md](docs/ONCHAIN-ACTIVITY.md) and [docs/TESTER-GUIDE.md](docs/TESTER-GUIDE.md).
+- **Proof:** builder test wallets labelled as such. One community tester, with the goal #10 createGoal explorer link. See [docs/ONCHAIN-ACTIVITY.md](docs/ONCHAIN-ACTIVITY.md) and [docs/TESTER-GUIDE.md](docs/TESTER-GUIDE.md).
 
 ## Design
 
