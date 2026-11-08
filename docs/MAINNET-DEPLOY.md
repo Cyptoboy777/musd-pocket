@@ -1,69 +1,52 @@
-# Mezo mainnet deploy (not executed)
+# Mezo mainnet preflight
 
 MUSD Pocket is live on Mezo testnet only:
 
 `0xEC03F758219746b6e773f107a05cF17b66E7D460`
 
-That address has no code on Mezo mainnet. The app refuses savings transactions unless the wallet is on Mezo testnet, and it does not send mainnet transactions to the testnet contract.
+That address has no code on Mezo mainnet (chain 31612). The app still refuses savings transactions off Mezo testnet. No mainnet Pocket address is configured.
 
-Do not broadcast a mainnet deploy until you have decided to fund it.
+Deployment is **pending sponsorship**. This repository does not broadcast, sign, or spend BTC. The testnet deployer `0xA8F5Ce266d62430f4B83C94fC5ADfb737948d1EA` is a labeled test wallet and is not the mainnet deployer. No other public deployer address is recorded here.
 
-Mezo's developer docs list mainnet chain id **31612** and testnet chain id **31611**: https://mezo.org/docs/developers/getting-started/
+## Sponsorship check
 
-A read of `eth_chainId` on `https://mezo.drpc.org` returned 31612. The script refuses to continue unless `block.chainid` is 31612, then checks that the dependency contracts have code, that MUSD's symbol is `MUSD`, that BorrowerOperations points at the signatures contract below, and that PriceFeed returns a price. Those checks happen before `startBroadcast`.
+Mezo's public docs were checked for a route that would deploy this contract without someone paying gas.
 
-## Contracts the script uses
+- Mainnet gas is BTC. The developer guide and glossary say fees are paid in BTC. Chain id 31612 was read from those docs and confirmed with `eth_chainId` on `https://mezo.drpc.org`, a public RPC listed in that guide.
+- The testnet faucet supplies test BTC only. It does not pay mainnet deployment.
+- [Get Gas](https://mezo.org/docs/users/getting-started/get-gas/) is a gasless swap: a relay submits the swap, and the wallet pays in MUSD or MEZO for 0.0001 BTC. That spends the holder's tokens. It is not a free contract deployment.
+- Founder, foundation, and hackathon grant pages describe applications and prizes. They are not an automatic gas relayer, and this work does not apply or contact anyone.
 
-| Piece | Address |
+No verified sponsorship for this deployment was found. The contract stays undeployed on mainnet until a sponsor pays the gas. Do not fund a wallet for it.
+
+## What was checked, read-only
+
+`forge script script/DeployV2Mainnet.s.sol:DeployV2Mainnet --rpc-url https://mezo.drpc.org` ran with no broadcast. It logged chain 31612, MUSD symbol `MUSD`, and BorrowerOperations pointing at `0xB57ab578BF20b3e318f3EFAA587C51DBccE5df7a`. TroveManager and PriceFeed have code. A separate `eth_call` of `PriceFeed.fetchPrice()` returned a price. Foundry's simulator cannot run Mezo's oracle precompile, so the script checks PriceFeed's code and the price is taken from that direct call.
+
+Constructor, if a sponsor later deploys the same artifact:
+
+| Argument | Value |
 |---|---|
-| MUSD | `0xdD468A1DDc392dcdbEf6db6e34E89AA338F9F186` |
-| BorrowerOperations | `0x44b1bac67dDA612a41a58AAf779143B181dEe031` |
-| BorrowerOperationsSignatures | `0xB57ab578BF20b3e318f3EFAA587C51DBccE5df7a` |
-| TroveManager | `0x94AfB503dBca74aC3E4929BACEeDfCe19B93c193` |
-| PriceFeed | `0xc5aC5A8892230E0A3e1c473881A2de7353fFcA88` |
+| musd | `0xdD468A1DDc392dcdbEf6db6e34E89AA338F9F186` |
+| borrowerOperationsSignatures | `0xB57ab578BF20b3e318f3EFAA587C51DBccE5df7a` |
+| troveManager | `0x94AfB503dBca74aC3E4929BACEeDfCe19B93c193` |
+| priceFeed | `0xc5aC5A8892230E0A3e1c473881A2de7353fFcA88` |
+| initialOwner | not chosen |
 
-## 1. Simulate only
+There is no proxy and no proxy admin. The owner would be `initialOwner`. At deployment `earlyFeeBps` is 200 (2%), and the contract caps it at 500 (5%). The owner can change that fee inside the cap, claim the fee pool, recover tokens that are not locked in a goal, and transfer ownership. The owner cannot take goal principal. This is not an independent audit.
 
-From `contracts/`, with no key and no `--broadcast`:
+## Artifact and gas estimate
 
-```bash
-export DEPLOYER=0xYourAddress
-forge script script/DeployV2Mainnet.s.sol:DeployV2Mainnet \
-  --rpc-url https://mezo.drpc.org \
-  --sender "$DEPLOYER"
-```
+Toolchain: Foundry `1.9.0` (`6056c5845d`), solc `0.8.28`, optimizer on, 200 runs, EVM version `london`.
 
-This does not deploy. A testnet RPC stops at the chain id check.
+Creation bytecode, before constructor arguments, keccak `0xe5acec4b85e125ae2e81ab3b75853d5620debf023f6e8fc5ae1d3fe836bba177`.
 
-## 2. Broadcast yourself, later
+With the placeholder owner above, the full init code keccak is `0x8ad5d7af35859c00e556e13e59917ded260f238bc3902b5a1a69630d8667505a`.
 
-Do not put a private key on the command line or in `PRIVATE_KEY`. Foundry can use an encrypted keystore or a hardware wallet. Let it prompt for the password. Do not pass `--password`.
+A read-only `eth_estimateGas` of that bytecode plus the constructor arguments above, with a placeholder owner `0x000000000000000000000000000000000000dEaD` (not a deployer), returned **2,308,865** gas. `eth_gasPrice` on the same RPC was **1,462,500** wei. That is about **0.000003377 BTC**. `fetchPrice()` was about **75,792 USD per BTC**, so the gas is about **0.26 USD**. Those three reads are the sources of the estimate. It is not an invoice and not a request to pay.
 
-Encrypted keystore:
+The init-code hash changes if `initialOwner` changes. No deployment address is claimed, because no sponsor address or nonce is known.
 
-```bash
-cast wallet import pocket-deployer --interactive
-```
+## What remains
 
-```bash
-export DEPLOYER=0xYourAddress
-forge script script/DeployV2Mainnet.s.sol:DeployV2Mainnet \
-  --rpc-url https://mezo.drpc.org \
-  --account pocket-deployer \
-  --sender "$DEPLOYER" \
-  --broadcast
-```
-
-Ledger or Trezor, with the device unlocked and the Ethereum app open:
-
-```bash
-forge script script/DeployV2Mainnet.s.sol:DeployV2Mainnet \
-  --rpc-url https://mezo.drpc.org \
-  --ledger \
-  --sender "$DEPLOYER" \
-  --broadcast
-```
-
-Replace `--ledger` with `--trezor` for a Trezor.
-
-Then confirm on https://explorer.mezo.org that the new address has code on chain 31612. Do not point the app at the testnet address for mainnet users. Wiring a verified mainnet address into the app is a separate change.
+A sponsor with mainnet BTC can deploy and verify this artifact later. Until that transaction exists and its code and immutables match `frontend/src/lib/mainnetPocket.ts`, the frontend keeps the mainnet address empty and savings writes on Mezo testnet only.

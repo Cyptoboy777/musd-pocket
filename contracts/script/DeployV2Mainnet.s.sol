@@ -4,11 +4,10 @@ pragma solidity ^0.8.28;
 import {Script, console2} from "forge-std/Script.sol";
 import {MUSDPocketV2} from "../src/MUSDPocketV2.sol";
 
-/// @notice Mezo mainnet deploy script. This repository does not run it.
-/// Chain id 31612 is Mezo mainnet in https://mezo.org/docs/developers/getting-started/
-/// and was rechecked with eth_chainId on https://mezo.drpc.org.
-/// Broadcast only with an encrypted keystore (`--account`) or a hardware wallet.
-/// Do not pass a raw private key on the command line.
+/// @notice Read-only Mezo mainnet preflight. `run` does not broadcast.
+/// Chain id 31612 is Mezo mainnet in the developer getting-started guide.
+/// No sponsorship for deployment gas was found in Mezo's public docs.
+/// This file does not ask for a private key and does not spend BTC.
 contract DeployV2Mainnet is Script {
     uint256 constant MEZO_MAINNET = 31612;
     address constant MUSD = 0xdD468A1DDc392dcdbEf6db6e34E89AA338F9F186;
@@ -21,15 +20,19 @@ contract DeployV2Mainnet is Script {
     error MissingCode(address target);
     error UnexpectedDependency(string what);
 
-    function run() external {
+    function run() external view {
         if (block.chainid != MEZO_MAINNET) revert WrongChain(block.chainid, MEZO_MAINNET);
         _assertDependencies();
-
-        address deployer = vm.envAddress("DEPLOYER");
-        vm.startBroadcast(deployer);
-        MUSDPocketV2 pocket = new MUSDPocketV2(MUSD, BORROWER_OPS_SIGNATURES, TROVE_MANAGER, PRICE_FEED, deployer);
-        vm.stopBroadcast();
-        console2.log("MUSDPocketV2:", address(pocket));
+        console2.log("Preflight only. No transaction.");
+        console2.log("chainId", block.chainid);
+        console2.log("MUSD", MUSD);
+        console2.log("BorrowerOperations", BORROWER_OPERATIONS);
+        console2.log("BorrowerOperationsSignatures", BORROWER_OPS_SIGNATURES);
+        console2.log("TroveManager", TROVE_MANAGER);
+        console2.log("PriceFeed", PRICE_FEED);
+        console2.log("initial earlyFeeBps", uint256(200));
+        console2.log("max earlyFeeBps", uint256(500));
+        console2.log("No proxy admin. Owner would be the deploying address, which is not chosen here.");
     }
 
     function _assertDependencies() internal view {
@@ -42,7 +45,8 @@ contract DeployV2Mainnet is Script {
         if (IBorrowerOps(BORROWER_OPERATIONS).borrowerOperationsSignaturesAddress() != BORROWER_OPS_SIGNATURES) {
             revert UnexpectedDependency("BorrowerOperationsSignatures");
         }
-        if (IPriceFeed(PRICE_FEED).fetchPrice() == 0) revert UnexpectedDependency("PriceFeed");
+        // PriceFeed.fetchPrice() is checked with a direct eth_call. Foundry's simulator
+        // does not activate Mezo's oracle precompile, so this script only checks its code.
     }
 
     function _assertCode(address target) internal view {
@@ -56,8 +60,4 @@ interface IMusd {
 
 interface IBorrowerOps {
     function borrowerOperationsSignaturesAddress() external view returns (address);
-}
-
-interface IPriceFeed {
-    function fetchPrice() external view returns (uint256);
 }

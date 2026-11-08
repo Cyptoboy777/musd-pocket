@@ -55,7 +55,7 @@ forge test
 
 ### Frontend
 
-Tests: **47 Foundry** (`forge test`) and **45 Vitest** (`npm test`).
+Tests: **47 Foundry** plus 1 skipped mainnet read unless `MEZO_MAINNET_RPC` is set (`forge test`), and **47 Vitest** (`npm test`).
 
 ```bash
 cd frontend
@@ -74,9 +74,11 @@ Hosted on Vercel with Root Directory `frontend` (see `frontend/vercel.json`). Pa
 - Explorer https://explorer.test.mezo.org
 - Faucet https://faucet.test.mezo.org
 - Borrow https://testnet.mezo.org/feature/borrow (min 1,800 MUSD + 200 gas deposit)
-- Mainnet deploy is not part of this release. Unsigned steps, if you later choose to fund one: [docs/MAINNET-DEPLOY.md](docs/MAINNET-DEPLOY.md)
+- Mainnet bytecode is prepared and checked. Deployment is pending a verified gas sponsorship. The app does not ask anyone to fund a wallet. See [docs/MAINNET-DEPLOY.md](docs/MAINNET-DEPLOY.md).
 
 ## Pitch
 
-- Pitch deck (PDF): [docs/MUSD-Pocket-Wave2-Deck.pdf](docs/MUSD-Pocket-Wave2-Deck.pdf)
+- Current pitch deck (PDF): [docs/MUSD-Pocket-Wave2-Final.pdf](docs/MUSD-Pocket-Wave2-Final.pdf)
+- Current slides: [docs/MUSD-Pocket-Wave2-Final.pptx](docs/MUSD-Pocket-Wave2-Final.pptx)
+- Earlier decks, kept as history: [docs/MUSD-Pocket-Wave2-Deck.pdf](docs/MUSD-Pocket-Wave2-Deck.pdf), [docs/MUSD-Pocket-Pitch-Deck.pdf](docs/MUSD-Pocket-Pitch-Deck.pdf)
 - Pitch video (Wave 2 demo): https://youtu.be/eWAqu1FZ-40
