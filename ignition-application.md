@@ -43,7 +43,7 @@ What it is (up to 10 words): Bitcoin-backed MUSD savings goals on Mezo.
 Utility (2-3 sentences): MUSD Pocket lets people lock Mezo MUSD into dated savings goals without selling BTC. You can fill a goal from your wallet, borrow against your BTC straight into the goal through Mezo BorrowerOperations, invite friends to chip in, or leave early for a transparent 2% fee. The product is for a global audience that wants self-custody goal savings with live ICR and liquidation price visibility.
 
 Which protocols and ecosystems are you currently live on
-Mezo testnet only (chain 31611). Verified MUSDPocketV2 at 0xEC03F758219746b6e773f107a05cF17b66E7D460 composing BorrowerOperationsSignatures (borrow-into-goal), TroveManager and PriceFeed for live ICR. Canonical MUSD. No mainnet funds moved. Honest about traction: only team test wallets so far, labelled as such in-app and in docs. Community testers section is empty on purpose until real third parties try it.
+Mezo testnet only (chain 31611). Verified MUSDPocketV2 at 0xEC03F758219746b6e773f107a05cF17b66E7D460 composing BorrowerOperationsSignatures (borrow-into-goal), TroveManager and PriceFeed for live ICR. Canonical MUSD. No mainnet Pocket deployment and no mainnet funds moved. Builder wallets are labelled as ours. One outside tester created goal 10 and has not deposited.
 
 Github link
 https://github.com/Cyptoboy777/musd-pocket
@@ -72,7 +72,7 @@ Revenue
 Early unlock fee is 2% of locked balance (contract max 5%). Chip-in and on-time unlock are free. Fees stay on-chain in the fee pool. Shown in the product Revenue panel.
 
 Honesty
-No fake users. No mainnet claims. Primary live URL is https://musd-pocket-mezo.vercel.app only. Do not use musd-pocket.vercel.app (another team).
+No fake users. No mainnet claims. Primary live URL is https://musd-pocket-mezo.vercel.app.
 
 Builder
 Narendra Varma · GitHub Cyptoboy777 · Telegram @Cryptoboy_777 · global positioning, EN/ES/PT/ZH/FR UI

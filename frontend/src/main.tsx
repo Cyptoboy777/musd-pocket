@@ -15,6 +15,7 @@ import "@fontsource/gloock/latin-400.css";
 import "@fontsource-variable/geist/wght.css";
 import { config } from "./wagmi";
 import App from "./App";
+import { DEPLOY_TOOL_ENABLED, isDeployToolPath } from "./lib/deployGate";
 import { ToastProvider } from "./components/Toasts";
 import "./styles/tokens.css";
 import "./App.css";
@@ -41,7 +42,17 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-createRoot(document.getElementById("root")!).render(
+const rootEl = document.getElementById("root")!;
+if (DEPLOY_TOOL_ENABLED && isDeployToolPath(window.location.pathname)) {
+  void import("./deploy/DeployTool").then(({ DeployTool }) => {
+    createRoot(rootEl).render(
+      <StrictMode>
+        <DeployTool />
+      </StrictMode>,
+    );
+  });
+} else {
+createRoot(rootEl).render(
   <StrictMode>
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
@@ -58,3 +69,4 @@ createRoot(document.getElementById("root")!).render(
     </WagmiProvider>
   </StrictMode>
 );
+}

@@ -2,7 +2,7 @@ import { createPublicClient, http, type Address, type Hex } from "viem";
 import { mezoTestnet } from "./chains";
 import { SAVINGS_VAULT } from "./proof";
 
-/** Documented mainnet sMUSD vault address (also checked on the connected chain). */
+/** Mainnet sMUSD address checked for bytecode. The product docs do not list it. */
 export const SMUSD_VAULT_ADDRESS = SAVINGS_VAULT.mainnet as Address;
 
 const vaultAbi = [

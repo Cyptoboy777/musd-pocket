@@ -1,7 +1,10 @@
 # On-chain activity: MUSD Pocket (Mezo testnet) — Wave 2 v2
 
 Network: Mezo testnet only (chain 31611). Explorer: https://explorer.test.mezo.org  
+Live app: https://musd-pocket-mezo.vercel.app  
 No mainnet funds. Times below are Asia/Calcutta.
+
+The verified v2 bytecode matches git `2c5bd9b`. Later commits add a per-goal early-exit fee and two-step ownership in the source tree. Those changes are not deployed. Mainnet Pocket is not deployed. See [DEPLOY_MAINNET.md](DEPLOY_MAINNET.md).
 
 ## Contracts
 

@@ -1,4 +1,6 @@
 import { defineChain } from "viem";
+import { FACTS, MUSD_TESTNET_ADDRESS, POCKET_V1_ADDRESS as POCKET_V1_FACT, POCKET_V2_ADDRESS } from "./facts";
+import { POCKET_MAINNET_ADDRESS } from "./mainnetPocket";
 
 /** Mezo Testnet — https://mezo.org/docs/developers/getting-started/ */
 export const mezoTestnet = defineChain({
@@ -17,28 +19,59 @@ export const mezoTestnet = defineChain({
   testnet: true,
 });
 
-/** Mezo mainnet chain id. Pocket is not deployed there; writes stay on testnet. */
-export const MEZO_MAINNET_CHAIN_ID = 31612;
+/**
+ * Mezo mainnet. Chain id, gas token, and public RPCs:
+ * https://mezo.org/docs/developers/getting-started/
+ * Added to the wallet only when facts.json has a Pocket address.
+ */
+export const mezoMainnet = defineChain({
+  id: FACTS.mainnet.chainId,
+  name: "Mezo",
+  nativeCurrency: { name: "Bitcoin", symbol: "BTC", decimals: FACTS.mainnet.decimals },
+  rpcUrls: {
+    default: {
+      http: [FACTS.mainnet.rpc],
+      webSocket: [FACTS.mainnet.rpcWs],
+    },
+  },
+  blockExplorers: {
+    default: { name: "Mezo Explorer", url: FACTS.mainnet.explorer },
+  },
+});
 
-/** Savings transactions are allowed only on Mezo testnet. */
+/** Mezo mainnet chain id. Savings writes stay on testnet. */
+export const MEZO_MAINNET_CHAIN_ID = mezoMainnet.id;
+
+/**
+ * Savings transactions go to the testnet pocket.
+ * facts.json mainnet.pocket is the flag for offering Mezo mainnet in the wallet.
+ * It does not retarget these writes. The signing domain and Mezo contracts in
+ * this app are the testnet ones until that wiring is done after a real deploy.
+ */
 export function pocketWritesAllowed(chainId: number | undefined): boolean {
   return chainId === mezoTestnet.id;
 }
 
-/** Canonical MUSD on Mezo testnet */
-export const MUSD_ADDRESS = "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503" as const;
+/** Chains offered to the wallet. Mainnet is omitted until a Pocket address exists. */
+export function walletChains() {
+  return POCKET_MAINNET_ADDRESS === null
+    ? ([mezoTestnet] as const)
+    : ([mezoTestnet, mezoMainnet] as const);
+}
+
+/** Canonical MUSD on Mezo testnet. https://mezo.org/docs/users/resources/contracts-reference/ */
+export const MUSD_ADDRESS = MUSD_TESTNET_ADDRESS;
 
 /**
- * MUSD Pocket v2 on Mezo testnet: borrow-to-goal, permit deposits, strict accounting.
- * Override with VITE_POCKET_ADDRESS. Deploy tx 0xa58ddba9…64f6.
+ * MUSD Pocket v2 on Mezo testnet. The verified bytecode is git 2c5bd9b.
+ * A local override may replace it for experiments. The default is facts.json.
  */
 export const POCKET_ADDRESS = (
-  import.meta.env.VITE_POCKET_ADDRESS ||
-  "0xEC03F758219746b6e773f107a05cF17b66E7D460"
+  import.meta.env.VITE_POCKET_ADDRESS || POCKET_V2_ADDRESS
 ) as `0x${string}`;
 
-/** Wave 1 v1 contract, kept for history (19 testnet txs). Still verified and readable. */
-export const POCKET_V1_ADDRESS = "0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8" as const;
+/** Wave 1 contract, kept so old explorer links still resolve. */
+export const POCKET_V1_ADDRESS = POCKET_V1_FACT;
 
 /** MEZO token (precompile) on Mezo testnet. */
 export const MEZO_TOKEN = "0x7B7c000000000000000000000000000000000001" as const;

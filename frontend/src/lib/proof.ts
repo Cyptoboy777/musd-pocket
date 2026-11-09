@@ -1,5 +1,5 @@
 /** Mezo testnet wallets that used MUSD Pocket. Builder keys and outside testers are separate lists. */
-export const LIVE_APP = "https://musd-pocket-mezo.vercel.app";
+export { LIVE_APP } from "./facts";
 export const EXPLORER = "https://explorer.test.mezo.org";
 
 export type ProofWallet = {
@@ -9,7 +9,10 @@ export type ProofWallet = {
   txs: { label: string; hash: `0x${string}` }[];
 };
 
-/** Documented mainnet Savings Vault (sMUSD). eth_getCode on Mezo testnet (31611) returns empty. */
+/**
+ * Mainnet sMUSD vault seen on the Mezo explorer. The vault product page does not
+ * publish this address. Pocket does not send goal balances there, and testnet has no code at it.
+ */
 export const SAVINGS_VAULT = {
   mainnet: "0xb4D498029af77680cD1eF828b967f010d06C51CC" as const,
   testnetHasCode: false,

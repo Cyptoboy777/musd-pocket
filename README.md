@@ -2,83 +2,86 @@
 
 # MUSD Pocket
 
-> Money that keeps its promises. Lock MUSD, Mezo's Bitcoin-backed dollar, into savings goals with a date. Withdraw on time, or early for a 2% fee. Borrow against your BTC straight into a goal. Invite friends worldwide to chip in. Send MUSD to anyone with an on-chain memo.
+We lock MUSD, Mezo's Bitcoin-backed dollar, into savings goals that have a date. You withdraw on the date, or earlier and pay the early-exit fee. You can also borrow against BTC straight into a goal, invite someone to chip in, or send MUSD with a short memo.
 
-Global **goal savings + memo payments** app for [Mezo](https://mezo.org)’s Bitcoin-backed **MUSD**.
-Built for the [AKINDO Mezo Buildathon](https://app.akindo.io/wave-hacks/OVOO0gdrVU8379D10) · Access & Distribution track · `@Cryptoboy_777`.
+This is our [AKINDO Mezo Buildathon](https://app.akindo.io/wave-hacks/OVOO0gdrVU8379D10) project for the Access & Distribution track.
 
-**The working app is Mezo testnet (chain 31611).** Mezo mainnet is not a Pocket deployment. One outside community tester created goal #10; that record is goal creation only.
+The app that works today is on Mezo testnet (chain 31611). Mezo mainnet does not have a Pocket deployment. One outside tester created goal 10. That record is goal creation only, with no deposit.
 
-## Wave 2
+Addresses, the live URL, and the test counts live in [facts.json](facts.json). If a number here disagrees with that file, the file is the one we keep current.
 
-- **Live app (primary):** https://musd-pocket-mezo.vercel.app
-- Also: https://musd-pocket-wheat.vercel.app · GitHub Pages: https://cyptoboy777.github.io/musd-pocket/
-- **Do not use** `musd-pocket.vercel.app` (another team's app).
-- **MUSDPocket v2 (verified):** [`0xEC03F758219746b6e773f107a05cF17b66E7D460`](https://explorer.test.mezo.org/address/0xEC03F758219746b6e773f107a05cF17b66E7D460)
-- **Full loan lifecycle in-app:** borrow-into-goal, repay, add collateral (Protect), early-withdraw fee path; close trove control wired.
-- **Protect my loan:** warns as ICR approaches danger; one-click addColl / repay via BorrowerOperations with hints; previews ICR and liquidation price before send.
-- **Shared-goal invite link:** friends can open without a wallet first, then guided onboarding (add network, faucet, connect, chip in).
-- **Loan readiness:** Mezo minimum ~1,800 MUSD principal + 200 MUSD gas deposit ≈ 2,000 MUSD total debt at open. Small savers keep the plain deposit path.
-- **Savings Vault (sMUSD):** a separate Mezo mainnet product. Pocket does not use it on testnet, and it does not raise trove ICR. Pocket itself is not deployed on Mezo mainnet; the app refuses savings transactions unless the wallet is on Mezo testnet.
-- **Revenue:** early-unlock fee 2% (cap 5%), chip-in 0% — shown in-product and in docs.
-- **i18n:** English default; optional ES / PT / ZH / FR for key CTAs (tabs, empty states, fee preview, stats). Global audience copy.
-- **/stats:** Public on-chain stats (goal count, TVL, deposits, fee pool, recent events with explorer links). Team test wallets labelled.
-- **Shareable goal card:** Invite `?invite=N` shows progress; Web Share + copy + X/Telegram/WhatsApp intents.
-- **UX:** Early-withdraw fee preview + confirm; Protect close-trove confirm + insufficient-MUSD pre-check; hero sample clearly labelled example-only.
-- **PWA:** `manifest.webmanifest` + light app-shell service worker (no stale chain data).
-- **Mezo Passport (BTC wallets):** Unisat, Xverse, and OKX via `@mezo-org/orangekit` connector factories inside RainbowKit (Vite alias maps `orangekit-smart-account/src` → `dist`). Leather is not exported by OrangeKit/Passport. EVM connect unchanged. Testnet only — BTC wallet signing needs the extension installed; no mainnet/user funds.
-- **Proof:** builder test wallets labelled as such. One community tester, with the goal #10 createGoal explorer link. See [docs/ONCHAIN-ACTIVITY.md](docs/ONCHAIN-ACTIVITY.md) and [docs/TESTER-GUIDE.md](docs/TESTER-GUIDE.md).
+## Where to click
+
+- Live app: https://musd-pocket-mezo.vercel.app
+- Demo video: https://youtu.be/eWAqu1FZ-40
+- Pitch deck: [docs/MUSD-Pocket-Wave2-Final.pdf](docs/MUSD-Pocket-Wave2-Final.pdf)
+- Repo: https://github.com/Cyptoboy777/musd-pocket
+- MUSD Pocket v2, verified on Mezo testnet: [`0xEC03F758219746b6e773f107a05cF17b66E7D460`](https://explorer.test.mezo.org/address/0xEC03F758219746b6e773f107a05cF17b66E7D460)
+- Wave 1 contract, history only: [`0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8`](https://explorer.test.mezo.org/address/0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8)
+
+The verified testnet bytecode matches git `2c5bd9b`. This branch adds a per-goal fee snapshot and two-step ownership in `contracts/src/MUSDPocketV2.sol`. That source is not what is on testnet, and it is not on mainnet. We did not redeploy.
+
+## What the app does
+
+- Borrow into a goal, repay, add collateral, and take the early-withdraw path. Closing a trove is wired in the UI.
+- Protect my loan shows the collateral ratio and liquidation price before you send.
+- A shared-goal link opens before you connect a wallet, then walks through testnet, the faucet, and a chip-in.
+- Mezo's minimum loan is about 1,800 MUSD plus a 200 MUSD gas deposit, so about 2,000 MUSD of debt at open. Smaller goals stay on a plain deposit.
+- The MUSD savings vault is a separate mainnet product. We do not use it here, and it does not change a loan's collateral ratio.
+- Early unlock fee defaults to 2%, with a 5% contract cap. Chip-in is 0%.
+- English is the default. ES, PT, ZH, and FR cover the main buttons.
+- `/stats` reads the testnet contract. Team wallets are labelled as ours.
+- Mezo Passport connectors for Unisat, Xverse, and OKX sit next to the EVM wallets. Leather is not exported by OrangeKit. This is testnet only.
+
+Proof and the tester invite are in [docs/ONCHAIN-ACTIVITY.md](docs/ONCHAIN-ACTIVITY.md) and [docs/TESTER-GUIDE.md](docs/TESTER-GUIDE.md). The security notes are in [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md). They are our review, not an independent audit.
 
 ## Design
 
-**Art direction: "Engraved light."** Banknote-style guilloche, bottle-green ink, champagne-gold light.
-Type: Gloock + Geist. Tokens in `frontend/src/styles/tokens.css`.
+Engraved light: banknote guilloche, bottle-green ink, champagne gold. Type is Gloock and Geist. Tokens are in `frontend/src/styles/tokens.css`.
 
-## Links
+## Setup
 
-- **Live demo:** https://musd-pocket-mezo.vercel.app
-- **Demo video:** https://youtu.be/eWAqu1FZ-40
-- **MUSDPocket v2 (Mezo testnet, verified):** [`0xEC03…D460`](https://explorer.test.mezo.org/address/0xEC03F758219746b6e773f107a05cF17b66E7D460)
-- **v1 (Wave 1):** [`0x2d5f…A1C8`](https://explorer.test.mezo.org/address/0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8)
-- **Repo:** https://github.com/Cyptoboy777/musd-pocket
-- **On-chain activity:** [docs/ONCHAIN-ACTIVITY.md](docs/ONCHAIN-ACTIVITY.md) · **Tester guide:** [docs/TESTER-GUIDE.md](docs/TESTER-GUIDE.md) · **Security:** [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md)
+You need Foundry (we used 1.9.0), Node 22, and npm 10.
 
-## Quick start
-
-### Contracts (Foundry)
+### Contracts
 
 ```bash
-export PATH="$HOME/.foundry/bin:$PATH"
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
 cd contracts
 forge test
 ```
 
-### Frontend
+`forge test` prints 58 passed, 0 failed, 1 skipped. The skipped test reads Mezo mainnet only when `MEZO_MAINNET_RPC` is set. It does not deploy and does not broadcast.
 
-Tests: **47 Foundry** plus 1 skipped mainnet read unless `MEZO_MAINNET_RPC` is set (`forge test`), and **47 Vitest** (`npm test`).
+Test counts: 58 Foundry passed, 0 failed, 1 skipped, 56 Vitest.
+
+### Frontend
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm test
 npm run build
 ```
 
-Hosted on Vercel with Root Directory `frontend` (see `frontend/vercel.json`). Pages workflow still builds with `VITE_BASE=/musd-pocket/`.
+`npm ci` uses `frontend/.npmrc` (`legacy-peer-deps=true`) because a WalletConnect dependency asks for TypeScript 5 while this app uses TypeScript 7. `npm test` prints 56 passed. `npm run build` typechecks and writes `frontend/dist`. GitHub Actions runs both on pull requests (`.github/workflows/ci.yml`).
 
-## Network (testnet)
+The Vercel project uses Root Directory `frontend`. See `frontend/vercel.json`.
 
-- Chain ID `31611` · RPC `https://rpc.test.mezo.org`
-- MUSD `0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503` (18 decimals)
-- MUSDPocket v2 `0xEC03F758219746b6e773f107a05cF17b66E7D460`
+## Network
+
+Testnet, from [Mezo's getting started guide](https://mezo.org/docs/developers/getting-started/):
+
+- Chain ID `31611`
+- RPC `https://rpc.test.mezo.org`
 - Explorer https://explorer.test.mezo.org
 - Faucet https://faucet.test.mezo.org
-- Borrow https://testnet.mezo.org/feature/borrow (min 1,800 MUSD + 200 gas deposit)
-- Mainnet bytecode is prepared and checked. Deployment is pending a verified gas sponsorship. The app does not ask anyone to fund a wallet. See [docs/MAINNET-DEPLOY.md](docs/MAINNET-DEPLOY.md).
+- MUSD `0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503` from the [contracts reference](https://mezo.org/docs/users/resources/contracts-reference/)
+- Borrow app https://testnet.mezo.org/feature/borrow
 
-## Pitch
+Mainnet (chain 31612) is documented in that same getting started guide. Pocket is not deployed there. The dry-run and the steps for a later sponsored deploy are in [docs/DEPLOY_MAINNET.md](docs/DEPLOY_MAINNET.md). We do not ask anyone to fund a wallet for it.
 
-- Current pitch deck (PDF): [docs/MUSD-Pocket-Wave2-Final.pdf](docs/MUSD-Pocket-Wave2-Final.pdf)
-- Current slides: [docs/MUSD-Pocket-Wave2-Final.pptx](docs/MUSD-Pocket-Wave2-Final.pptx)
-- Earlier decks, kept as history: [docs/MUSD-Pocket-Wave2-Deck.pdf](docs/MUSD-Pocket-Wave2-Deck.pdf), [docs/MUSD-Pocket-Pitch-Deck.pdf](docs/MUSD-Pocket-Pitch-Deck.pdf)
-- Pitch video (Wave 2 demo): https://youtu.be/eWAqu1FZ-40
+## Older decks
+
+[docs/MUSD-Pocket-Wave2-Deck.pdf](docs/MUSD-Pocket-Wave2-Deck.pdf) and [docs/MUSD-Pocket-Pitch-Deck.pdf](docs/MUSD-Pocket-Pitch-Deck.pdf) are earlier versions. The current deck is the Final PDF linked above.

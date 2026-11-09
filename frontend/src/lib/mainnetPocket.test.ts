@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { MAINNET_POCKET_DEPS, POCKET_MAINNET_ADDRESS, mainnetPocketReady } from "./mainnetPocket";
-import { pocketWritesAllowed, mezoTestnet } from "./chains";
+import { MAINNET_POCKET_DEPS, POCKET_MAINNET_ADDRESS, mainnetPocketConfigured, mainnetPocketReady } from "./mainnetPocket";
+import { pocketWritesAllowed, mezoTestnet, walletChains } from "./chains";
 
 const code = "0x60806040";
 
 describe("mainnet pocket gate", () => {
   it("has no verified mainnet address and does not allow mainnet writes", () => {
     expect(POCKET_MAINNET_ADDRESS).toBeNull();
+    expect(mainnetPocketConfigured()).toBe(false);
+    expect(walletChains().map((chain) => chain.id)).toEqual([mezoTestnet.id]);
     expect(pocketWritesAllowed(MAINNET_POCKET_DEPS.chainId)).toBe(false);
     expect(pocketWritesAllowed(mezoTestnet.id)).toBe(true);
     expect(mainnetPocketReady({ chainId: 31612 })).toBe(false);

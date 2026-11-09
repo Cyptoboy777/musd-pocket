@@ -1,117 +1,48 @@
 Multiple frameworks detected: Foundry, solc, Solc-json. Using Foundry (highest priority). Use --compile-force-framework to override.
-'forge clean' running (wd: /workspace/buildathons/mezo/contracts)
+'forge clean' running (wd: /agent/repos/musd-pocket/contracts)
 'forge config --json' running
-'forge build --build-info --deny never src/MUSDPocketV2.sol' running (wd: /workspace/buildathons/mezo/contracts)
+'forge build --build-info --deny never src/MUSDPocketV2.sol' running (wd: /agent/repos/musd-pocket/contracts)
 INFO:Detectors:
 Detector: reentrancy-balance
-Reentrancy in MUSDPocketV2.borrowToGoal(uint256,uint256,address,address,bytes,uint256) (src/MUSDPocketV2.sol#208-231):
+Reentrancy in MUSDPocketV2.borrowToGoal(uint256,uint256,address,address,bytes,uint256) (src/MUSDPocketV2.sol#233-256):
 	External call allowing reentrancy:
-	- borrowerOpsSig.withdrawMUSDWithSignature(amount,upperHint,lowerHint,msg.sender,address(this),signature,deadline) (src/MUSDPocketV2.sol#219-221)
+	- borrowerOpsSig.withdrawMUSDWithSignature(amount,upperHint,lowerHint,msg.sender,address(this),signature,deadline) (src/MUSDPocketV2.sol#246-248)
 	Balance read before the call:
-	- before = musd.balanceOf(address(this)) (src/MUSDPocketV2.sol#218)
+	- before = musd.balanceOf(address(this)) (src/MUSDPocketV2.sol#243)
 	Possible stale balance used after the call in a condition:
-	- received != amount (src/MUSDPocketV2.sol#223)
+	- received != amount (src/MUSDPocketV2.sol#250)
 		- stale variable `received`
 Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
 INFO:Detectors:
 Detector: incorrect-equality
-MUSDPocketV2.recoverStray(address) (src/MUSDPocketV2.sol#367-373) uses a dangerous strict equality:
-	- amount == 0 (src/MUSDPocketV2.sol#370)
+MUSDPocketV2.recoverStray(address) (src/MUSDPocketV2.sol#393-399) uses a dangerous strict equality:
+	- amount == 0 (src/MUSDPocketV2.sol#396)
 Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
 INFO:Detectors:
 Detector: locked-ether
 Contract locking ether found:
-	Contract MUSDPocketV2 (src/MUSDPocketV2.sol#26-430) has payable functions:
-	 - MUSDPocketV2.receive() (src/MUSDPocketV2.sol#149-151)
+	Contract MUSDPocketV2 (src/MUSDPocketV2.sol#33-468) has payable functions:
+	 - MUSDPocketV2.receive() (src/MUSDPocketV2.sol#163-165)
 	But does not have a function to withdraw the ether
 Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#contracts-that-lock-ether
 INFO:Detectors:
-Detector: reentrancy-no-eth
-Reentrancy in MUSDPocketV2.borrowToGoal(uint256,uint256,address,address,bytes,uint256) (src/MUSDPocketV2.sol#208-231):
-	External calls:
-	- borrowerOpsSig.withdrawMUSDWithSignature(amount,upperHint,lowerHint,msg.sender,address(this),signature,deadline) (src/MUSDPocketV2.sol#219-221)
-	State variables written after the call(s):
-	- _credit(goalId,msg.sender,amount) (src/MUSDPocketV2.sol#229)
-		- goals[goalId].balance += amount (src/MUSDPocketV2.sol#403)
-	MUSDPocketV2.goals (src/MUSDPocketV2.sol#63) can be used in cross function reentrancies:
-	- MUSDPocketV2.createGoal(string,uint256,uint64,bool) (src/MUSDPocketV2.sol#157-183)
-	- MUSDPocketV2.getGoal(uint256) (src/MUSDPocketV2.sol#314-329)
-	- MUSDPocketV2.goals (src/MUSDPocketV2.sol#63)
-	- MUSDPocketV2.progressBps(uint256) (src/MUSDPocketV2.sol#335-339)
-	- MUSDPocketV2.setFamilyMember(uint256,address,bool) (src/MUSDPocketV2.sol#275-283)
-Reentrancy in MUSDPocketV2.deposit(uint256,uint256) (src/MUSDPocketV2.sol#186-190):
-	External calls:
-	- _pullFrom(msg.sender,amount) (src/MUSDPocketV2.sol#188)
-		- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.transferFrom.selector,from,to,amount)) (src/MUSDPocketV2.sol#421-422)
-	State variables written after the call(s):
-	- _credit(goalId,msg.sender,amount) (src/MUSDPocketV2.sol#189)
-		- goals[goalId].balance += amount (src/MUSDPocketV2.sol#403)
-	MUSDPocketV2.goals (src/MUSDPocketV2.sol#63) can be used in cross function reentrancies:
-	- MUSDPocketV2.createGoal(string,uint256,uint64,bool) (src/MUSDPocketV2.sol#157-183)
-	- MUSDPocketV2.getGoal(uint256) (src/MUSDPocketV2.sol#314-329)
-	- MUSDPocketV2.goals (src/MUSDPocketV2.sol#63)
-	- MUSDPocketV2.progressBps(uint256) (src/MUSDPocketV2.sol#335-339)
-	- MUSDPocketV2.setFamilyMember(uint256,address,bool) (src/MUSDPocketV2.sol#275-283)
-Reentrancy in MUSDPocketV2.depositWithPermit(uint256,uint256,uint256,uint8,bytes32,bytes32) (src/MUSDPocketV2.sol#193-201):
-	External calls:
-	- _permit(amount,deadline,v,r,s) (src/MUSDPocketV2.sol#198)
-		- IERC20Permit(address(musd)).permit(msg.sender,address(this),amount,deadline,v,r,s) (src/MUSDPocketV2.sol#410-413)
-	- _pullFrom(msg.sender,amount) (src/MUSDPocketV2.sol#199)
-		- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.transferFrom.selector,from,to,amount)) (src/MUSDPocketV2.sol#421-422)
-	State variables written after the call(s):
-	- _credit(goalId,msg.sender,amount) (src/MUSDPocketV2.sol#200)
-		- goals[goalId].balance += amount (src/MUSDPocketV2.sol#403)
-	MUSDPocketV2.goals (src/MUSDPocketV2.sol#63) can be used in cross function reentrancies:
-	- MUSDPocketV2.createGoal(string,uint256,uint64,bool) (src/MUSDPocketV2.sol#157-183)
-	- MUSDPocketV2.getGoal(uint256) (src/MUSDPocketV2.sol#314-329)
-	- MUSDPocketV2.goals (src/MUSDPocketV2.sol#63)
-	- MUSDPocketV2.progressBps(uint256) (src/MUSDPocketV2.sol#335-339)
-	- MUSDPocketV2.setFamilyMember(uint256,address,bool) (src/MUSDPocketV2.sol#275-283)
-Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
-INFO:Detectors:
-Detector: reentrancy-benign
-Reentrancy in MUSDPocketV2.borrowToGoal(uint256,uint256,address,address,bytes,uint256) (src/MUSDPocketV2.sol#208-231):
-	External calls:
-	- borrowerOpsSig.withdrawMUSDWithSignature(amount,upperHint,lowerHint,msg.sender,address(this),signature,deadline) (src/MUSDPocketV2.sol#219-221)
-	State variables written after the call(s):
-	- totalBorrowedToGoals += amount (src/MUSDPocketV2.sol#228)
-	- _credit(goalId,msg.sender,amount) (src/MUSDPocketV2.sol#229)
-		- totalLocked += amount (src/MUSDPocketV2.sol#404)
-Reentrancy in MUSDPocketV2.deposit(uint256,uint256) (src/MUSDPocketV2.sol#186-190):
-	External calls:
-	- _pullFrom(msg.sender,amount) (src/MUSDPocketV2.sol#188)
-		- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.transferFrom.selector,from,to,amount)) (src/MUSDPocketV2.sol#421-422)
-	State variables written after the call(s):
-	- _credit(goalId,msg.sender,amount) (src/MUSDPocketV2.sol#189)
-		- totalLocked += amount (src/MUSDPocketV2.sol#404)
-Reentrancy in MUSDPocketV2.depositWithPermit(uint256,uint256,uint256,uint8,bytes32,bytes32) (src/MUSDPocketV2.sol#193-201):
-	External calls:
-	- _permit(amount,deadline,v,r,s) (src/MUSDPocketV2.sol#198)
-		- IERC20Permit(address(musd)).permit(msg.sender,address(this),amount,deadline,v,r,s) (src/MUSDPocketV2.sol#410-413)
-	- _pullFrom(msg.sender,amount) (src/MUSDPocketV2.sol#199)
-		- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.transferFrom.selector,from,to,amount)) (src/MUSDPocketV2.sol#421-422)
-	State variables written after the call(s):
-	- _credit(goalId,msg.sender,amount) (src/MUSDPocketV2.sol#200)
-		- totalLocked += amount (src/MUSDPocketV2.sol#404)
-Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
-INFO:Detectors:
 Detector: timestamp
-MUSDPocketV2.createGoal(string,uint256,uint64,bool) (src/MUSDPocketV2.sol#157-183) uses timestamp for comparisons
+MUSDPocketV2.createGoal(string,uint256,uint64,bool) (src/MUSDPocketV2.sol#171-199) uses timestamp for comparisons
 	Dangerous comparisons:
-	- unlockTime <= block.timestamp (src/MUSDPocketV2.sol#162)
-	- lock < MIN_LOCK || lock > MAX_LOCK (src/MUSDPocketV2.sol#164)
-MUSDPocketV2.withdraw(uint256) (src/MUSDPocketV2.sol#234-248) uses timestamp for comparisons
+	- unlockTime <= block.timestamp (src/MUSDPocketV2.sol#176)
+	- lock < MIN_LOCK || lock > MAX_LOCK (src/MUSDPocketV2.sol#178)
+MUSDPocketV2.withdraw(uint256) (src/MUSDPocketV2.sol#259-273) uses timestamp for comparisons
 	Dangerous comparisons:
-	- block.timestamp < g.unlockTime (src/MUSDPocketV2.sol#238)
-MUSDPocketV2.earlyWithdraw(uint256) (src/MUSDPocketV2.sol#251-269) uses timestamp for comparisons
+	- block.timestamp < g.unlockTime (src/MUSDPocketV2.sol#263)
+MUSDPocketV2.earlyWithdraw(uint256) (src/MUSDPocketV2.sol#276-294) uses timestamp for comparisons
 	Dangerous comparisons:
-	- block.timestamp >= g.unlockTime (src/MUSDPocketV2.sol#255)
+	- block.timestamp >= g.unlockTime (src/MUSDPocketV2.sol#280)
 Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
 INFO:Detectors:
 Detector: low-level-calls
-Low level call in MUSDPocketV2._pullTo(address,address,uint256) (src/MUSDPocketV2.sol#420-424):
-	- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.transferFrom.selector,from,to,amount)) (src/MUSDPocketV2.sol#421-422)
-Low level call in MUSDPocketV2._send(address,uint256) (src/MUSDPocketV2.sol#426-429):
-	- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.transfer.selector,to,amount)) (src/MUSDPocketV2.sol#427)
+Low level call in MUSDPocketV2._pullTo(address,address,uint256) (src/MUSDPocketV2.sol#458-462):
+	- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.transferFrom.selector,from,to,amount)) (src/MUSDPocketV2.sol#459-460)
+Low level call in MUSDPocketV2._send(address,uint256) (src/MUSDPocketV2.sol#464-467):
+	- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.transfer.selector,to,amount)) (src/MUSDPocketV2.sol#465)
 Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
-INFO:Slither:src/MUSDPocketV2.sol analyzed (6 contracts with 102 detectors), 14 result(s) found
+INFO:Slither:src/MUSDPocketV2.sol analyzed (6 contracts with 102 detectors), 8 result(s) found

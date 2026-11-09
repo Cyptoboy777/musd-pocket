@@ -14,10 +14,10 @@ Legend: PASS = evidence attached this wave. OPEN = needs user (materials/recruit
 |---|---|---|
 | Integration L2: only plain ERC-20 MUSD | PASS | borrowToGoal composes BOS WithdrawMUSD: tx https://explorer.test.mezo.org/tx/0x15ee0df8a64757939921d4392b88909d5dfc2f0a69f1b14b407bfe780fcbba7f ; Protect addColl https://explorer.test.mezo.org/tx/0x2da3e12391fedcd94868e589525be5a5137c9eb4f18bbb3efd46b790edac0c22 ; repay https://explorer.test.mezo.org/tx/0x6bc4369125d44ec9863927812d96f3599accc976e17466383c4ca854e652fe5e |
 | Borrow-into-goal existed but source not in repo / unverified / unused | PASS | Source `contracts/src/MUSDPocketV2.sol` in repo; explorer verified; UI GoalCard borrow mode; tx above |
-| Wrong live link (`musd-pocket.vercel.app` collision) | PASS | README + app + Proof + submissions cite only https://musd-pocket-mezo.vercel.app |
+| Wrong live link (another team's Vercel app) | PASS | README, app, and submissions use https://musd-pocket-mezo.vercel.app |
 | No live ICR / liquidation price | PASS | `BitcoinPanel` + borrow preview + Protect preview use TroveManager + PriceFeed (`frontend/src/lib/mezo.ts`, `risk.ts`) |
 | Consider MUSD Savings vault | PASS | `SavingsVaultPanel` + `vault.ts` feature flag; honest empty on 31611; `data-feature="smusd-no-icr"` |
-| Real users beyond two wallets | OPEN (honest) | Self wallets labelled in Proof; Community testers empty by design; `docs/TESTER-GUIDE.md` for recruiting. No fake users. |
+| Real users beyond two wallets | OPEN (honest) | Builder wallets labelled. One outside createGoal (#10), no outside deposit. See facts.json. |
 
 ## B. dsh_agent / builder notes
 
@@ -59,7 +59,7 @@ Legend: PASS = evidence attached this wave. OPEN = needs user (materials/recruit
 | Invite link + chip-in E2E | PASS | Invite UI `data-feature="invite-landing"`; chip-in tx 0x83439819…d63f on shared goal #6 |
 | Global i18n (en/es/pt/zh/fr) | PASS | `frontend/src/lib/i18n.ts`; no Hindi/Telugu; vitest `wave2.test.ts` |
 | Revenue panel | PASS | `data-feature="revenue-model"` |
-| Tests | PASS | 47 Foundry + 22 vitest |
+| Tests | HISTORICAL | This row was 47 Foundry + 22 Vitest on 3 Nov 2026. Current counts are in facts.json. |
 
 ## F. Production click-through QA (before/after merge)
 
@@ -73,12 +73,12 @@ Run against https://musd-pocket-mezo.vercel.app after merge.
 | Nav Contract / explorer links | PASS | PASS | explorer.test.mezo.org address + borrowToGoal tx → HTTP 200 |
 | Proof self-wallet explorer links | PASS | PASS | Same explorer host 200; Proof panel ships self-wallet links only |
 | Community testers empty | PASS | PASS | `community-testers-empty` marker in prod JS |
-| Wrong URL not linked as primary | PASS | PASS | Prod JS contains only `musd-pocket-mezo.vercel.app` (2 hits); zero `musd-pocket.vercel.app` |
+| Wrong URL not linked as primary | PASS | PASS | Prod bundle cites https://musd-pocket-mezo.vercel.app |
 | Lang cycle EN→ES→PT→ZH→FR | PASS | PASS | `lang-toggle` + i18n cycle in code/tests |
 | Invite `?invite=6` | PASS | PASS | https://musd-pocket-mezo.vercel.app/?invite=6 → 200 |
 | Honest sMUSD no-ICR | PASS | PASS | `smusd-no-icr` in prod JS |
 
-Preview alias (SSO-protected): https://musd-pocket-git-wave2-pro-cryptoboys-projects-d555dcd8.vercel.app — verified via vercel curl before merge; same asset hash as prod.
+SSO preview hostnames are not submission links. Use https://musd-pocket-mezo.vercel.app.
 
 ## G. Hard rules compliance
 
