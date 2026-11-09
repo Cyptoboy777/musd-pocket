@@ -60,7 +60,7 @@ We do not treat this as a clean bill of health. The balance check trusts that th
 
 ## Tests
 
-`forge test` on a clean clone (Forge 1.9.0): **58 passed, 0 failed, 1 skipped**. The skip is `MainnetPreflightTest`, which forks mainnet only when `MEZO_MAINNET_RPC` is set and does not deploy. `npm test` is **49 passed**, and `npm run build` passes.
+`forge test` on a clean clone (Forge 1.9.0): **58 passed, 0 failed, 1 skipped**. The skip is `MainnetPreflightTest`, which forks mainnet only when `MEZO_MAINNET_RPC` is set and does not deploy. `npm test` is **56 passed**, and `npm run build` passes.
 
 Coverage we added for this pass:
 

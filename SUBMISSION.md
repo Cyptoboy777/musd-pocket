@@ -48,7 +48,7 @@ Mezo mainnet does not have this contract. We do not claim it is live there.
 
 1. Read the Mezo docs and the MUSD addresses, and picked goal savings for the Access track.
 2. Shipped v1, then v2 with borrow-into-goal against BorrowerOperationsSignatures.
-3. Kept Foundry and Vitest green. Current counts are in facts.json (58 Foundry passed, 0 failed, 1 skipped, 49 Vitest).
+3. Kept Foundry and Vitest green. Current counts are in facts.json (58 Foundry passed, 0 failed, 1 skipped, 56 Vitest).
 4. Hosted the frontend at https://musd-pocket-mezo.vercel.app.
 
 ## Links

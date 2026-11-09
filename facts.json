@@ -55,7 +55,7 @@
     "foundryPassed": 58,
     "foundryFailed": 0,
     "foundrySkipped": 1,
-    "vitestPassed": 49,
-    "note": "Clean clone, forge 1.9.0: forge test 58 passed, 0 failed, 1 skipped (MainnetPreflight unless MEZO_MAINNET_RPC is set). npm test: 49 passed. npm run build passed."
+    "vitestPassed": 56,
+    "note": "Clean clone, forge 1.9.0: forge test 58 passed, 0 failed, 1 skipped (MainnetPreflight unless MEZO_MAINNET_RPC is set). npm test: 56 passed. npm run build passed."
   }
 }

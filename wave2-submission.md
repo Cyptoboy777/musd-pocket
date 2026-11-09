@@ -26,7 +26,7 @@ Key Wave 2 txs (explorer.test.mezo.org)
 - repayMUSD: 0x6bc4369125d44ec9863927812d96f3599accc976e17466383c4ca854e652fe5e
 - helper chip-in: 0x834398190a083850ce1fa341dc5767fb8d1376a6805a7990b58d52c96eead63f
 
-Tests: 58 Foundry passed, 0 failed, 1 skipped mainnet read, 49 Vitest passed. Counts are in facts.json.
+Tests: 58 Foundry passed, 0 failed, 1 skipped mainnet read, 56 Vitest passed. Counts are in facts.json.
 Demo video: https://youtu.be/eWAqu1FZ-40
 Pitch deck: docs/MUSD-Pocket-Wave2-Final.pdf
 Mezo Passport: Unisat / Xverse / OKX via OrangeKit inside RainbowKit (testnet).

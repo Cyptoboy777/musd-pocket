@@ -48,26 +48,45 @@ The getting started page points at [github.com/mezo-org/musd](https://github.com
 
 There is no proxy and no proxy admin on Pocket. `owner` is the constructor argument. At deploy, `earlyFeeBps` is 200 (2%) and the cap is 500 (5%). Goals store the fee in force when they are created. A later `setEarlyFeeBps` does not change open goals. The owner can claim the fee pool, recover tokens that are not locked in a goal, and start a two-step ownership move. The owner cannot take goal principal. This is not an independent audit. See [SECURITY_REVIEW.md](SECURITY_REVIEW.md).
 
-## When someone pays the gas
+## Deploy from MetaMask
 
-1. Confirm `POCKET_OWNER` is the multisig, not the key that pays gas.
-2. From `contracts/`, simulate again:
+The public app at https://musd-pocket-mezo.vercel.app does not include a deploy page. Vercel preview builds (`VERCEL_ENV=preview`) serve `/deploy-tool`. That page connects MetaMask, asks for Mezo mainnet (chain 31612, RPC `https://mezo.drpc.org`, explorer https://explorer.mezo.org, from the [getting started guide](https://mezo.org/docs/developers/getting-started/)), and sends the creation transaction from the wallet. The key stays in MetaMask. `deploy-mainnet.sh` still refuses `--broadcast`.
+
+Constructor arguments shown on the page, same as `contracts/script/DeployV2Mainnet.s.sol`:
+
+| Argument | Address | Source |
+|---|---|---|
+| musd | `0xdD468A1DDc392dcdbEf6db6e34E89AA338F9F186` | [Contracts reference](https://mezo.org/docs/users/resources/contracts-reference/) and [musd v1.1.0](https://github.com/mezo-org/musd/releases/tag/v1.1.0) |
+| borrowerOperationsSignatures | `0xB57ab578BF20b3e318f3EFAA587C51DBccE5df7a` | [musd v1.1.0](https://github.com/mezo-org/musd/releases/tag/v1.1.0) proxy |
+| troveManager | `0x94AfB503dBca74aC3E4929BACEeDfCe19B93c193` | same release, proxy |
+| priceFeed | `0xc5aC5A8892230E0A3e1c473881A2de7353fFcA88` | same release, proxy |
+| initialOwner | the address you type, defaulting to the connected wallet | your multisig |
+
+BorrowerOperations `0x44b1bac67dDA612a41a58AAf779143B181dEe031` is the proxy the script checks. It is not a constructor argument.
+
+On the page, confirm the gas estimate and the creation-bytecode hash, then confirm in MetaMask. After the receipt, the page reads `musd`, `borrowerOpsSig`, `troveManager`, `priceFeed`, and `owner` and says whether they match. Leave `facts.json` `mainnet.pocket` null until the explorer verification below passes.
+
+## Verify the source on the explorer
+
+From `contracts/`, after you have the deployed address and the owner you used. This does not broadcast a Pocket transaction. It submits the source to the explorer API when you run it.
 
 ```bash
-export POCKET_OWNER=0xYOUR_MULTISIG
-export MEZO_MAINNET_RPC=https://mezo.drpc.org
-./script/deploy-mainnet.sh
+cd contracts
+forge verify-contract \
+  --rpc-url https://mezo.drpc.org \
+  --verifier blockscout \
+  --verifier-url https://explorer.mezo.org/api \
+  <deployed-address> \
+  src/MUSDPocketV2.sol:MUSDPocketV2 \
+  --constructor-args $(cast abi-encode "constructor(address,address,address,address,address)" \
+    0xdD468A1DDc392dcdbEf6db6e34E89AA338F9F186 \
+    0xB57ab578BF20b3e318f3EFAA587C51DBccE5df7a \
+    0x94AfB503dBca74aC3E4929BACEeDfCe19B93c193 \
+    0xc5aC5A8892230E0A3e1c473881A2de7353fFcA88 \
+    <owner>)
 ```
 
-3. Read the new gas figure. Stop if the dependencies revert.
-4. Broadcast only from a machine that holds the sponsored key, with `--broadcast` and the key in an environment variable, not in the repo. `deploy-mainnet.sh` will refuse that on purpose. The underlying script is `script/DeployV2Mainnet.s.sol`.
-5. Verify. `./script/verify-mainnet.sh` only prints the command. It does not submit it. After you have the real address:
-
-```bash
-export POCKET_ADDRESS=0xDEPLOYED
-export POCKET_OWNER=0xYOUR_MULTISIG
-# then run the printed forge verify-contract against https://explorer.mezo.org/api
-```
+`https://mezo.drpc.org` and chain 31612 are from the [getting started guide](https://mezo.org/docs/developers/getting-started/). The four protocol addresses are from the [contracts reference](https://mezo.org/docs/users/resources/contracts-reference/) (MUSD) and the [musd v1.1.0 release](https://github.com/mezo-org/musd/releases/tag/v1.1.0) (the three proxies). `./script/verify-mainnet.sh` prints this command and does not send it.
 
 ## After the transaction exists
 
