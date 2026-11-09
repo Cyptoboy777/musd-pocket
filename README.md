@@ -52,9 +52,9 @@ cd contracts
 forge test
 ```
 
-`forge test` prints 58 passed and 1 skipped. The skipped test reads Mezo mainnet only when `MEZO_MAINNET_RPC` is set. It does not deploy and does not broadcast.
+`forge test` prints 58 passed, 0 failed, 1 skipped. The skipped test reads Mezo mainnet only when `MEZO_MAINNET_RPC` is set. It does not deploy and does not broadcast.
 
-Test counts: 58 Foundry passed, 1 skipped, 49 Vitest.
+Test counts: 58 Foundry passed, 0 failed, 1 skipped, 49 Vitest.
 
 ### Frontend
 
@@ -65,7 +65,7 @@ npm test
 npm run build
 ```
 
-`npm ci` uses `frontend/.npmrc` (`legacy-peer-deps=true`) because a WalletConnect dependency asks for TypeScript 5 while this app uses TypeScript 7. `npm test` prints 49 passed. `npm run build` typechecks and writes `frontend/dist`.
+`npm ci` uses `frontend/.npmrc` (`legacy-peer-deps=true`) because a WalletConnect dependency asks for TypeScript 5 while this app uses TypeScript 7. `npm test` prints 49 passed. `npm run build` typechecks and writes `frontend/dist`. GitHub Actions runs both on pull requests (`.github/workflows/ci.yml`).
 
 The Vercel project uses Root Directory `frontend`. See `frontend/vercel.json`.
 

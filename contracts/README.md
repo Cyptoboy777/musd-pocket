@@ -17,7 +17,7 @@ The live app is https://musd-pocket-mezo.vercel.app. It talks to the verified Me
 forge test
 ```
 
-Expect 58 passed and 1 skipped. The skipped test is `MainnetPreflightTest`, and it runs only when `MEZO_MAINNET_RPC` is set. It does not broadcast.
+Expect 58 passed, 0 failed, 1 skipped. The skipped test is `MainnetPreflightTest`, and it runs only when `MEZO_MAINNET_RPC` is set. It does not broadcast.
 
 ## Mainnet
 

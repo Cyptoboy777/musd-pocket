@@ -22,20 +22,18 @@ contract DeployV2MainnetTest is Test {
         script.run();
     }
 
-    /// @dev Local creation cost. A mainnet eth_estimateGas is recorded in docs/DEPLOY_MAINNET.md
-    ///      when the dry-run RPC is reachable. This number is not a fee quote.
+    /// @dev Cost of the CREATE frame itself. Read it before any other call: lastFrameGas
+    ///      is whichever frame finished last, and a later owner() read is only a few
+    ///      thousand gas. gasleft() in the caller is also not the create cost when the
+    ///      create is isolated. This is not a fee quote.
     function test_creationGas_isBounded() public {
-        uint256 before = gasleft();
-        new MUSDPocketV2(
-            address(0x1),
-            address(0x2),
-            address(0x3),
-            address(0x4),
-            address(0x5)
-        );
-        uint256 used = before - gasleft();
+        MUSDPocketV2 pocket = new MUSDPocketV2(address(0x1), address(0x2), address(0x3), address(0x4), address(0x5));
+        uint256 used = uint256(vm.lastFrameGas().gasTotalUsed);
         console2.log("creationGas", used);
         assertGt(used, 500_000);
         assertLt(used, 4_000_000);
+
+        assertGt(address(pocket).code.length, 1000);
+        assertEq(pocket.owner(), address(0x5));
     }
 }

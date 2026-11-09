@@ -60,7 +60,7 @@ We do not treat this as a clean bill of health. The balance check trusts that th
 
 ## Tests
 
-`forge test` on this commit: **58 passed, 1 skipped**. The skip is `MainnetPreflightTest`, which forks mainnet only when `MEZO_MAINNET_RPC` is set and does not deploy.
+`forge test` on a clean clone (Forge 1.9.0): **58 passed, 0 failed, 1 skipped**. The skip is `MainnetPreflightTest`, which forks mainnet only when `MEZO_MAINNET_RPC` is set and does not deploy. `npm test` is **49 passed**, and `npm run build` passes.
 
 Coverage we added for this pass:
 
@@ -68,7 +68,7 @@ Coverage we added for this pass:
 - `test_ownership_twoStep` and `test_ownership_pendingCanBeReplaced`: the owner does not change until `acceptOwnership`. A stranger cannot accept. The zero address is rejected.
 - `test_deposit_callbackCannotReenter` and `test_deposit_callbackCannotWithdrawEarlyCredit`.
 - `MUSDPocketV2InvariantTest`: 40 runs, depth 20. `invariant_solvent` keeps the MUSD balance at least `totalLocked + feePool` with no stray balance. `invariant_openGoalKeepsCreationFee` keeps the snapshotted fee inside the 5% cap.
-- `DeployV2MainnetTest`: the script reverts on a zero owner and on the wrong chain, before it can deploy.
+- `DeployV2MainnetTest`: the script reverts on a zero owner and on the wrong chain, before it can deploy. Creation gas is `lastFrameGas().gasTotalUsed` on the CREATE, and it has to sit between 500,000 and 4,000,000. `gasleft()` in the caller is not that number.
 
 ## Before a mainnet transaction
 
