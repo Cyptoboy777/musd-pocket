@@ -1,7 +1,7 @@
 import { connectorsForWallets, getDefaultConfig, getDefaultWallets } from "@rainbow-me/rainbowkit";
 import { coinbaseWallet, injectedWallet } from "@rainbow-me/rainbowkit/wallets";
 import { createConfig, http } from "wagmi";
-import { mezoTestnet } from "./lib/chains";
+import { mezoMainnet, mezoTestnet, walletChains } from "./lib/chains";
 import { getPassportWalletGroup } from "./lib/passportWallets";
 
 /**
@@ -18,20 +18,23 @@ const wcProjectId = (import.meta.env.VITE_WC_PROJECT_ID as string | undefined)?.
 export const walletConnectEnabled = wcProjectId.length > 0;
 
 const appName = "MUSD Pocket";
-const transports = { [mezoTestnet.id]: http() };
+const chains = walletChains();
+const transports = chains.length === 1
+  ? { [mezoTestnet.id]: http() }
+  : { [mezoTestnet.id]: http(), [mezoMainnet.id]: http(mezoMainnet.rpcUrls.default.http[0]) };
 const passportGroup = getPassportWalletGroup();
 
 export const config = walletConnectEnabled
   ? getDefaultConfig({
       appName,
       projectId: wcProjectId,
-      chains: [mezoTestnet],
+      chains,
       transports,
       ssr: false,
       wallets: [passportGroup, ...getDefaultWallets().wallets],
     })
   : createConfig({
-      chains: [mezoTestnet],
+      chains,
       transports,
       connectors: connectorsForWallets(
         [

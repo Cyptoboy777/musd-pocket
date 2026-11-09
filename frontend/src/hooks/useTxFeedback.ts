@@ -18,7 +18,11 @@ export function walletErrorCopy(err: unknown): WalletErrorCopy {
     return { title: "Not sent", body: "You declined the request in your wallet. Nothing was sent.", notSubmitted: true };
   }
   if (/POCKET_TESTNET_ONLY/i.test(msg)) {
-    return { title: "Not sent", body: "Savings goals are on Mezo testnet. Nothing was sent.", notSubmitted: true };
+    return {
+      title: "Not sent",
+      body: "Savings goals are on Mezo testnet. Mainnet Pocket is not deployed. Nothing was sent.",
+      notSubmitted: true,
+    };
   }
   if (/insufficient funds/i.test(msg)) {
     return { title: "Not sent", body: "Not enough BTC for gas. Nothing was sent.", notSubmitted: true };

@@ -14,6 +14,7 @@ import { formatUnits, parseUnits, isAddress, zeroAddress } from "viem";
 import { AnimatePresence, m } from "motion/react";
 import { musdPocketAbi, erc20Abi } from "./lib/abi";
 import { MUSD_ADDRESS, MEZO_MAINNET_CHAIN_ID, POCKET_ADDRESS, POCKET_V1_ADDRESS, MEZO, mezoTestnet, pocketWritesAllowed } from "./lib/chains";
+import { mainnetPocketConfigured } from "./lib/mainnetPocket";
 import { useMezoActions, useMezoPosition, type MezoPosition } from "./lib/mezo";
 import { COMFORT, POCKET_FLOOR, BAND_COPY, band, liquidationPrice, maxBorrowAt, ratio, ratioAfterBorrow } from "./lib/risk";
 import { BitcoinPanel } from "./components/BitcoinPanel";
@@ -243,6 +244,9 @@ export default function App() {
             <Wordmark />
             <p>Bitcoin-backed savings goals on Mezo. Built for the AKINDO Mezo Buildathon, Access &amp; Distribution track.</p>
             <p className="footer-badge" data-feature="testnet-badge">{tr(lang, "testnetOnly")} · {tr(lang, "feeNote")}</p>
+            {!mainnetPocketConfigured() && (
+              <p className="footer-badge faint" data-feature="mainnet-not-deployed">Mainnet Pocket is not deployed. This app sends savings transactions on Mezo testnet only.</p>
+            )}
             <p className="footer-badge faint" data-feature="mezo-passport-btc">{tr(lang, "passportNote")}</p>
           </div>
           <dl className="footer-addrs">
@@ -251,13 +255,14 @@ export default function App() {
             <div><dt>Mezo borrow signatures</dt><dd><Addr value={MEZO.borrowerOpsSignatures} /></dd></div>
             <div><dt>MUSD token</dt><dd><Addr value={MUSD_ADDRESS} /></dd></div>
             <div><dt>Network</dt><dd>Mezo testnet</dd></div>
+            <div><dt>Mainnet</dt><dd>{mainnetPocketConfigured() ? "Address set" : "Not deployed"}</dd></div>
           </dl>
           <div className="footer-links">
             <a href={LIVE_APP} target="_blank" rel="noreferrer">Live app <IconExternal width={14} height={14} /></a>
             <a href={EXPLORER} target="_blank" rel="noreferrer">Explorer <IconExternal width={14} height={14} /></a>
             <a href={REPO} target="_blank" rel="noreferrer">Source <IconExternal width={14} height={14} /></a>
             <a href="/stats">Live stats</a>
-            <a href={`${REPO}/blob/master/docs/onchain-activity.md`} target="_blank" rel="noreferrer">On-chain activity <IconExternal width={14} height={14} /></a>
+            <a href={`${REPO}/blob/master/docs/ONCHAIN-ACTIVITY.md`} target="_blank" rel="noreferrer">On-chain activity <IconExternal width={14} height={14} /></a>
             <a href={`${REPO}/blob/master/docs/SECURITY_REVIEW.md`} target="_blank" rel="noreferrer">Security review <IconExternal width={14} height={14} /></a>
             <a href={LINKS.faucet} target="_blank" rel="noreferrer">Faucet <IconExternal width={14} height={14} /></a>
           </div>
@@ -451,7 +456,7 @@ function AccountPanel({ balance, loading, connected, address, goals, wrongNetwor
         <span className="muted">MUSD balance</span>
         <span className={`status ${connected ? (wrongNetwork ? "status-warn" : "status-ok") : ""}`}>
           <i aria-hidden="true" />
-          {connected ? (onMainnet ? "Mezo mainnet" : wrongNetwork ? "Other network" : "Mezo testnet") : "Not connected"}
+          {connected ? (onMainnet ? (mainnetPocketConfigured() ? "Mezo mainnet" : "Mezo mainnet · Pocket not deployed") : wrongNetwork ? "Other network" : "Mezo testnet") : "Not connected"}
         </span>
       </div>
       <div className="account-amount">
@@ -997,7 +1002,7 @@ function GetStarted({ connected, address, wrongNetwork, onMainnet, btc, btcLoadi
           {!walletConnectEnabled && <> On a phone, open this page in your wallet app's built-in browser.</>}
         </>
       ),
-      status: !connected ? "Not connected" : onMainnet ? "Mezo mainnet" : wrongNetwork ? "Other network" : `Connected as ${short(address)}`,
+      status: !connected ? "Not connected" : onMainnet ? (mainnetPocketConfigured() ? "Mezo mainnet" : "Mezo mainnet · Pocket not deployed") : wrongNetwork ? "Other network" : `Connected as ${short(address)}`,
       actions: !connected ? (
         <ConnectCta label="Connect wallet" size="md" />
       ) : wrongNetwork ? (

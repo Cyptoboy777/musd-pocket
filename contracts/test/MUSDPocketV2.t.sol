@@ -114,6 +114,8 @@ contract MUSDPocketV2Test is Test {
         uint256 id = _goal(alice, false);
         tm.setIcrAfterBorrow(alice, 2.1e18);
         vm.expectEmit(true, true, false, true);
+        emit MUSDPocketV2.Deposited(id, alice, 300e18);
+        vm.expectEmit(true, true, false, true);
         emit MUSDPocketV2.BorrowedToGoal(id, alice, 300e18, 2.1e18);
         vm.prank(alice);
         pocket.borrowToGoal(id, 300e18, address(0), address(0), hex"01", block.timestamp + 10 minutes);
