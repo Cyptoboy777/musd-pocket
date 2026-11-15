@@ -10,7 +10,9 @@
 
     /* Bundler mode */
     "moduleResolution": "bundler",
+    "resolveJsonModule": true,
     "paths": {
+      "@facts": ["../facts.json"],
       "@mezo-org/orangekit-smart-account/src/*": [
         "./node_modules/@mezo-org/orangekit-smart-account/dist/src/*"
       ]

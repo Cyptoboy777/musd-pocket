@@ -135,8 +135,7 @@ export function StatsPanel({ lang = "en" }: { lang?: Lang }) {
         }
         mapped.sort((a, b) => (a.blockNumber < b.blockNumber ? 1 : -1));
         if (!cancelled) setEvents(mapped.slice(0, 24));
-      } catch (e) {
-        console.error("Recent events failed", e);
+      } catch {
         if (!cancelled) {
           setEvents([]);
           setEventsFailed(true);

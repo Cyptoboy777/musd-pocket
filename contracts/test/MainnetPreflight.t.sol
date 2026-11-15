@@ -16,7 +16,7 @@ contract MainnetPreflightTest is Test {
         vm.createSelectFork(rpc);
         assertEq(block.chainid, 31612);
         DeployV2Mainnet preflight = new DeployV2Mainnet();
-        preflight.run();
+        preflight.preflight();
         assertEq(address(0xEC03F758219746b6e773f107a05cF17b66E7D460).code.length, 0);
     }
 }

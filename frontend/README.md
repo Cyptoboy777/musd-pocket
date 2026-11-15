@@ -1,32 +1,11 @@
-# React + TypeScript + Vite
+# MUSD Pocket frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The app is the Vite project in this folder. Setup, tests, and the contract addresses are in the [root README](../README.md) and [facts.json](../facts.json).
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm ci
+npm test
+npm run build
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+`npm test` is 56 Vitest tests passed. The live app is https://musd-pocket-mezo.vercel.app. It writes to Mezo testnet contract `0xEC03F758219746b6e773f107a05cF17b66E7D460`. Mainnet Pocket is not deployed.

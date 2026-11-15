@@ -1,0 +1,61 @@
+{
+  "product": "MUSD Pocket",
+  "liveUrl": "https://musd-pocket-mezo.vercel.app",
+  "repo": "https://github.com/Cyptoboy777/musd-pocket",
+  "video": "https://youtu.be/eWAqu1FZ-40",
+  "deck": "docs/MUSD-Pocket-Wave2-Final.pdf",
+  "track": "Access & Distribution",
+  "network": {
+    "name": "Mezo Testnet",
+    "chainId": 31611,
+    "rpc": "https://rpc.test.mezo.org",
+    "ws": "wss://rpc-ws.test.mezo.org",
+    "explorer": "https://explorer.test.mezo.org",
+    "faucet": "https://faucet.test.mezo.org",
+    "borrow": "https://testnet.mezo.org/feature/borrow",
+    "swap": "https://testnet.mezo.org/feature/swap"
+  },
+  "mainnet": {
+    "name": "Mezo",
+    "chainId": 31612,
+    "status": "not-deployed",
+    "pocket": null,
+    "native": "BTC",
+    "decimals": 18,
+    "explorer": "https://explorer.mezo.org",
+    "rpc": "https://mezo.drpc.org",
+    "rpcWs": "wss://mezo.drpc.org",
+    "musd": "0xdD468A1DDc392dcdbEf6db6e34E89AA338F9F186",
+    "borrowerOperations": "0x44b1bac67dDA612a41a58AAf779143B181dEe031",
+    "borrowerOpsSignatures": "0xB57ab578BF20b3e318f3EFAA587C51DBccE5df7a",
+    "troveManager": "0x94AfB503dBca74aC3E4929BACEeDfCe19B93c193",
+    "priceFeed": "0xc5aC5A8892230E0A3e1c473881A2de7353fFcA88",
+    "sources": {
+      "gettingStarted": "https://mezo.org/docs/developers/getting-started/",
+      "contracts": "https://mezo.org/docs/users/resources/contracts-reference/",
+      "musdRelease": "https://github.com/mezo-org/musd/releases/tag/v1.1.0"
+    }
+  },
+  "contracts": {
+    "pocketV2": "0xEC03F758219746b6e773f107a05cF17b66E7D460",
+    "pocketV2VerifiedCommit": "2c5bd9b",
+    "pocketV1": "0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8",
+    "musdTestnet": "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503",
+    "borrowerOperationsTestnet": "0xCdF7028ceAB81fA0C6971208e83fa7872994beE5",
+    "borrowerOpsSignaturesTestnet": "0xD757e3646AF370b15f32EB557F0F8380Df7D639e",
+    "troveManagerTestnet": "0xE47c80e8c23f6B4A1aE41c34837a0599D5D16bb0",
+    "priceFeedTestnet": "0x86bCF0841622a5dAC14A313a15f96A95421b9366"
+  },
+  "community": {
+    "outsideTesters": 1,
+    "outsideDeposits": 0,
+    "note": "One outside wallet created goal 10 on 4 Nov 2026. That wallet has no deposit."
+  },
+  "tests": {
+    "foundryPassed": 58,
+    "foundryFailed": 0,
+    "foundrySkipped": 1,
+    "vitestPassed": 56,
+    "note": "Clean clone, forge 1.9.0: forge test 58 passed, 0 failed, 1 skipped (MainnetPreflight unless MEZO_MAINNET_RPC is set). npm test: 56 passed. npm run build passed."
+  }
+}

@@ -1,11 +1,8 @@
+# Not the app we submit. The live app is https://musd-pocket-mezo.vercel.app.
+# Left as a manual workflow so a push to master does not publish a second host.
 name: Deploy frontend to GitHub Pages
 
 on:
-  push:
-    branches: [master]
-    paths:
-      - "frontend/**"
-      - ".github/workflows/pages.yml"
   workflow_dispatch:
 
 permissions:

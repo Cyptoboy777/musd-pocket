@@ -3,7 +3,6 @@ MUSD Pocket tester guide (Mezo testnet)
 This is a short guide you can send to a friend who wants to try MUSD Pocket on Mezo testnet. Simple English. No mainnet. No real money.
 
 Live app: https://musd-pocket-mezo.vercel.app
-(Do not use musd-pocket.vercel.app — that is another team's app.)
 
 What you need
 - A browser wallet (MetaMask or similar)

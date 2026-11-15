@@ -243,6 +243,13 @@ export const musdPocketAbi = [
   },
   {
     "type": "function",
+    "name": "goalEarlyFeeBps",
+    "inputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "outputs": [{ "name": "", "type": "uint16", "internalType": "uint16" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "earlyFeeBps",
     "inputs": [],
     "outputs": [
@@ -446,6 +453,20 @@ export const musdPocketAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pendingOwner",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "acceptOwnership",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -874,6 +895,24 @@ export const musdPocketAbi = [
   },
   {
     "type": "event",
+    "name": "GoalFeeSnapshotted",
+    "inputs": [
+      { "name": "goalId", "type": "uint256", "indexed": true, "internalType": "uint256" },
+      { "name": "feeBps", "type": "uint16", "indexed": false, "internalType": "uint16" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "OwnershipTransferStarted",
+    "inputs": [
+      { "name": "previousOwner", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "newOwner", "type": "address", "indexed": true, "internalType": "address" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "OwnershipTransferred",
     "inputs": [
       {
@@ -1042,6 +1081,11 @@ export const musdPocketAbi = [
   {
     "type": "error",
     "name": "NotGoalOwner",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotPendingOwner",
     "inputs": []
   },
   {

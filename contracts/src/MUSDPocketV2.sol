@@ -23,6 +23,13 @@ import {
 ///      - Strict accounting (totalLocked) so the owner can only ever touch the fee pool and
 ///        stray tokens, never goal balances.
 ///      - Reentrancy lock and checked low-level token transfers.
+///      - Each goal stores the early-exit fee in force when it was created. Later
+///        setEarlyFeeBps calls apply only to goals created afterwards.
+///      - Ownership moves in two steps. The constructor owner should be a multisig.
+///        The deployer is not given ownership unless that address is passed in.
+/// @dev The verified Mezo testnet deployment 0xEC03F758219746b6e773f107a05cF17b66E7D460
+///      was built from git 2c5bd9b. It does not include the fee snapshot or two-step
+///      ownership. This file is the source for the next deployment. Mainnet is not deployed.
 contract MUSDPocketV2 {
     // -------------------------------------------------------------------------
     // Types
@@ -47,8 +54,10 @@ contract MUSDPocketV2 {
     ITroveManager public immutable troveManager;
     IPriceFeed public immutable priceFeed;
     address public owner;
+    /// @notice Proposed owner. Has no admin power until it calls acceptOwnership.
+    address public pendingOwner;
 
-    uint16 public earlyFeeBps = 200; // 2%
+    uint16 public earlyFeeBps = 200; // 2%, used only for goals created from now on
     uint16 public constant MAX_EARLY_FEE_BPS = 500; // 5% hard cap
     uint256 public constant MIN_LOCK = 1 days;
     uint256 public constant MAX_LOCK = 730 days;
@@ -61,6 +70,8 @@ contract MUSDPocketV2 {
     uint256 public nextGoalId = 1;
 
     mapping(uint256 => Goal) public goals;
+    /// @notice Early-exit fee locked in at createGoal. Not updated by setEarlyFeeBps.
+    mapping(uint256 => uint16) public goalEarlyFeeBps;
     mapping(uint256 => mapping(address => bool)) public familyMember;
     mapping(address => uint256[]) private _goalsByOwner;
 
@@ -82,6 +93,8 @@ contract MUSDPocketV2 {
     event FeeClaimed(address indexed to, uint256 amount);
     event StrayRecovered(address indexed to, uint256 amount);
     event EarlyFeeUpdated(uint16 bps);
+    event GoalFeeSnapshotted(uint256 indexed goalId, uint16 feeBps);
+    event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     // -------------------------------------------------------------------------
@@ -89,6 +102,7 @@ contract MUSDPocketV2 {
     // -------------------------------------------------------------------------
 
     error NotOwner();
+    error NotPendingOwner();
     error NotGoalOwner();
     error NotContributor();
     error GoalInactive();
@@ -174,6 +188,8 @@ contract MUSDPocketV2 {
             isFamily: isFamily
         });
         _goalsByOwner[msg.sender].push(goalId);
+        goalEarlyFeeBps[goalId] = earlyFeeBps;
+        emit GoalFeeSnapshotted(goalId, earlyFeeBps);
 
         if (isFamily) {
             familyMember[goalId][msg.sender] = true;
@@ -183,10 +199,12 @@ contract MUSDPocketV2 {
     }
 
     /// @notice Deposit MUSD (needs a prior approve).
+    /// @dev Credit the goal before the token pull. A failed pull reverts the credit.
+    ///      nonReentrant blocks a callback from withdrawing the credited balance first.
     function deposit(uint256 goalId, uint256 amount) external nonReentrant {
         _checkContributor(goalId, amount);
-        _pullFrom(msg.sender, amount);
         _credit(goalId, msg.sender, amount);
+        _pullFrom(msg.sender, amount);
     }
 
     /// @notice Deposit MUSD with an EIP-2612 permit: one signature, one transaction.
@@ -195,9 +213,9 @@ contract MUSDPocketV2 {
         nonReentrant
     {
         _checkContributor(goalId, amount);
+        _credit(goalId, msg.sender, amount);
         _permit(amount, deadline, v, r, s);
         _pullFrom(msg.sender, amount);
-        _credit(goalId, msg.sender, amount);
     }
 
     /// @notice Borrow MUSD against the caller's own Mezo trove straight into a goal.
@@ -205,6 +223,13 @@ contract MUSDPocketV2 {
     ///      nonce, deadline)`. Mezo checks the signature and nonce; we only accept
     ///      borrower == msg.sender, credit what actually arrived, and refuse to leave the
     ///      trove below MIN_ICR_AFTER_BORROW.
+    /// @dev Accounting is updated before the Mezo call so a callback cannot observe a
+    ///      half-applied goal. nonReentrant rejects that callback. After the call we still
+    ///      measure the MUSD balance delta: Mezo does not return the amount transferred,
+    ///      and a value-0 BTC call from ActivePool is expected. If the delta is not `amount`,
+    ///      or the trove would finish under 150%, the whole transaction reverts, including
+    ///      the credit. The balance read is intentional. It is not a stale value used to
+    ///      size a payout.
     function borrowToGoal(
         uint256 goalId,
         uint256 amount,
@@ -216,6 +241,8 @@ contract MUSDPocketV2 {
         _checkContributor(goalId, amount);
 
         uint256 before = musd.balanceOf(address(this));
+        totalBorrowedToGoals += amount;
+        _credit(goalId, msg.sender, amount);
         borrowerOpsSig.withdrawMUSDWithSignature(
             amount, upperHint, lowerHint, msg.sender, address(this), signature, deadline
         );
@@ -225,8 +252,6 @@ contract MUSDPocketV2 {
         uint256 icrAfter = troveManager.getCurrentICR(msg.sender, priceFeed.fetchPrice());
         if (icrAfter < MIN_ICR_AFTER_BORROW) revert LoanTooRisky(icrAfter);
 
-        totalBorrowedToGoals += amount;
-        _credit(goalId, msg.sender, amount);
         emit BorrowedToGoal(goalId, msg.sender, amount, icrAfter);
     }
 
@@ -247,7 +272,7 @@ contract MUSDPocketV2 {
         _send(msg.sender, amount);
     }
 
-    /// @notice Leave before the unlock date and pay `earlyFeeBps` into the fee pool.
+    /// @notice Leave before the unlock date and pay the fee snapshotted at goal creation.
     function earlyWithdraw(uint256 goalId) external nonReentrant {
         Goal storage g = goals[goalId];
         if (!g.active) revert GoalInactive();
@@ -256,7 +281,7 @@ contract MUSDPocketV2 {
 
         uint256 amount = g.balance;
         if (amount == 0) revert BadAmount();
-        uint256 fee = (amount * earlyFeeBps) / 10_000;
+        uint256 fee = (amount * goalEarlyFeeBps[goalId]) / 10_000;
         uint256 net = amount - fee;
 
         g.balance = 0;
@@ -349,6 +374,7 @@ contract MUSDPocketV2 {
     // Admin (can never touch goal balances)
     // -------------------------------------------------------------------------
 
+    /// @notice Fee for goals created after this call. Open goals keep goalEarlyFeeBps.
     function setEarlyFeeBps(uint16 bps) external onlyOwner {
         if (bps > MAX_EARLY_FEE_BPS) revert FeeTooHigh();
         earlyFeeBps = bps;
@@ -372,10 +398,22 @@ contract MUSDPocketV2 {
         _send(to, amount);
     }
 
+    /// @notice Start a two-step ownership move. `newOwner` must call acceptOwnership.
+    ///         Passing the zero address is rejected. The current owner keeps control
+    ///         until the new one accepts, and can replace the pending address.
     function transferOwnership(address newOwner) external onlyOwner {
         if (newOwner == address(0)) revert ZeroAddress();
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
+        pendingOwner = newOwner;
+        emit OwnershipTransferStarted(owner, newOwner);
+    }
+
+    /// @notice Finish a two-step ownership move. Only the pending address can call this.
+    function acceptOwnership() external {
+        if (msg.sender != pendingOwner) revert NotPendingOwner();
+        address previous = owner;
+        owner = msg.sender;
+        pendingOwner = address(0);
+        emit OwnershipTransferred(previous, msg.sender);
     }
 
     // -------------------------------------------------------------------------

@@ -173,5 +173,8 @@ describe("pocket action dispatch", () => {
     expect(ambiguous.notSubmitted).toBe(false);
     expect(ambiguous.body).not.toMatch(/Nothing was sent|not sent|failed|viem|rpc\./i);
     expect(ambiguous.body).toMatch(/Check your wallet/);
+    const leak = walletErrorCopy(new Error("VITE_POCKET_ADDRESS\n    at main.tsx:1:1"));
+    expect(leak.body).not.toMatch(/VITE_|at main/);
+    expect(leak.title).not.toMatch(/VITE_|at main/);
   });
 });
