@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMezoActions, type MezoPosition } from "../lib/mezo";
 import {
-  BAND_COPY, COMFORT, band, liquidationPrice, protectLevel,
+  BAND_COPY, COMFORT, band, checkRepay, liquidationPrice, protectLevel,
   ratio, ratioAfterAddColl, ratioAfterRepay,
 } from "../lib/risk";
 import { useAsyncTx } from "../hooks/useAsyncTx";
@@ -39,6 +39,8 @@ export function ProtectLoanPanel({
   const level = protectLevel(r);
   const btcN = Number(btcAmt) || 0;
   const repayN = Number(repayAmt) || 0;
+  // Mezo refuses a partial repay that leaves the loan under its minimum debt.
+  const repayCheck = trove ? checkRepay(trove, repayN) : undefined;
   const debtNeeded = trove ? trove.debt : 0;
   const canClose = musdBalance + 1e-9 >= debtNeeded && debtNeeded > 0;
 
@@ -152,10 +154,17 @@ export function ProtectLoanPanel({
               <div><span>Band</span><strong>{BAND_COPY[preview.band]}</strong></div>
             </div>
           )}
-          <button type="submit" className="btn btn-primary btn-block" disabled={busy || !(repayN > 0) || repayN > musdBalance + 1e-9}>
+          <button type="submit" className="btn btn-primary btn-block" disabled={busy || !(repayN > 0) || repayN > musdBalance + 1e-9 || !repayCheck?.ok}>
             {repayTx.busy ? <span className="spinner" /> : t(lang, "protectRepay")}
           </button>
           {repayN > musdBalance && <div className="form-error" role="alert">Not enough MUSD in this wallet.</div>}
+          {repayN > 0 && repayCheck && !repayCheck.ok && (
+            <div className="form-error" role="alert" data-feature="repay-min-debt">
+              {repayCheck.maxPartial > 0
+                ? <>Mezo needs your loan to keep at least {num(repayCheck.floor, 0)} MUSD of debt. Repay up to {num(repayCheck.maxPartial)} MUSD, or close the loan.</>
+                : <>Your loan is at Mezo's minimum ({num(repayCheck.floor, 0)} MUSD), so it can't be partly repaid. Add BTC to protect it, or close the loan.</>}
+            </div>
+          )}
         </form>
       )}
 

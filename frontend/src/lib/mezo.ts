@@ -3,7 +3,7 @@ import { formatUnits, parseSignature, parseUnits, type Address, type Hex } from 
 import { useRef } from "react";
 import { MEZO, MEZO_TOKEN, MUSD_ADDRESS, POCKET_ADDRESS, mezoTestnet, pocketWritesAllowed } from "./chains";
 import { musdPocketAbi } from "./abi";
-import type { Trove } from "./risk";
+import { MIN_NET_DEBT, checkRepay, ratio, type Trove } from "./risk";
 
 /* ───────────── Minimal ABIs for Mezo's MUSD protocol ───────────── */
 
@@ -18,7 +18,33 @@ export const troveManagerAbi = [
   },
   { type: "function", name: "getTroveStatus", stateMutability: "view", inputs: [{ name: "_borrower", type: "address" }], outputs: [{ type: "uint8" }] },
   { type: "function", name: "checkRecoveryMode", stateMutability: "view", inputs: [{ name: "_price", type: "uint256" }], outputs: [{ type: "bool" }] },
+  {
+    type: "function", name: "getCurrentICR", stateMutability: "view",
+    inputs: [{ name: "_borrower", type: "address" }, { name: "_price", type: "uint256" }],
+    outputs: [{ type: "uint256" }],
+  },
 ] as const;
+
+/**
+ * Turn getEntireDebtAndColl into plain numbers without double counting pending rewards.
+ * Mezo's docs say entireDebt = principal + interest is what getCurrentICR uses, so the pending
+ * fields are normally already folded in. Adding them again overstated both sides of the ratio.
+ * `icr` (TroveManager.getCurrentICR, 18 decimals) is the ground truth: we pick whichever reading
+ * matches it, and if neither does we trust the contract's ratio over our own sums.
+ */
+export function troveFromChain(dc: readonly bigint[], price: number, icr?: bigint): Trove {
+  const [coll, principal, interest, pColl, pPrincipal, pInterest] = dc;
+  const n = (v: bigint) => Number(formatUnits(v, 18));
+  const plain: Trove = { coll: n(coll), debt: n(principal + interest) };
+  const withPending: Trove = { coll: n(coll + pColl), debt: n(principal + interest + pPrincipal + pInterest) };
+  if (icr === undefined || icr === 0n || !(price > 0)) return plain;
+  const target = n(icr);
+  if (!Number.isFinite(target) || target <= 0) return plain;
+  const matches = (t: Trove) => Math.abs(ratio(t, price) - target) / target < 0.005;
+  if (matches(plain)) return plain;
+  if (matches(withPending)) return withPending;
+  return { coll: plain.coll, debt: (plain.coll * price) / target };
+}
 
 export const priceFeedAbi = [
   { type: "function", name: "fetchPrice", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
@@ -61,6 +87,7 @@ export const borrowerOperationsAbi = [
     outputs: [],
   },
   { type: "function", name: "closeTrove", stateMutability: "nonpayable", inputs: [], outputs: [] },
+  { type: "function", name: "minNetDebt", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 ] as const;
 
 /** Compute SortedTroves insert hints for a projected NICR. */
@@ -132,18 +159,16 @@ export function useMezoPosition(): MezoPosition {
   const dc = data?.[2]?.result as readonly bigint[] | undefined;
   const { data: rm } = useReadContracts({
     allowFailure: true,
-    contracts: [{ address: MEZO.troveManager, abi: troveManagerAbi, functionName: "checkRecoveryMode", args: [priceRaw ?? 0n], chainId: mezoTestnet.id }],
-    query: { enabled: priceRaw !== undefined },
+    contracts: [
+      { address: MEZO.troveManager, abi: troveManagerAbi, functionName: "checkRecoveryMode", args: [priceRaw ?? 0n], chainId: mezoTestnet.id },
+      { address: MEZO.troveManager, abi: troveManagerAbi, functionName: "getCurrentICR", args: [address!, priceRaw ?? 0n], chainId: mezoTestnet.id },
+    ],
+    query: { enabled: enabled && priceRaw !== undefined },
   });
+  const icrRaw = rm?.[1]?.result as bigint | undefined;
 
   let trove: Trove | undefined;
-  if (status === 1 && dc) {
-    const [coll, principal, interest, pColl, pPrincipal, pInterest] = dc;
-    trove = {
-      coll: Number(formatUnits(coll + pColl, 18)),
-      debt: Number(formatUnits(principal + interest + pPrincipal + pInterest, 18)),
-    };
-  }
+  if (status === 1 && dc) trove = troveFromChain(dc, toN(priceRaw) ?? 0, icrRaw);
   return {
     loading: enabled && isLoading,
     price: toN(priceRaw),
@@ -182,6 +207,17 @@ export type PocketActionDeps = {
   writeContract: (args: PocketWrite) => Promise<Hex>;
   waitForReceipt: (hash: Hex) => Promise<{ status: "success" | "reverted" }>;
 };
+
+/** Mezo's minimum net debt is governable, so read it; fall back to the documented 1,800 if the read fails. */
+async function readMinNetDebt(deps: PocketActionDeps): Promise<number> {
+  try {
+    const v = await deps.readContract({ address: MEZO.borrowerOperations, abi: borrowerOperationsAbi, functionName: "minNetDebt" });
+    if (typeof v === "bigint" && v > 0n) return Number(formatUnits(v, 18));
+  } catch {
+    /* use the documented value */
+  }
+  return MIN_NET_DEBT;
+}
 
 /** Before any broadcast, a wrong chain means nothing was submitted. After one, say the network changed. */
 function requireTestnet(deps: PocketActionDeps, alreadySubmitted = false) {
@@ -249,12 +285,15 @@ export function createPocketActions(deps: PocketActionDeps) {
       deps.readContract({ address: MEZO.priceFeed, abi: priceFeedAbi, functionName: "fetchPrice" }),
     ]);
     if (status !== 1) throw new Error("No active Mezo loan on this wallet.");
-    const [coll, principal, interest, pColl, pPrincipal, pInterest] = dc as readonly bigint[];
-    const live: Trove = {
-      coll: Number(formatUnits(coll + pColl, 18)),
-      debt: Number(formatUnits(principal + interest + pPrincipal + pInterest, 18)),
-    };
+    // Recovery Mode: Mezo only lets a loan take on debt if it stays above 150% and the whole system
+    // recovers. Stop here instead of asking the wallet to sign something that will revert.
+    const [recovery, icrRaw] = await Promise.all([
+      deps.readContract({ address: MEZO.troveManager, abi: troveManagerAbi, functionName: "checkRecoveryMode", args: [priceRaw as bigint] }),
+      deps.readContract({ address: MEZO.troveManager, abi: troveManagerAbi, functionName: "getCurrentICR", args: [address, priceRaw as bigint] }),
+    ]);
+    if (recovery === true) throw new Error("RECOVERY_MODE");
     const price = Number(formatUnits(priceRaw as bigint, 18));
+    const live = troveFromChain(dc as readonly bigint[], price, typeof icrRaw === "bigint" ? icrRaw : undefined);
     const maxSafe = Math.floor((((live.coll * price) / 1.5) - live.debt) / 1.001 * 100) / 100;
     if (Number(amountStr) > maxSafe + 1e-9) {
       throw new Error(`Price moved. At most ${maxSafe.toFixed(2)} MUSD keeps you at 150% right now.`);
@@ -315,6 +354,10 @@ export function createPocketActions(deps: PocketActionDeps) {
     if (!address) throw new Error("Connect a wallet first.");
     const amount = parseUnits(amountStr, 18);
     if (amount <= 0n) throw new Error("Enter a MUSD amount greater than zero.");
+    // Mezo reverts a partial repay that leaves net debt under the minimum. Catch it before an
+    // approval is sent for a repayment that cannot succeed.
+    const check = checkRepay(trove, Number(amountStr), await readMinNetDebt(deps));
+    if (!check.ok) throw new Error(`REPAY_BELOW_MIN ${check.maxPartial} ${check.floor}`);
     const collWei = parseUnits(trove.coll.toFixed(18), 18);
     const newDebt = Math.max(0, trove.debt - Number(amountStr));
     const debtWei = parseUnits(newDebt.toFixed(18), 18);
