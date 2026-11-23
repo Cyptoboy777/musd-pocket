@@ -1,5 +1,13 @@
 # Changelog
 
+## Wave 3 final (branch `wave3-final`)
+
+- New "How it earns" section in the app and [docs/BUSINESS.md](docs/BUSINESS.md): one live fee, three planned streams, projections labelled as projections.
+- Removed GitHub links from the app footer.
+- New page title, description and share image.
+- README: judge status table, architecture diagram, business model and team.
+- Not changed: contracts, tests and the visual design. Not run in this session: Foundry, Vitest, the build and Lighthouse (no package install was possible).
+
 ## Wave 3 (24 Nov 2026), branch `wave3-judge`
 
 Answers the Wave 2 judge feedback point by point. The full mapping, with commits and tests, is in [docs/JUDGE-FEEDBACK.md](docs/JUDGE-FEEDBACK.md).

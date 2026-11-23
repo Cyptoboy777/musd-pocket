@@ -41,7 +41,7 @@
 .suffix.link-btn { pointer-events: auto; cursor: pointer; background: none; border: 0; color: var(--accent); }
 
 /* testers */
-.testers, .team { padding: var(--s-24) 0 0; }
+.testers, .team, .business { padding: var(--s-24) 0 0; }
 .testers-wrap, .team-wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 28px; display: grid; gap: var(--s-4); }
 .testers-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-3); }
 .tester-stat { display: grid; gap: 6px; }
@@ -92,3 +92,13 @@
 .risk-list .risk-value { grid-column: 2; text-align: left; }
 .risk-list .risk-dot { grid-row: 1; }
 .risk-panel .account-row h3 { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Business section */
+.biz-wrap { max-width: var(--maxw); margin: 0 auto var(--s-4); padding: 0 28px; display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s-4); }
+.biz-card { padding: 22px 24px; display: flex; flex-direction: column; gap: 10px; }
+.biz-card h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: var(--fs-xl); }
+.biz-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.biz-rate { margin: 0; color: var(--gold-300); font-size: 0.95rem; }
+.biz-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.biz-list li { display: flex; gap: 10px; align-items: start; color: var(--muted); }
+@media (max-width: 760px) { .biz-wrap { grid-template-columns: 1fr; } }

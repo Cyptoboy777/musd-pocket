@@ -23,6 +23,7 @@ import { EarnRow, LoanShield, RecoveryBanner, RiskChecksPanel, TeamSection, Test
 import { ProofPanel } from "./components/ProofPanel";
 import { ProtectLoanPanel } from "./components/ProtectLoanPanel";
 import { RevenuePanel } from "./components/RevenuePanel";
+import { BusinessSection } from "./components/Business";
 import { InviteLanding, InviteCopyButton, useIsInvite } from "./components/InvitePanel";
 import { StatsPanel } from "./components/StatsPanel";
 import { ConfirmDialog } from "./components/ConfirmDialog";
@@ -49,7 +50,6 @@ const TAB_KEYS: { id: Tab; key: "tabPockets" | "tabNewGoal" | "tabCoach" | "tabS
   { id: "send", key: "tabSend" },
 ];
 const EXPLORER = mezoTestnet.blockExplorers.default.url;
-const REPO = "https://github.com/Cyptoboy777/musd-pocket";
 /** Verified against mezo.org/docs on 21 Oct 2026. */
 const LINKS = {
   faucet: "https://faucet.test.mezo.org",
@@ -261,6 +261,7 @@ export default function App() {
         <StatsPanel lang={lang} />
         <TestersSection />
         <ProofPanel lang={lang} />
+        <BusinessSection />
         <TeamSection />
       </main>
 
@@ -289,10 +290,7 @@ export default function App() {
           <div className="footer-links">
             <a href={LIVE_APP} target="_blank" rel="noreferrer">Live app <IconExternal width={14} height={14} /></a>
             <a href={EXPLORER} target="_blank" rel="noreferrer">Explorer <IconExternal width={14} height={14} /></a>
-            <a href={REPO} target="_blank" rel="noreferrer">Source <IconExternal width={14} height={14} /></a>
             <a href="/stats">Live stats</a>
-            <a href={`${REPO}/blob/master/docs/ONCHAIN-ACTIVITY.md`} target="_blank" rel="noreferrer">On-chain activity <IconExternal width={14} height={14} /></a>
-            <a href={`${REPO}/blob/master/docs/SECURITY_REVIEW.md`} target="_blank" rel="noreferrer">Security review <IconExternal width={14} height={14} /></a>
             <a href={LINKS.faucet} target="_blank" rel="noreferrer">Faucet <IconExternal width={14} height={14} /></a>
           </div>
         </div>

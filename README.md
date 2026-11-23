@@ -22,6 +22,43 @@ Addresses, the live URL and the test counts live in [facts.json](facts.json). If
 
 Mezo mainnet does not have a Pocket yet. The deploy is ready for the owner to run from their own wallet: [docs/DEPLOY_MAINNET.md](docs/DEPLOY_MAINNET.md).
 
+## For judges: every Wave 2 ask and where it stands
+
+Wave 2 scores: Mezo Integration 8, Product and Business 4, Technical 7, User Experience 7, Materials 7. Detail, commits and tests: [docs/JUDGE-FEEDBACK.md](docs/JUDGE-FEEDBACK.md).
+
+| Ask | Status | Where |
+|---|---|---|
+| Put locked MUSD to work in the MUSD Savings Vault | Done on testnet | `setEarn`, `_park`, `_settle` in `MUSDPocketV3.sol` |
+| A goal repays or closes its owner's loan in an emergency | Done on testnet, proven in fork tests | `emergencyRepay`, `emergencyClose` |
+| No borrowing in Recovery Mode | Done, contract and app | `borrowToGoal` reverts `RecoveryModeActive`; app shows a banner |
+| Minimum debt checked before a repay | Done, contract and app | `BelowMinNetDebt`, reads `minNetDebt()` live; the app checks first |
+| Pending-rewards double count in the loan view | Done | `troveFromEntire` in `frontend/src/lib/mezo.ts` |
+| Outside wallets that deposit and chip in | **Not met**: 2 outside wallets created goals, 0 deposits, 0 chip-ins | Counted live from the explorer in the Testers section |
+| Mainnet | **Not deployed.** Ready for the owner to run from their own wallet | [docs/DEPLOY_MAINNET.md](docs/DEPLOY_MAINNET.md) |
+| sMUSD gauge | Not used. Mezo has no sMUSD gauge | See JUDGE-FEEDBACK.md |
+| Yield fee, Pocket Pro, embeddable widget | Planned, not built | [docs/BUSINESS.md](docs/BUSINESS.md) |
+
+### How the parts fit
+
+```mermaid
+flowchart LR
+  W[Wallet] -->|signs| App[MUSD Pocket app]
+  App --> P[MUSDPocketV3]
+  T[PocketTimelock, 2-day delay] -->|owns, fees only| P
+  P -->|withdraw / repay / close with signature| BOS[Mezo BorrowerOperationsSignatures]
+  P -->|park and claim yield| V[Mezo MUSD Savings Vault]
+  P -->|reads| TM[TroveManager and PriceFeed]
+  BOS --> TM
+```
+
+### Business model
+
+One fee is live: 2% on leaving a goal early (capped at 5%). A fee on savings yield, an optional Pocket Pro plan and an embeddable widget are planned and are not built. Revenue is zero today and the projections are labelled as such. Read [docs/BUSINESS.md](docs/BUSINESS.md); the app shows the same thing in its "How it earns" section.
+
+### Who builds it
+
+A solo builder, Crypto boy (Cryptoboy_777 on AKINDO): contracts, the Mezo integration, product and design.
+
 ## What v3 does, using Mezo's own contracts
 
 | Mezo primitive | What Pocket does with it |
