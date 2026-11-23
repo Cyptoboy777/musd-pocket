@@ -81,7 +81,7 @@ const ARG_ROWS = [
     name: "savingsVault (sMUSD)",
     value: POCKET_CONSTRUCTOR.savingsVault,
     source: "PCV.feeRecipient() on Mezo mainnet, listed in Mezo's vault notices",
-    href: `${FACTS.mainnet.explorer}/address/${POCKET_CONSTRUCTOR.savingsVault}`,
+    href: `https://mezo.org/earn/vaults/${POCKET_CONSTRUCTOR.savingsVault}`,
   },
 ] as const;
 

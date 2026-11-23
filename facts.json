@@ -34,6 +34,20 @@
       "gettingStarted": "https://mezo.org/docs/developers/getting-started/",
       "contracts": "https://mezo.org/docs/users/resources/contracts-reference/",
       "musdRelease": "https://github.com/mezo-org/musd/releases/tag/v1.1.0"
+    },
+    "savingsVault": "0xb4D498029af77680cD1eF828b967f010d06C51CC",
+    "pcv": "0x391EcC7ffEFc48cff41D0F2Bb36e38b82180B993",
+    "rpcFallback": "https://mainnet.mezo.public.validationcloud.io",
+    "v3DeployEstimate": {
+      "timelockGas": 609493,
+      "pocketGas": 3952774,
+      "gas": 4562267,
+      "gasPriceWei": 1462500,
+      "btc": "0.000006672315",
+      "usd": "0.41",
+      "btcUsd": "60979.16",
+      "measuredAt": "2026-11-24 01:15 IST",
+      "note": "contracts/script/estimate-v3-mainnet-gas.sh: cast estimate --create for PocketTimelock then MUSDPocketV3 on a Mezo mainnet RPC. Testnet Pocket deploy used 3,952,990 gas."
     }
   },
   "contracts": {
@@ -44,18 +58,43 @@
     "borrowerOperationsTestnet": "0xCdF7028ceAB81fA0C6971208e83fa7872994beE5",
     "borrowerOpsSignaturesTestnet": "0xD757e3646AF370b15f32EB557F0F8380Df7D639e",
     "troveManagerTestnet": "0xE47c80e8c23f6B4A1aE41c34837a0599D5D16bb0",
-    "priceFeedTestnet": "0x86bCF0841622a5dAC14A313a15f96A95421b9366"
+    "priceFeedTestnet": "0x86bCF0841622a5dAC14A313a15f96A95421b9366",
+    "pocketV3": "0xF86c8ef87F617041BBbcF61EeBE34cB811E7616c",
+    "pocketV3DeployTx": "0x0fe3ef152b860d1a8dbc7fa4a11d1a02c959301e34d4d7457e84a379eb1b145b",
+    "savingsVaultTestnet": "0x6f461c68B2c5492C0F5CCEc5a264d692aA7A8e16",
+    "pcvTestnet": "0x4dDD70f4C603b6089c07875Be02fEdFD626b80Af",
+    "pocketV3Timelock": "0xb6790A383679A3364E656dAd1E8fCf4195f37990",
+    "pocketV3TimelockDeployTx": "0xb3f9fab51645dda964fa0c4eabd50a3c44f1b7fa1aa75dfa4c3a5bc5e850c5c2",
+    "pocketV3TimelockDelaySeconds": 172800,
+    "pocketV3Verified": {
+      "blockscout": "verified (flattened source)",
+      "sourcify": "exact_match",
+      "timelockBlockscout": "verified",
+      "timelockSourcify": "exact_match"
+    },
+    "pocketV3Superseded": {
+      "address": "0x2543dE68Eea9518e16F19C5F57fD5cd22abf226F",
+      "note": "First v3 testnet deploy, owned by the deployer key. Replaced the same night by the timelock-owned deploy; its one smoke-test goal was withdrawn."
+    },
+    "pocketV3SmokeTxs": {
+      "createGoal": "0x6015c794c55e30130cc768b3d68091f5340591fbd577f8c28f1112b09b26bbe2",
+      "deposit": "0x6fc072536d1f4aa776765b852a11c9ca40b9067d94d3ac930f68fc231bd88701",
+      "setEarn": "0xc3f52cbfae7ba178e1a96b7dcf4bd148229a3fb77be0fd348962d81644a3ed26",
+      "note": "Builder wallet, goal 1 'Rainy day fund', 20 MUSD parked in sMUSD, 24 Nov 2026 01:04-01:06 IST"
+    }
   },
   "community": {
-    "outsideTesters": 1,
+    "outsideTesters": 2,
     "outsideDeposits": 0,
-    "note": "One outside wallet created goal 10 on 4 Nov 2026. That wallet has no deposit."
+    "outsideChipIns": 0,
+    "note": "On v2, wallet 0x63Ef\u2026d2d1 created goal 10 on 4 Nov 2026 and wallet 0xF6CB\u2026aC88 created goals 11 and 12 on 16 Nov 2026. Neither is in our builder list. Neither has deposited. The in-app Testers section recounts this from the explorer on every load."
   },
   "tests": {
-    "foundryPassed": 58,
+    "foundryPassed": 99,
     "foundryFailed": 0,
     "foundrySkipped": 1,
-    "vitestPassed": 56,
-    "note": "Clean clone, forge 1.9.0: forge test 58 passed, 0 failed, 1 skipped (MainnetPreflight unless MEZO_MAINNET_RPC is set). npm test: 56 passed. npm run build passed."
+    "forkPassed": 8,
+    "vitestPassed": 64,
+    "note": "forge test (no RPC) and npx vitest run on 2026-11-24. forkPassed is RUN_FORK=1 forge test --match-path 'test/*fork*' against Mezo testnet (4 v2 + 4 v3)."
   }
 }

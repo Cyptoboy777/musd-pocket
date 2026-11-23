@@ -1,16 +1,33 @@
-# On-chain activity: MUSD Pocket (Mezo testnet) — Wave 2 v2
+# On-chain activity: MUSD Pocket (Mezo testnet)
 
 Network: Mezo testnet only (chain 31611). Explorer: https://explorer.test.mezo.org  
 Live app: https://musd-pocket-mezo.vercel.app  
 No mainnet funds. Times below are Asia/Calcutta.
 
-The verified v2 bytecode matches git `2c5bd9b`. Later commits add a per-goal early-exit fee and two-step ownership in the source tree. Those changes are not deployed. Mainnet Pocket is not deployed. See [DEPLOY_MAINNET.md](DEPLOY_MAINNET.md).
+Wave 3 moved the app to v3, `0xF86c8ef87F617041BBbcF61EeBE34cB811E7616c`. v2 goals stay where they are. Mainnet Pocket is not deployed. See [DEPLOY_MAINNET.md](DEPLOY_MAINNET.md).
+
+## Wave 3 (24 Nov 2026, Asia/Calcutta)
+
+| Step | Tx |
+|---|---|
+| Deploy PocketTimelock (2-day delay) | [0xb3f9fab5…c5c2](https://explorer.test.mezo.org/tx/0xb3f9fab51645dda964fa0c4eabd50a3c44f1b7fa1aa75dfa4c3a5bc5e850c5c2) |
+| Deploy MUSDPocketV3, owner = timelock | [0x0fe3ef15…145b](https://explorer.test.mezo.org/tx/0x0fe3ef152b860d1a8dbc7fa4a11d1a02c959301e34d4d7457e84a379eb1b145b) |
+| createGoal #1 "Rainy day fund" (shared, 30 days) | [0x6015c794…bbe2](https://explorer.test.mezo.org/tx/0x6015c794c55e30130cc768b3d68091f5340591fbd577f8c28f1112b09b26bbe2) |
+| deposit 20 MUSD | [0x6fc07253…8701](https://explorer.test.mezo.org/tx/0x6fc072536d1f4aa776765b852a11c9ca40b9067d94d3ac930f68fc231bd88701) |
+| setEarn on: 20 MUSD into sMUSD | [0xc3f52cbf…ed26](https://explorer.test.mezo.org/tx/0xc3f52cbfae7ba178e1a96b7dcf4bd148229a3fb77be0fd348962d81644a3ed26) |
+
+All from our builder wallet. Emergency repay and close are covered by fork tests against live testnet (see [JUDGE-FEEDBACK.md](JUDGE-FEEDBACK.md)); our builder trove was redeemed, so there is no broadcast repay from v3 yet.
+
+An earlier v3 at `0x2543dE68Eea9518e16F19C5F57fD5cd22abf226F` was owned directly by the deployer. We replaced it the same night with the timelock-owned one and withdrew its single smoke-test goal.
 
 ## Contracts
 
 | Contract | Address | Notes |
 |---|---|---|
-| MUSDPocket v2 (current) | [0xEC03F758219746b6e773f107a05cF17b66E7D460](https://explorer.test.mezo.org/address/0xEC03F758219746b6e773f107a05cF17b66E7D460) | Verified. Borrow-into-goal, permit deposits, early fee. Deploy tx [0xa58ddba9…64f6](https://explorer.test.mezo.org/tx/0xa58ddba9e9c1fb87ee211016f729491806bf74e06ce23fa38a97fe0d092d64f6) |
+| MUSD Pocket v3 (current) | [0xF86c8ef87F617041BBbcF61EeBE34cB811E7616c](https://explorer.test.mezo.org/address/0xF86c8ef87F617041BBbcF61EeBE34cB811E7616c) | Verified (Blockscout, Sourcify exact match). Earn in sMUSD, emergency repay/close, Recovery Mode guard. Owned by the timelock below |
+| PocketTimelock | [0xb6790A383679A3364E656dAd1E8fCf4195f37990](https://explorer.test.mezo.org/address/0xb6790A383679A3364E656dAd1E8fCf4195f37990) | 2-day delay on admin actions |
+| MUSD Savings Vault (sMUSD), testnet | [0x6f461c68B2c5492C0F5CCEc5a264d692aA7A8e16](https://explorer.test.mezo.org/address/0x6f461c68B2c5492C0F5CCEc5a264d692aA7A8e16) | Mezo's vault; `PCV.feeRecipient()` |
+| MUSDPocket v2 (Wave 2) | [0xEC03F758219746b6e773f107a05cF17b66E7D460](https://explorer.test.mezo.org/address/0xEC03F758219746b6e773f107a05cF17b66E7D460) | Verified. Borrow-into-goal, permit deposits, early fee. Deploy tx [0xa58ddba9…64f6](https://explorer.test.mezo.org/tx/0xa58ddba9e9c1fb87ee211016f729491806bf74e06ce23fa38a97fe0d092d64f6) |
 | MUSDPocket v1 (Wave 1) | [0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8](https://explorer.test.mezo.org/address/0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8) | Kept for history (19 Wave 1 txs) |
 | MUSD (canonical) | [0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503](https://explorer.test.mezo.org/address/0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503) | |
 | BorrowerOperations | [0xCdF7028ceAB81fA0C6971208e83fa7872994beE5](https://explorer.test.mezo.org/address/0xCdF7028ceAB81fA0C6971208e83fa7872994beE5) | addColl / repayMUSD / closeTrove / openTrove |
@@ -18,7 +35,7 @@ The verified v2 bytecode matches git `2c5bd9b`. Later commits add a per-goal ear
 | TroveManager | [0xE47c80e8c23f6B4A1aE41c34837a0599D5D16bb0](https://explorer.test.mezo.org/address/0xE47c80e8c23f6B4A1aE41c34837a0599D5D16bb0) | Live ICR inputs |
 | PriceFeed | [0x86bCF0841622a5dAC14A313a15f96A95421b9366](https://explorer.test.mezo.org/address/0x86bCF0841622a5dAC14A313a15f96A95421b9366) | BTC price |
 | HintHelpers / SortedTroves | [0x4e4c…BCF6](https://explorer.test.mezo.org/address/0x4e4cBA3779d56386ED43631b4dCD6d8EacEcBCF6) / [0x722E…68fA](https://explorer.test.mezo.org/address/0x722E4D24FD6Ff8b0AC679450F3D91294607268fA) | Hints for adjust paths |
-| sMUSD Savings Vault (Mezo mainnet, separate product) | [0xb4D498029af77680cD1eF828b967f010d06C51CC](https://explorer.mezo.org/address/0xb4D498029af77680cD1eF828b967f010d06C51CC) | Not used by Pocket on testnet. Does not raise a loan's collateral ratio. Pocket itself is not deployed on mainnet. |
+| sMUSD Savings Vault (Mezo mainnet) | [0xb4D498029af77680cD1eF828b967f010d06C51CC](https://explorer.mezo.org/address/0xb4D498029af77680cD1eF828b967f010d06C51CC) | What the mainnet v3 deploy will use. Pocket itself is not deployed on mainnet. |
 
 ## Wallets
 
@@ -31,11 +48,12 @@ The verified v2 bytecode matches git `2c5bd9b`. Later commits add a per-goal ear
 
 ### Community testers
 
-One outside wallet. The recorded activity is goal creation.
+Two outside wallets. The recorded activity is goal creation only, with no deposits or chip-ins yet. The app's Testers section recounts this live.
 
 | Role | Address | Transaction |
 |---|---|---|
 | Community tester | [0x63EfDF0633a5Cf057103CcB7dd657C9bd7AEd2d1](https://explorer.test.mezo.org/address/0x63EfDF0633a5Cf057103CcB7dd657C9bd7AEd2d1) | [createGoal #10, Emergency fund](https://explorer.test.mezo.org/tx/0x25051be7bd23ca4751d13723410bcc16e983614ec6327545f26efbed2ed73fc2) on 4 Nov 2026, 19:08 IST. Target 1,000 MUSD. |
+| Community tester | [0xF6CB266868ddCc8fe9D11bcDd34BD43a8367aC88](https://explorer.test.mezo.org/address/0xf6cb266868ddcc8fe9d11bcdd34bd43a8367ac88) | [createGoal #11](https://explorer.test.mezo.org/tx/0xc4225f88885dcba1418a310643d5c985d6cc09724a5560d4b60278181b47a7fb) and [#12](https://explorer.test.mezo.org/tx/0x13b648ecd0ce0ee05799eef81b5ad973067529d1f556961780cba9bec3d50eef) on 16 Nov 2026 |
 
 ## Wave 2 lifecycle txs (exercised 3 Nov 2026, Asia/Calcutta)
 

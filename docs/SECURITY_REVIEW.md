@@ -74,7 +74,20 @@ Coverage we added for this pass:
 
 1. Deploy from this source, not from `2c5bd9b`, with `POCKET_OWNER` set to a multisig. Steps and the gas simulation are in [DEPLOY_MAINNET.md](DEPLOY_MAINNET.md).
 2. Verify on https://explorer.mezo.org and read back the four immutable addresses and `owner()`.
-3. Do not route goal balances into the MUSD savings vault without a new review. Share accounting, a paused vault, who gets the yield, and a withdraw that works when the vault does not, are all open. The vault product page does not even publish the address we have seen on the explorer.
+3. (Wave 2 note, answered in the Wave 3 section below.) Do not route goal balances into the MUSD savings vault without a new review. Share accounting, a paused vault, who gets the yield, and a withdraw that works when the vault does not, are all open. The vault product page does not even publish the address we have seen on the explorer.
 4. This file is still not an independent audit. Budget time for an outside reviewer before other people's money depends on it.
 
 The testnet app must keep saying mainnet is not deployed until that address is real.
+
+
+## Wave 3 (v3) notes
+
+v3 does route goal balances into the MUSD Savings Vault, but only for goals whose owner switches earning on. Here is how we answered the open questions above:
+
+- **Share accounting.** sMUSD pays yield by a global index, not by shares. Each earning goal stores its principal and the index when it joined. Its yield is `principal × (index now − index then)`. A goal that joins late gets nothing from earlier yield (`test_earn_lateJoinerDoesNotTakeEarlierYield`), and the fuzz test `testFuzz_yieldNeverOverpays` checks the Pocket never pays out more than the vault gave it. Fork test `test_fork_earnInRealSavingsVault` runs this against the real testnet vault.
+- **Who gets the yield.** The goal owner, with the goal balance. Yield is not fee income, and the admin cannot reach it (`strayBalance` excludes vault funds and the yield pool).
+- **Paused or upgraded vault.** The verified sMUSD source has no pause, but it is an upgradeable proxy controlled by Mezo governance, and it can move funds between strategies. If a vault withdraw ever reverted, withdraws from earning goals would revert too until it works again. Goals that never switch earning on are not affected. We say this in the app next to the switch.
+- **Emergency repay and close.** Only the goal owner, only for their own trove (the signature binds `borrower = msg.sender`). The contract checks the MUSD actually burned equals the amount it meant to repay (`RepayMismatch`) and reads `minNetDebt()` live before calling Mezo.
+- **Owner powers.** The owner is a 2-day timelock. It can change the early fee within the 5% cap for new goals, claim the fee pool, and recover tokens sent by mistake that are not part of any goal.
+
+Still true: this is our own review, not an independent audit.

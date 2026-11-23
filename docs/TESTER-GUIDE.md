@@ -34,13 +34,15 @@ Step 5 — Connect and create a goal
 Connect your wallet in the app (must be on Mezo Testnet 31611).
 Open New goal, pick a name, target, and lock days, then create.
 You can mark a goal Shared so friends can chip in after you add their address.
+On the goal card, flip "Earn in the MUSD Savings Vault" if you want the MUSD to earn while it waits. You get principal plus yield back when you withdraw.
 
 Step 6 — Deposit or chip in
 Add MUSD from your wallet (one signature with permit), or borrow from your own Mezo loan straight into the goal if you have a healthy trove.
-If you received an invite link, finish the four steps on that page and chip in once the goal owner has added you as a contributor.
+If you received an invite link, finish the steps on that page and chip in once the goal owner has added you as a contributor.
 
 Step 7 — Optional: protect a loan
 If you have a Mezo loan, the Protect my loan panel shows live ICR and liquidation price, and can add collateral or repay with a preview before you send.
+Each goal card also has "Protect my loan": it repays part of your Mezo loan, or closes it, using the money in that goal. It is free while the loan is below 200% or Mezo is in Recovery Mode. It keeps your loan above Mezo's 1,800 MUSD minimum for you.
 
 Step 8 — Send us proof (optional)
 If you are happy to be listed as a community tester, send:
@@ -56,8 +58,10 @@ Fees
 
 Safety
 - Testnet only. Never send mainnet funds to testnet addresses.
-- sMUSD savings vault is documented on mainnet but has no code on this testnet; the app says so honestly. sMUSD does not raise trove ICR.
+- Earning uses Mezo's own MUSD Savings Vault (sMUSD) on testnet, 0x6f461c68B2c5492C0F5CCEc5a264d692aA7A8e16. It does not raise a loan's collateral ratio by itself; repaying from a goal does.
+- Borrowing into a goal is paused while Mezo is in Recovery Mode.
 
 Repo and contract
 - GitHub: https://github.com/Cyptoboy777/musd-pocket
-- MUSDPocket v2 (verified): 0xEC03F758219746b6e773f107a05cF17b66E7D460
+- MUSD Pocket v3 (verified, current): 0xF86c8ef87F617041BBbcF61EeBE34cB811E7616c
+- MUSDPocket v2 (Wave 2, older goals): 0xEC03F758219746b6e773f107a05cF17b66E7D460

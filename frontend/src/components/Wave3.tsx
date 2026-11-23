@@ -132,7 +132,7 @@ export function EarnRow({ goalId, balance, canWrite, active, onDone }: { goalId:
         <span>
           {earning
             ? <>{money(n18(inVault))} MUSD in Mezo's MUSD Savings Vault · <span className="tnum">+{yieldNow.toFixed(4)} MUSD</span> yield so far</>
-            : <>Park the balance in Mezo's MUSD Savings Vault (sMUSD). Rate varies with protocol fees; withdraw returns principal plus yield.</>}
+            : <>Park the balance in Mezo's MUSD Savings Vault (sMUSD). The rate moves with protocol fees. Withdraw returns principal plus yield, as long as Mezo's vault is paying out.</>}
         </span>
       </div>
       <button
