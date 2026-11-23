@@ -13,12 +13,13 @@ import {
 import { formatUnits, parseUnits, isAddress, zeroAddress } from "viem";
 import { AnimatePresence, m } from "motion/react";
 import { musdPocketAbi, erc20Abi } from "./lib/abi";
-import { MUSD_ADDRESS, MEZO_MAINNET_CHAIN_ID, POCKET_ADDRESS, POCKET_V1_ADDRESS, MEZO, mezoTestnet, pocketWritesAllowed } from "./lib/chains";
+import { MUSD_ADDRESS, MEZO_MAINNET_CHAIN_ID, POCKET_ADDRESS, POCKET_V1_ADDRESS, MEZO, POCKET_V2, mezoTestnet, pocketWritesAllowed } from "./lib/chains";
+import { FACTS } from "./lib/facts";
 import { mainnetPocketConfigured } from "./lib/mainnetPocket";
 import { useMezoActions, useMezoPosition, type MezoPosition } from "./lib/mezo";
 import { COMFORT, POCKET_FLOOR, BAND_COPY, band, liquidationPrice, maxBorrowAt, ratio, ratioAfterBorrow } from "./lib/risk";
 import { BitcoinPanel } from "./components/BitcoinPanel";
-import { SavingsVaultPanel } from "./components/SavingsVaultPanel";
+import { EarnRow, LoanShield, RecoveryBanner, RiskChecksPanel, TeamSection, TestersSection, useSystemRisk } from "./components/Wave3";
 import { ProofPanel } from "./components/ProofPanel";
 import { ProtectLoanPanel } from "./components/ProtectLoanPanel";
 import { RevenuePanel } from "./components/RevenuePanel";
@@ -94,6 +95,8 @@ export default function App() {
     return () => window.clearTimeout(t);
   }, [showStats]);
   const pos = useMezoPosition();
+  const sys = useSystemRisk();
+  const recoveryMode = sys.recoveryMode ?? pos.recoveryMode;
   const deployed = POCKET_ADDRESS !== zeroAddress;
   const toggleLang = () => {
     const next = cycleLang(lang);
@@ -116,6 +119,15 @@ export default function App() {
     args: address ? [address] : undefined,
     query: { enabled: !!address && deployed },
   });
+
+  const { data: v2Ids } = useReadContract({
+    address: POCKET_V2,
+    abi: musdPocketAbi,
+    functionName: "goalsOf",
+    args: address ? [address] : undefined,
+    query: { enabled: !!address },
+  });
+  const v2Count = ((v2Ids as bigint[] | undefined) || []).length;
 
   const { data: btcBal, isLoading: btcLoading } = useBalance({
     address,
@@ -149,6 +161,7 @@ export default function App() {
             <a href="#how">{tr(lang, "navHow")}</a>
             <a href="#start">{tr(lang, "navStart")}</a>
             <a href="#app">{tr(lang, "navPockets")}</a>
+            <a href="#testers">Testers</a>
             <a href="#proof">{tr(lang, "navProof")}</a>
             <a href="/stats" onClick={(e) => { e.preventDefault(); setShowStats(true); window.history.pushState({}, "", "/stats"); document.getElementById("stats")?.scrollIntoView({ behavior: "smooth" }); }}>{tr(lang, "navStats")}</a>
             <a href={`${EXPLORER}/address/${POCKET_ADDRESS}`} target="_blank" rel="noreferrer">
@@ -192,7 +205,7 @@ export default function App() {
               <AccountPanel balance={balance} loading={isConnected && balLoading} connected={isConnected} address={address} goals={ids.length} wrongNetwork={wrongNetwork} onMainnet={onMainnet} noMusd={noMusd} onGuide={toStart} />
               <BitcoinPanel pos={pos} connected={isConnected && !wrongNetwork} />
               <ProtectLoanPanel pos={pos} connected={isConnected && !wrongNetwork} lang={lang} musdBalance={balance} />
-              <SavingsVaultPanel lang={lang} />
+              <RiskChecksPanel pos={pos} connected={isConnected && !wrongNetwork} />
               <RevenuePanel lang={lang} />
             </aside>
 
@@ -210,6 +223,17 @@ export default function App() {
                 </div>
               )}
 
+              <RecoveryBanner on={recoveryMode} />
+              {isConnected && v2Count > 0 && (
+                <div className="notice" role="note" data-feature="v2-goals">
+                  <IconInfo2 />
+                  <span>
+                    You also have {v2Count} {v2Count === 1 ? "goal" : "goals"} on the Wave 2 contract. They are safe and unchanged there;{" "}
+                    <a href={`${EXPLORER}/address/${POCKET_V2}?tab=write_contract`} target="_blank" rel="noreferrer">withdraw them on the explorer</a>. New goals use v3.
+                  </span>
+                </div>
+              )}
+
               <Tabs tab={tab} setTab={setTab} lang={lang} />
 
               <AnimatePresence mode="wait" initial={false}>
@@ -224,7 +248,7 @@ export default function App() {
                   transition={{ duration: 0.32, ease: EASE }}
                 >
                   {tab === "goals" && (
-                    <GoalsPanel goalIds={ids} deployed={deployed} connected={isConnected} loading={isConnected && goalsLoading} noMusd={noMusd} pos={pos} lang={lang} onCreate={() => setTab("save")} onCoach={() => setTab("coach")} onGuide={toStart} />
+                    <GoalsPanel goalIds={ids} deployed={deployed} connected={isConnected} loading={isConnected && goalsLoading} noMusd={noMusd} pos={pos} recoveryMode={!!recoveryMode} lang={lang} onCreate={() => setTab("save")} onCoach={() => setTab("coach")} onGuide={toStart} />
                   )}
                   {tab === "save" && <SavePanel key={draft?.n ?? 0} draft={draft} deployed={deployed} noMusd={noMusd} onGuide={toStart} onCreated={() => { void refetchGoals(); setTab("goals"); }} />}
                   {tab === "coach" && <Coach pos={pos} walletMusd={balance} connected={isConnected && !wrongNetwork} onUse={(d) => { setDraft({ ...d, n: Date.now() }); setTab("save"); }} />}
@@ -235,7 +259,9 @@ export default function App() {
           </div>
         </section>
         <StatsPanel lang={lang} />
+        <TestersSection />
         <ProofPanel lang={lang} />
+        <TeamSection />
       </main>
 
       <footer className="footer">
@@ -250,7 +276,10 @@ export default function App() {
             <p className="footer-badge faint" data-feature="mezo-passport-btc">{tr(lang, "passportNote")}</p>
           </div>
           <dl className="footer-addrs">
-            <div><dt>MUSD Pocket v2</dt><dd><Addr value={POCKET_ADDRESS} /></dd></div>
+            <div><dt>MUSD Pocket v3</dt><dd><Addr value={POCKET_ADDRESS} /></dd></div>
+            <div><dt>Admin timelock (2 days)</dt><dd><Addr value={FACTS.contracts.pocketV3Timelock} /></dd></div>
+            <div><dt>MUSD Savings Vault (sMUSD)</dt><dd><Addr value={FACTS.contracts.savingsVaultTestnet} /></dd></div>
+            <div><dt>v2 (Wave 2)</dt><dd><Addr value={POCKET_V2} /></dd></div>
             <div><dt>v1 (Wave 1 start)</dt><dd><Addr value={POCKET_V1_ADDRESS} /></dd></div>
             <div><dt>Mezo borrow signatures</dt><dd><Addr value={MEZO.borrowerOpsSignatures} /></dd></div>
             <div><dt>MUSD token</dt><dd><Addr value={MUSD_ADDRESS} /></dd></div>
@@ -301,7 +330,7 @@ function Hero({ balance, loading, connected, goals, onStart, onView, onGuide }: 
             ))}
           </h1>
           <m.p className="hero-sub" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: EASE, delay: 0.35 }}>
-            Save in MUSD, the Bitcoin-backed dollar on Mezo, toward goals with a date. Fill a goal from your wallet, or borrow against your BTC straight into it with one signature, without selling a satoshi.
+            Save in MUSD, the Bitcoin-backed dollar on Mezo, toward goals with a date. Borrow against your BTC straight into a goal, let it earn in Mezo's Savings Vault while it waits, and use it to rescue your loan if BTC drops.
           </m.p>
           <m.div className="hero-cta" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: EASE, delay: 0.45 }}>
             <button className="btn btn-primary btn-lg" onClick={onStart}>
@@ -312,7 +341,7 @@ function Hero({ balance, loading, connected, goals, onStart, onView, onGuide }: 
             </button>
           </m.div>
           <m.p className="hero-guide" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.55 }}>
-            New to Mezo? <button type="button" className="link-btn" onClick={onGuide}>Get free test MUSD in four steps</button>
+            New to Mezo? <button type="button" className="link-btn" onClick={onGuide}>Start in three steps</button>
           </m.p>
           <m.ul className="hero-facts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.6 }}>
             <li><IconBitcoin /> Backed by Bitcoin</li>
@@ -416,8 +445,8 @@ function Note({ balance, loading, connected, goals }: { balance: number; loading
 function HowItWorks() {
   const steps = [
     { icon: <IconPlus />, title: "Name a goal", body: "Set a target in MUSD and an unlock date between 1 day and 2 years." },
-    { icon: <IconDeposit />, title: "Fill the pocket", body: "Add MUSD with one signature, or borrow it from your Mezo loan straight into the goal. Share a goal so others can chip in." },
-    { icon: <IconUnlock />, title: "Unlock on time", body: "Withdraw everything on the date. Need it sooner? Break early for a 2% fee." },
+    { icon: <IconDeposit />, title: "Fill it and let it earn", body: "Add MUSD with one signature, borrow it from your Mezo loan, or let friends chip in. Switch on earning and the balance sits in Mezo's MUSD Savings Vault." },
+    { icon: <IconShield />, title: "Unlock, or rescue your loan", body: "Withdraw principal plus yield on the date. If BTC falls, the goal can pay down your own Mezo loan first, fee-free while the loan is at risk." },
   ];
   return (
     <section id="how" className="how" aria-labelledby="how-title">
@@ -523,7 +552,7 @@ const EXAMPLES = [
   { name: "Home deposit", target: "5,000", days: 365 },
 ];
 
-function GoalsPanel({ goalIds, deployed, connected, loading, noMusd, pos, lang = "en", onCreate, onCoach, onGuide }: { goalIds: bigint[]; deployed: boolean; connected: boolean; loading: boolean; noMusd: boolean; pos: MezoPosition; lang?: Lang; onCreate: () => void; onCoach: () => void; onGuide: () => void }) {
+function GoalsPanel({ goalIds, deployed, connected, loading, noMusd, pos, recoveryMode, lang = "en", onCreate, onCoach, onGuide }: { goalIds: bigint[]; deployed: boolean; connected: boolean; loading: boolean; noMusd: boolean; pos: MezoPosition; recoveryMode: boolean; lang?: Lang; onCreate: () => void; onCoach: () => void; onGuide: () => void }) {
   if (!deployed) {
     return <EmptyState title={tr(lang, "emptyDeployTitle")} body={tr(lang, "emptyDeployBody")} />;
   }
@@ -545,7 +574,7 @@ function GoalsPanel({ goalIds, deployed, connected, loading, noMusd, pos, lang =
           ))}
         </ul>
         <div className="empty-cta"><ConnectCta label={tr(lang, "connectStart")} /></div>
-        <p className="empty-foot">No wallet or no MUSD yet? <button type="button" className="link-btn" onClick={onGuide}>Follow the four-step guide</button>.</p>
+        <p className="empty-foot">No wallet or no MUSD yet? <button type="button" className="link-btn" onClick={onGuide}>Follow the three-step guide</button>.</p>
       </div>
     );
   }
@@ -584,7 +613,7 @@ function GoalsPanel({ goalIds, deployed, connected, loading, noMusd, pos, lang =
   return (
     <div className="goal-list">
       {goalIds.map((id, i) => (
-        <GoalCard key={id.toString()} goalId={id} index={i} pos={pos} lang={lang} />
+        <GoalCard key={id.toString()} goalId={id} index={i} pos={pos} recoveryMode={recoveryMode} lang={lang} />
       ))}
     </div>
   );
@@ -617,7 +646,7 @@ function GoalSkeleton() {
   );
 }
 
-function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: number; pos: MezoPosition; lang?: Lang }) {
+function GoalCard({ goalId, index, pos, recoveryMode, lang = "en" }: { goalId: bigint; index: number; pos: MezoPosition; recoveryMode: boolean; lang?: Lang }) {
   const chainId = useChainId();
   const canWrite = pocketWritesAllowed(chainId);
   const { writeContract, data: hash, isPending, error } = useWriteContract();
@@ -631,7 +660,8 @@ function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: 
   const { data: feeBpsData } = useReadContract({
     address: POCKET_ADDRESS,
     abi: musdPocketAbi,
-    functionName: "earlyFeeBps",
+    functionName: "goalEarlyFeeBps",
+    args: [goalId],
   });
   const actions = useMezoActions();
   const [addAmt, setAddAmt] = useState("");
@@ -666,6 +696,7 @@ function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: 
   const safeRoom = t && price ? maxBorrowAt(t, price, COMFORT) : 0;
   const floorRoom = t && price ? maxBorrowAt(t, price, POCKET_FLOOR) : 0;
   const tooRisky = after !== undefined && after < POCKET_FLOOR;
+  const refreshAll = () => { void refetch(); pos.refetch(); };
   const liqAfter = t && bAmt > 0 ? liquidationPrice({ coll: t.coll, debt: t.debt + bAmt * 1.001 }) : undefined;
 
   const feeBps = typeof feeBpsData === "number" ? feeBpsData : Number(feeBpsData ?? 200);
@@ -716,6 +747,9 @@ function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: 
         </div>
       </div>
 
+      <EarnRow goalId={goalId} balance={balance} canWrite={canWrite} active={active} onDone={refreshAll} />
+      <LoanShield goalId={goalId} balance={balance} locked={locked} pos={pos} canWrite={canWrite} onDone={refreshAll} />
+
       <div className="seg" role="group" aria-label="How to fund this goal">
         <button type="button" className={mode === "add" ? "on" : ""} aria-pressed={mode === "add"} onClick={() => setMode("add")}><IconDeposit width={15} height={15} /> From wallet</button>
         <button type="button" className={mode === "borrow" ? "on" : ""} aria-pressed={mode === "borrow"} onClick={() => setMode("borrow")}><IconBitcoin width={15} height={15} /> Borrow from my BTC</button>
@@ -739,6 +773,10 @@ function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: 
         <div className="fund fund-empty">
           <p>Borrowing into a goal needs a Mezo loan on this wallet. Open one on Mezo (minimum 1,800 MUSD principal + 200 MUSD gas deposit, about 2,000 MUSD total debt). Small savers should keep using From wallet. With a valid trove, MUSD goes straight into this goal and your BTC stays yours.</p>
           <a className="btn btn-ghost btn-block" href={LINKS.borrow} target="_blank" rel="noreferrer">Open a loan on Mezo <IconExternal width={15} height={15} /></a>
+        </div>
+      ) : recoveryMode ? (
+        <div className="fund fund-empty" data-feature="borrow-paused-rm">
+          <p>Borrowing into goals is paused while Mezo is in Recovery Mode. The contract refuses it too, so nothing can slip through. Adding MUSD from your wallet still works.</p>
         </div>
       ) : (
         <form className="fund" onSubmit={(e) => { e.preventDefault(); if (bAmt > 0 && !tooRisky) void bor.run(() => actions.borrowToGoal(goalId, borrowAmt, t)); }}>
@@ -983,10 +1021,9 @@ function GetStarted({ connected, address, wrongNetwork, onMainnet, btc, btcLoadi
 
   const ready = connected && !wrongNetwork;
   const s1: StepState = ready ? "done" : "todo";
-  const s2: StepState = !ready ? "todo" : btcLoading ? "loading" : btc > 0 ? "done" : "todo";
-  const s3: StepState = !ready ? "todo" : musdLoading ? "loading" : musd > 0 ? "done" : "todo";
-  const s4: StepState = ready && goals > 0 ? "done" : "todo";
-  const states = [s1, s2, s3, s4];
+  const s2: StepState = !ready ? "todo" : btcLoading || musdLoading ? "loading" : btc > 0 && musd > 0 ? "done" : "todo";
+  const s3: StepState = ready && goals > 0 ? "done" : "todo";
+  const states = [s1, s2, s3];
   const doneCount = states.filter((x) => x === "done").length;
   const current = states.findIndex((x) => x !== "done");
 
@@ -1012,41 +1049,31 @@ function GetStarted({ connected, address, wrongNetwork, onMainnet, btc, btcLoadi
       ) : null,
     },
     {
-      title: "Get free test BTC",
-      body: <>BTC pays the gas on Mezo. The official faucet sends test BTC (and MEZO) to your address after a quick CAPTCHA.</>,
-      status: !ready ? "Waiting for step 1" : btcLoading ? "Checking balance…" : btc > 0 ? `${fmtNum(btc, btc < 0.01 ? 5 : 4)} BTC in your wallet` : "No test BTC yet",
-      actions: (
-        <>
-          <a className="btn btn-primary" href={LINKS.faucet} target="_blank" rel="noreferrer">Open the Mezo faucet <IconExternal width={15} height={15} /></a>
-          {connected && address && (
-            <button type="button" className="btn btn-ghost" onClick={() => { navigator.clipboard?.writeText(address).then(() => setCopied(true)).catch(() => {}); }}>
-              {copied ? <IconCheck width={16} height={16} /> : <IconCopy width={16} height={16} />} {copied ? "Copied" : "Copy my address"}
-            </button>
-          )}
-        </>
-      ),
-    },
-    {
-      title: "Turn test BTC into MUSD",
+      title: "Get free test money",
       body: (
         <>
-          Sign in to the Mezo testnet app with the same wallet. <strong>Swap</strong> a little BTC for MUSD (any amount), or{" "}
-          <strong>borrow</strong> MUSD against your BTC (the minimum loan is 1,800 MUSD). Opening a loan means at least about 2,000 MUSD total debt (1,800 + 200 gas deposit). With a loan open, MUSD Pocket can borrow more straight into a goal.{" "}
-          <a href={LINKS.borrowGuide} target="_blank" rel="noreferrer">Borrowing guide</a>
+          Grab test BTC from the Mezo faucet (it pays the gas), then swap a little of it for MUSD in the Mezo testnet app with the same wallet.
+          Already hold BTC on Mezo? You can borrow MUSD against it instead and never sell.{" "}
+          <a href={LINKS.borrowGuide} target="_blank" rel="noreferrer">How borrowing works</a>
         </>
       ),
-      status: !ready ? "Waiting for step 1" : musdLoading ? "Checking balance…" : musd > 0 ? `${fmtNum(musd)} MUSD ready to save` : "No MUSD yet",
+      status: !ready ? "Waiting for step 1" : btcLoading || musdLoading ? "Checking balances…" : `${fmtNum(btc, btc < 0.01 ? 5 : 4)} BTC · ${fmtNum(musd)} MUSD`,
       actions: (
         <>
-          <a className="btn btn-primary" href={LINKS.swap} target="_blank" rel="noreferrer">Swap BTC to MUSD <IconExternal width={15} height={15} /></a>
-          <a className="btn btn-ghost" href={LINKS.borrow} target="_blank" rel="noreferrer">Borrow MUSD <IconExternal width={15} height={15} /></a>
+          <a className="btn btn-primary" href={LINKS.faucet} target="_blank" rel="noreferrer">Get test BTC <IconExternal width={15} height={15} /></a>
+          <a className="btn btn-ghost" href={LINKS.swap} target="_blank" rel="noreferrer">Swap BTC to MUSD <IconExternal width={15} height={15} /></a>
+          {connected && address && (
+            <button type="button" className="link-btn" onClick={() => { navigator.clipboard?.writeText(address).then(() => setCopied(true)).catch(() => {}); }}>
+              {copied ? "Address copied" : "Copy my address"}
+            </button>
+          )}
           {ready && <button type="button" className="link-btn" onClick={addMusd}>Show MUSD in my wallet</button>}
         </>
       ),
     },
     {
-      title: "Open your first pocket",
-      body: <>Name a goal, set a target and an unlock date, then deposit any amount of MUSD.</>,
+      title: "Start a goal and let it earn",
+      body: <>Name it, pick a target and an unlock date, add any amount of MUSD, then flip on earning to park it in Mezo's MUSD Savings Vault.</>,
       status: !ready ? "Waiting for step 1" : goals > 0 ? `${goals} ${goals === 1 ? "pocket" : "pockets"} created` : "No pockets yet",
       actions: <button type="button" className="btn btn-primary" onClick={onCreate}><IconPlus /> Create a goal</button>,
     },
@@ -1055,14 +1082,14 @@ function GetStarted({ connected, address, wrongNetwork, onMainnet, btc, btcLoadi
   return (
     <section id="start" className="start" aria-labelledby="start-title">
       <div className="section-head">
-        <h2 id="start-title">Get test MUSD in five minutes</h2>
+        <h2 id="start-title">Your first goal in three steps</h2>
         <p>MUSD Pocket runs on Mezo testnet, so everything here uses free test money. Your progress updates as you go.</p>
       </div>
       <div className="start-wrap">
         <div className="panel start-panel">
           <div className="start-progress">
-            <span className="tnum">{connected ? `${doneCount} of 4 done` : "4 steps"}</span>
-            <span className="bar"><i style={{ transform: `scaleX(${doneCount / 4})` }} /></span>
+            <span className="tnum">{connected ? `${doneCount} of 3 done` : "3 steps"}</span>
+            <span className="bar"><i style={{ transform: `scaleX(${doneCount / 3})` }} /></span>
           </div>
           <ol className="start-steps">
             {steps.map((st, i) => {

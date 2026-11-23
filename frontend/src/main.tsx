@@ -19,6 +19,7 @@ import { DEPLOY_TOOL_ENABLED, isDeployToolPath } from "./lib/deployGate";
 import { ToastProvider } from "./components/Toasts";
 import "./styles/tokens.css";
 import "./App.css";
+import "./styles/wave3.css";
 
 const queryClient = new QueryClient();
 

@@ -13,7 +13,7 @@ function text(rel: string): string {
 const currentDocs = [
   "README.md",
   "SUBMISSION.md",
-  "wave2-submission.md",
+  "docs/JUDGE-FEEDBACK.md",
   "docs/TESTER-GUIDE.md",
   "docs/DEPLOY_MAINNET.md",
   "docs/ONCHAIN-ACTIVITY.md",
@@ -23,7 +23,7 @@ const currentDocs = [
 describe("facts.json", () => {
   it("is what the app uses for the live pocket", () => {
     expect(LIVE_APP).toBe(FACTS.liveUrl);
-    expect(POCKET_ADDRESS.toLowerCase()).toBe(FACTS.contracts.pocketV2.toLowerCase());
+    expect(POCKET_ADDRESS.toLowerCase()).toBe(FACTS.contracts.pocketV3.toLowerCase());
     expect(MUSD_ADDRESS.toLowerCase()).toBe(FACTS.contracts.musdTestnet.toLowerCase());
     expect(POCKET_MAINNET_ADDRESS).toBeNull();
     expect(FACTS.mainnet.status).toBe("not-deployed");
@@ -35,7 +35,7 @@ describe("facts.json", () => {
     for (const file of currentDocs) {
       const body = text(file);
       expect(body, file).toContain(FACTS.liveUrl);
-      expect(body, file).toContain(FACTS.contracts.pocketV2);
+      expect(body, file).toContain(FACTS.contracts.pocketV3);
       expect(body, file).not.toContain("musd-pocket.vercel.app");
       expect(body, file).not.toContain("github.io/musd-pocket");
     }

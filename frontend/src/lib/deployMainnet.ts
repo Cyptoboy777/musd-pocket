@@ -1,41 +1,61 @@
 import { decodeAbiParameters, encodeDeployData, getAddress, type Hex } from "viem";
 import { FACTS } from "./facts";
 import artifact from "./pocketCreationBytecode.json" with { type: "json" };
+import timelockArtifact from "./timelockCreationBytecode.json" with { type: "json" };
 
 /** Mezo mainnet chain id 31612. https://mezo.org/docs/developers/getting-started/ */
 export const MEZO_MAINNET_CHAIN_ID = 31612;
 export const MEZO_MAINNET_CHAIN_HEX = "0x7b7c";
 
 /**
- * Constructor arguments for MUSDPocketV2.
+ * Config for MUSDPocketV3 on Mezo mainnet.
  * MUSD: https://mezo.org/docs/users/resources/contracts-reference/
  * Protocol proxies: https://github.com/mezo-org/musd/releases/tag/v1.1.0
- * Same values as contracts/script/DeployV2Mainnet.s.sol.
+ * savingsVault (sMUSD): PCV.feeRecipient() on mainnet, also listed in mezo-org/documentation.
+ * Same values as contracts/script/DeployV3Mainnet.s.sol.
  */
 export const POCKET_CONSTRUCTOR = {
   musd: FACTS.mainnet.musd as Hex,
+  borrowerOperations: FACTS.mainnet.borrowerOperations as Hex,
   borrowerOperationsSignatures: FACTS.mainnet.borrowerOpsSignatures as Hex,
   troveManager: FACTS.mainnet.troveManager as Hex,
   priceFeed: FACTS.mainnet.priceFeed as Hex,
+  savingsVault: FACTS.mainnet.savingsVault as Hex,
 } as const;
 
-/** Checked by the deploy script. Not a constructor argument. */
-export const BORROWER_OPERATIONS = FACTS.mainnet.borrowerOperations as Hex;
+export const BORROWER_OPERATIONS = POCKET_CONSTRUCTOR.borrowerOperations;
+
+/** Admin changes wait this long (2 days) in PocketTimelock. */
+export const TIMELOCK_DELAY = 172800n;
 
 export const CREATION_BYTECODE = artifact.bytecode as Hex;
 export const CREATION_BYTECODE_HASH = artifact.bytecodeHash as Hex;
+export const TIMELOCK_BYTECODE = timelockArtifact.bytecode as Hex;
+export const TIMELOCK_BYTECODE_HASH = timelockArtifact.bytecodeHash as Hex;
 
 const constructorAbi = [
   {
     type: "constructor",
     inputs: [
-      { name: "musdToken", type: "address" },
-      { name: "borrowerOperationsSignatures", type: "address" },
-      { name: "troveManager_", type: "address" },
-      { name: "priceFeed_", type: "address" },
-      { name: "initialOwner", type: "address" },
+      {
+        name: "c",
+        type: "tuple",
+        components: [
+          { name: "musd", type: "address" },
+          { name: "borrowerOperations", type: "address" },
+          { name: "borrowerOperationsSignatures", type: "address" },
+          { name: "troveManager", type: "address" },
+          { name: "priceFeed", type: "address" },
+          { name: "savingsVault", type: "address" },
+          { name: "owner", type: "address" },
+        ],
+      },
     ],
   },
+] as const;
+
+const timelockConstructorAbi = [
+  { type: "constructor", inputs: [{ name: "admin_", type: "address" }, { name: "delay_", type: "uint256" }] },
 ] as const;
 
 export function mainnetDeployAllowed(chainId: number | undefined | null): boolean {
@@ -60,29 +80,35 @@ export function parseOwner(input: string): { ok: true; address: Hex } | { ok: fa
   }
 }
 
-export function constructorArgs(owner: Hex): readonly [Hex, Hex, Hex, Hex, Hex] {
-  return [
-    POCKET_CONSTRUCTOR.musd,
-    POCKET_CONSTRUCTOR.borrowerOperationsSignatures,
-    POCKET_CONSTRUCTOR.troveManager,
-    POCKET_CONSTRUCTOR.priceFeed,
-    owner,
-  ];
+export type PocketConfig = {
+  musd: Hex;
+  borrowerOperations: Hex;
+  borrowerOperationsSignatures: Hex;
+  troveManager: Hex;
+  priceFeed: Hex;
+  savingsVault: Hex;
+  owner: Hex;
+};
+
+/** The Pocket's owner is the timelock, never a plain wallet. */
+export function constructorArgs(owner: Hex): PocketConfig {
+  return { ...POCKET_CONSTRUCTOR, owner };
 }
 
-/** Creation transaction data: compiled bytecode plus ABI-encoded constructor args. */
+/** Creation transaction data: compiled bytecode plus the ABI-encoded Config tuple. */
 export function encodePocketDeploy(owner: Hex): Hex {
-  return encodeDeployData({
-    abi: constructorAbi,
-    bytecode: CREATION_BYTECODE,
-    args: constructorArgs(owner),
-  });
+  return encodeDeployData({ abi: constructorAbi, bytecode: CREATION_BYTECODE, args: [constructorArgs(owner)] });
 }
 
 export function decodePocketDeployArgs(data: Hex): readonly string[] {
   const argsHex = `0x${data.slice(CREATION_BYTECODE.length)}` as Hex;
-  const decoded = decodeAbiParameters(constructorAbi[0].inputs, argsHex);
-  return decoded.map((value) => String(value));
+  const [c] = decodeAbiParameters(constructorAbi[0].inputs, argsHex);
+  return [c.musd, c.borrowerOperations, c.borrowerOperationsSignatures, c.troveManager, c.priceFeed, c.savingsVault, c.owner].map(String);
+}
+
+/** Step 1: the timelock that will own the Pocket. The admin is the user's own wallet. */
+export function encodeTimelockDeploy(admin: Hex, delay: bigint = TIMELOCK_DELAY): Hex {
+  return encodeDeployData({ abi: timelockConstructorAbi, bytecode: TIMELOCK_BYTECODE, args: [admin, delay] });
 }
 
 export function mezoMainnetWalletParams() {
@@ -105,6 +131,8 @@ export function formatBtcFromWei(wei: bigint): string {
 
 export type Readback = {
   musd?: string | null;
+  borrowerOps?: string | null;
+  savingsVault?: string | null;
   borrowerOpsSig?: string | null;
   troveManager?: string | null;
   priceFeed?: string | null;
@@ -114,6 +142,8 @@ export type Readback = {
 export function compareReadback(read: Readback, owner: Hex): { field: string; expected: string; actual: string; match: boolean }[] {
   const rows: { field: string; expected: string; actual: string | null | undefined }[] = [
     { field: "musd", expected: POCKET_CONSTRUCTOR.musd, actual: read.musd },
+    { field: "borrowerOps", expected: POCKET_CONSTRUCTOR.borrowerOperations, actual: read.borrowerOps },
+    { field: "savingsVault", expected: POCKET_CONSTRUCTOR.savingsVault, actual: read.savingsVault },
     { field: "borrowerOpsSig", expected: POCKET_CONSTRUCTOR.borrowerOperationsSignatures, actual: read.borrowerOpsSig },
     { field: "troveManager", expected: POCKET_CONSTRUCTOR.troveManager, actual: read.troveManager },
     { field: "priceFeed", expected: POCKET_CONSTRUCTOR.priceFeed, actual: read.priceFeed },

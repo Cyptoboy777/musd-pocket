@@ -1,5 +1,5 @@
 import { defineChain } from "viem";
-import { FACTS, MUSD_TESTNET_ADDRESS, POCKET_V1_ADDRESS as POCKET_V1_FACT, POCKET_V2_ADDRESS } from "./facts";
+import { FACTS, MUSD_TESTNET_ADDRESS, POCKET_V1_ADDRESS as POCKET_V1_FACT, POCKET_V2_ADDRESS, POCKET_V3_ADDRESS } from "./facts";
 import { POCKET_MAINNET_ADDRESS } from "./mainnetPocket";
 
 /** Mezo Testnet — https://mezo.org/docs/developers/getting-started/ */
@@ -63,12 +63,17 @@ export function walletChains() {
 export const MUSD_ADDRESS = MUSD_TESTNET_ADDRESS;
 
 /**
- * MUSD Pocket v2 on Mezo testnet. The verified bytecode is git 2c5bd9b.
- * A local override may replace it for experiments. The default is facts.json.
+ * MUSD Pocket v3 on Mezo testnet (verified on the Mezo explorer). The default is facts.json.
+ * VITE_POCKET_V3_ADDRESS may override it for local experiments. The old VITE_POCKET_ADDRESS
+ * variable pointed at v2 and is deliberately no longer read, so a stale env var cannot
+ * send new goals to the Wave 2 contract.
  */
 export const POCKET_ADDRESS = (
-  import.meta.env.VITE_POCKET_ADDRESS || POCKET_V2_ADDRESS
+  import.meta.env.VITE_POCKET_V3_ADDRESS || POCKET_V3_ADDRESS
 ) as `0x${string}`;
+
+/** Wave 2 contract. Goals created there stay there; the app still reads and closes them. */
+export const POCKET_V2 = POCKET_V2_ADDRESS;
 
 /** Wave 1 contract, kept so old explorer links still resolve. */
 export const POCKET_V1_ADDRESS = POCKET_V1_FACT;

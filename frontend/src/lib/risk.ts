@@ -14,6 +14,8 @@ export const CCR = 1.5;
 export const POCKET_FLOOR = 1.5;
 /** What we suggest people aim for. */
 export const COMFORT = 2.0;
+/** Same as MUSDPocketV3.AT_RISK_ICR: under this, emergency repay from a locked goal is fee-free. */
+export const AT_RISK = 2.0;
 export const BORROW_FEE = 0.001;
 /** Mezo minimum net debt when opening a trove (protocol). */
 export const MIN_NET_DEBT = 1800;

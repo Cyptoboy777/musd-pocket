@@ -14,6 +14,9 @@ import {
   decodePocketDeployArgs,
   deployErrorCopy,
   encodePocketDeploy,
+  encodeTimelockDeploy,
+  TIMELOCK_BYTECODE,
+  TIMELOCK_DELAY,
   formatBtcFromWei,
   mainnetDeployAllowed,
   mezoMainnetWalletParams,
@@ -21,9 +24,12 @@ import {
 } from "./deployMainnet";
 
 const OWNER = "0x1111111111111111111111111111111111111111" as const;
-/** cast abi-encode for the five constructor arguments and this owner. */
+/** cast abi-encode "f((address,address,address,address,address,address,address))" for the v3 Config with this owner. */
 const ENCODED_ARGS =
-  "0x000000000000000000000000dd468a1ddc392dcdbef6db6e34e89aa338f9f186000000000000000000000000b57ab578bf20b3e318f3efaa587c51dbcce5df7a00000000000000000000000094afb503dbca74ac3e4929baceedfce19b93c193000000000000000000000000c5ac5a8892230e0a3e1c473881a2de7353ffca880000000000000000000000001111111111111111111111111111111111111111";
+  "0x000000000000000000000000dd468a1ddc392dcdbef6db6e34e89aa338f9f18600000000000000000000000044b1bac67dda612a41a58aaf779143b181dee031000000000000000000000000b57ab578bf20b3e318f3efaa587c51dbcce5df7a00000000000000000000000094afb503dbca74ac3e4929baceedfce19b93c193000000000000000000000000c5ac5a8892230e0a3e1c473881a2de7353ffca88000000000000000000000000b4d498029af77680cd1ef828b967f010d06c51cc0000000000000000000000001111111111111111111111111111111111111111";
+/** cast abi-encode "f(address,uint256)" OWNER 172800 */
+const ENCODED_TIMELOCK_ARGS =
+  "0x0000000000000000000000001111111111111111111111111111111111111111000000000000000000000000000000000000000000000000000000000002a300";
 
 describe("mainnet deploy encoding", () => {
   it("uses the documented mainnet addresses and leaves pocket unset", () => {
@@ -33,14 +39,8 @@ describe("mainnet deploy encoding", () => {
     expect(POCKET_CONSTRUCTOR.troveManager).toBe("0x94AfB503dBca74aC3E4929BACEeDfCe19B93c193");
     expect(POCKET_CONSTRUCTOR.priceFeed).toBe("0xc5aC5A8892230E0A3e1c473881A2de7353fFcA88");
     expect(BORROWER_OPERATIONS).toBe("0x44b1bac67dDA612a41a58AAf779143B181dEe031");
-    expect(constructorArgs(OWNER)).toEqual([
-      POCKET_CONSTRUCTOR.musd,
-      POCKET_CONSTRUCTOR.borrowerOperationsSignatures,
-      POCKET_CONSTRUCTOR.troveManager,
-      POCKET_CONSTRUCTOR.priceFeed,
-      OWNER,
-    ]);
-    expect(constructorArgs(OWNER)).not.toContain(BORROWER_OPERATIONS);
+    expect(POCKET_CONSTRUCTOR.savingsVault).toBe("0xb4D498029af77680cD1eF828b967f010d06C51CC");
+    expect(constructorArgs(OWNER)).toEqual({ ...POCKET_CONSTRUCTOR, owner: OWNER });
   });
 
   it("appends the cast ABI encoding to the creation bytecode", () => {
@@ -49,11 +49,20 @@ describe("mainnet deploy encoding", () => {
     expect(data.slice(CREATION_BYTECODE.length)).toBe(ENCODED_ARGS.slice(2));
     expect(decodePocketDeployArgs(data)).toEqual([
       POCKET_CONSTRUCTOR.musd,
+      POCKET_CONSTRUCTOR.borrowerOperations,
       POCKET_CONSTRUCTOR.borrowerOperationsSignatures,
       POCKET_CONSTRUCTOR.troveManager,
       POCKET_CONSTRUCTOR.priceFeed,
+      POCKET_CONSTRUCTOR.savingsVault,
       OWNER,
     ]);
+  });
+
+  it("deploys the timelock first with a two-day delay", () => {
+    expect(TIMELOCK_DELAY).toBe(172800n);
+    const data = encodeTimelockDeploy(OWNER);
+    expect(data.startsWith(TIMELOCK_BYTECODE)).toBe(true);
+    expect(data.slice(TIMELOCK_BYTECODE.length)).toBe(ENCODED_TIMELOCK_ARGS.slice(2));
   });
 
   it("changes only the owner word when the owner changes", () => {
@@ -61,7 +70,7 @@ describe("mainnet deploy encoding", () => {
     const first = encodePocketDeploy(OWNER);
     const second = encodePocketDeploy(other);
     expect(first.slice(0, CREATION_BYTECODE.length)).toBe(second.slice(0, CREATION_BYTECODE.length));
-    expect(decodePocketDeployArgs(second)[4]).toBe(other);
+    expect(decodePocketDeployArgs(second)[6]).toBe(other);
   });
 });
 
@@ -106,6 +115,8 @@ describe("owner checksum and readback", () => {
   it("compares immutables and owner without echoing raw errors", () => {
     const rows = compareReadback({
       musd: POCKET_CONSTRUCTOR.musd,
+      borrowerOps: POCKET_CONSTRUCTOR.borrowerOperations,
+      savingsVault: POCKET_CONSTRUCTOR.savingsVault,
       borrowerOpsSig: POCKET_CONSTRUCTOR.borrowerOperationsSignatures.toLowerCase(),
       troveManager: "0x0000000000000000000000000000000000000001",
       priceFeed: POCKET_CONSTRUCTOR.priceFeed,

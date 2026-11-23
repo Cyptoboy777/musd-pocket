@@ -1,3 +1,4 @@
+import { FACTS } from "../lib/facts";
 import { COMMUNITY_TESTERS, EXPLORER, LIVE_APP, PROOF_WALLETS, type ProofWallet } from "../lib/proof";
 import { IconExternal } from "./Icons";
 import type { Lang } from "../lib/i18n";
@@ -56,7 +57,9 @@ export function ProofPanel({ lang = "en" }: { lang?: Lang }) {
       )}
 
       <p className="btc-copy faint" style={{ marginTop: 16 }}>
-        Contracts: v2{" "}
+        Contracts: v3{" "}
+        <a href={`${EXPLORER}/address/${FACTS.contracts.pocketV3}`} target="_blank" rel="noreferrer">{FACTS.contracts.pocketV3.slice(0, 6)}…{FACTS.contracts.pocketV3.slice(-4)}</a>
+        {" "}(verified, owned by a 2-day timelock) · v2{" "}
         <a href={`${EXPLORER}/address/0xEC03F758219746b6e773f107a05cF17b66E7D460`} target="_blank" rel="noreferrer">0xEC03…D460</a>
         {" "}(verified) · v1{" "}
         <a href={`${EXPLORER}/address/0x2d5f1275ac326aE0253aAf1cF7b633f7Fec2A1C8`} target="_blank" rel="noreferrer">0x2d5f…A1C8</a>.

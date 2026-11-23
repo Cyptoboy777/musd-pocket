@@ -37,6 +37,29 @@ export function walletErrorCopy(err: unknown): WalletErrorCopy {
       notSubmitted: false,
     };
   }
+  if (/RecoveryModeActive/i.test(msg)) {
+    return { title: "Paused for safety", body: "Mezo is in Recovery Mode, so borrowing into goals and closing loans are paused. Repaying still works.", notSubmitted: false };
+  }
+  if (/MIN_NET_DEBT|BelowMinNetDebt/i.test(msg)) {
+    const m = /MIN_NET_DEBT ([0-9.]+)/.exec(msg);
+    const max = m ? Number(m[1]).toLocaleString("en-US", { maximumFractionDigits: 2 }) : null;
+    return {
+      title: "Not sent",
+      body: max !== null
+        ? `Mezo keeps every loan at 1,800 MUSD or more. The most you can repay from this goal right now is ${max} MUSD. To clear the whole loan, use Close loan.`
+        : "Mezo keeps every loan at 1,800 MUSD or more. Repay a smaller amount, or close the whole loan.",
+      notSubmitted: m !== null,
+    };
+  }
+  if (/NO_LOAN|NoActiveTrove/i.test(msg)) {
+    return { title: "Not sent", body: "This wallet has no open Mezo loan to repay. Nothing was sent.", notSubmitted: true };
+  }
+  if (/InsufficientGoalBalance/i.test(msg)) {
+    return { title: "Not completed", body: "This goal does not hold enough MUSD for that, fee included.", notSubmitted: false };
+  }
+  if (/EarnUnavailable/i.test(msg)) {
+    return { title: "Not completed", body: "Earning is not switched on for this network yet.", notSubmitted: false };
+  }
   if (/LoanTooRisky|StillLocked|NotContributor|NotGoalOwner|BadAmount|BadLock/i.test(msg)) {
     return { title: "Not completed", body: "The contract declined this action.", notSubmitted: false };
   }

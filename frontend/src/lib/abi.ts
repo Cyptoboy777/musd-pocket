@@ -1,32 +1,50 @@
-/** MUSD Pocket v2 (contracts/src/MUSDPocketV2.sol), generated from forge out/. */
+/** MUSD Pocket v3 (contracts/src/MUSDPocketV3.sol), generated from forge out/. v2 function
+ *  signatures are unchanged in v3, so the same ABI reads the Wave 2 contract too. */
 export const musdPocketAbi = [
   {
     "type": "constructor",
     "inputs": [
       {
-        "name": "musdToken",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "borrowerOperationsSignatures",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "troveManager_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "priceFeed_",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "initialOwner",
-        "type": "address",
-        "internalType": "address"
+        "name": "c",
+        "type": "tuple",
+        "internalType": "struct MUSDPocketV3.Config",
+        "components": [
+          {
+            "name": "musd",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "borrowerOperations",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "borrowerOperationsSignatures",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "troveManager",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "priceFeed",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "savingsVault",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "owner",
+            "type": "address",
+            "internalType": "address"
+          }
+        ]
       }
     ],
     "stateMutability": "nonpayable"
@@ -34,6 +52,32 @@ export const musdPocketAbi = [
   {
     "type": "receive",
     "stateMutability": "payable"
+  },
+  {
+    "type": "function",
+    "name": "AT_RISK_ICR",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "GAS_COMPENSATION",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -89,6 +133,13 @@ export const musdPocketAbi = [
   },
   {
     "type": "function",
+    "name": "acceptOwnership",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "borrowToGoal",
     "inputs": [
       {
@@ -127,13 +178,26 @@ export const musdPocketAbi = [
   },
   {
     "type": "function",
+    "name": "borrowerOps",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IBorrowerOperationsView"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "borrowerOpsSig",
     "inputs": [],
     "outputs": [
       {
         "name": "",
         "type": "address",
-        "internalType": "contract IBorrowerOperationsSignatures"
+        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -243,13 +307,6 @@ export const musdPocketAbi = [
   },
   {
     "type": "function",
-    "name": "goalEarlyFeeBps",
-    "inputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
-    "outputs": [{ "name": "", "type": "uint16", "internalType": "uint16" }],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "earlyFeeBps",
     "inputs": [],
     "outputs": [
@@ -267,6 +324,152 @@ export const musdPocketAbi = [
     "inputs": [
       {
         "name": "goalId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "earnAvailable",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "earnIndexSnap",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "earnInfo",
+    "inputs": [
+      {
+        "name": "goalId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "earning",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "inVault",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "pending",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "earnedToDate",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "earnPrincipal",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "emergencyClose",
+    "inputs": [
+      {
+        "name": "goalId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "signature",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "deadline",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "emergencyRepay",
+    "inputs": [
+      {
+        "name": "goalId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "upperHint",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "lowerHint",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "signature",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "deadline",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -356,6 +559,63 @@ export const musdPocketAbi = [
         "name": "isFamily",
         "type": "bool",
         "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "goalEarlyFeeBps",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "goalEarning",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "goalYieldEarned",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -456,20 +716,6 @@ export const musdPocketAbi = [
   },
   {
     "type": "function",
-    "name": "pendingOwner",
-    "inputs": [],
-    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "acceptOwnership",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "owner",
     "inputs": [],
     "outputs": [
@@ -477,6 +723,38 @@ export const musdPocketAbi = [
         "name": "",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pendingOwner",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pendingYield",
+    "inputs": [
+      {
+        "name": "goalId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -525,6 +803,19 @@ export const musdPocketAbi = [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "savingsVault",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IMUSDSavingsRate"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -607,6 +898,24 @@ export const musdPocketAbi = [
   },
   {
     "type": "function",
+    "name": "setEarn",
+    "inputs": [
+      {
+        "name": "goalId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "on",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "setFamilyMember",
     "inputs": [
       {
@@ -623,6 +932,19 @@ export const musdPocketAbi = [
         "name": "allowed",
         "type": "bool",
         "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "settleYield",
+    "inputs": [
+      {
+        "name": "goalId",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -656,7 +978,33 @@ export const musdPocketAbi = [
   },
   {
     "type": "function",
+    "name": "totalInVault",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "totalLocked",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "totalRepaidFromGoals",
     "inputs": [],
     "outputs": [
       {
@@ -688,7 +1036,7 @@ export const musdPocketAbi = [
       {
         "name": "",
         "type": "address",
-        "internalType": "contract ITroveManager"
+        "internalType": "contract ITroveManagerV3"
       }
     ],
     "stateMutability": "view"
@@ -705,6 +1053,19 @@ export const musdPocketAbi = [
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "yieldPool",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "event",
@@ -808,6 +1169,93 @@ export const musdPocketAbi = [
   },
   {
     "type": "event",
+    "name": "EarnModeSet",
+    "inputs": [
+      {
+        "name": "goalId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "on",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "EmergencyClosed",
+    "inputs": [
+      {
+        "name": "goalId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "borrower",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "debtPaid",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "fee",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "EmergencyRepaid",
+    "inputs": [
+      {
+        "name": "goalId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "borrower",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "fee",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "netDebtAfter",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "FamilyMemberUpdated",
     "inputs": [
       {
@@ -897,8 +1345,18 @@ export const musdPocketAbi = [
     "type": "event",
     "name": "GoalFeeSnapshotted",
     "inputs": [
-      { "name": "goalId", "type": "uint256", "indexed": true, "internalType": "uint256" },
-      { "name": "feeBps", "type": "uint16", "indexed": false, "internalType": "uint16" }
+      {
+        "name": "goalId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "feeBps",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
+      }
     ],
     "anonymous": false
   },
@@ -906,8 +1364,18 @@ export const musdPocketAbi = [
     "type": "event",
     "name": "OwnershipTransferStarted",
     "inputs": [
-      { "name": "previousOwner", "type": "address", "indexed": true, "internalType": "address" },
-      { "name": "newOwner", "type": "address", "indexed": true, "internalType": "address" }
+      {
+        "name": "previousOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "newOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
     ],
     "anonymous": false
   },
@@ -926,6 +1394,25 @@ export const musdPocketAbi = [
         "type": "address",
         "indexed": true,
         "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ParkedInVault",
+    "inputs": [
+      {
+        "name": "goalId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -988,6 +1475,25 @@ export const musdPocketAbi = [
   },
   {
     "type": "event",
+    "name": "UnparkedFromVault",
+    "inputs": [
+      {
+        "name": "goalId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Withdrawn",
     "inputs": [
       {
@@ -1001,6 +1507,25 @@ export const musdPocketAbi = [
         "type": "address",
         "indexed": true,
         "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "YieldCredited",
+    "inputs": [
+      {
+        "name": "goalId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
       },
       {
         "name": "amount",
@@ -1028,6 +1553,17 @@ export const musdPocketAbi = [
   },
   {
     "type": "error",
+    "name": "BelowMinNetDebt",
+    "inputs": [
+      {
+        "name": "maxRepayable",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "BorrowMismatch",
     "inputs": [
       {
@@ -1044,6 +1580,11 @@ export const musdPocketAbi = [
   },
   {
     "type": "error",
+    "name": "EarnUnavailable",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "EmptyName",
     "inputs": []
   },
@@ -1056,6 +1597,22 @@ export const musdPocketAbi = [
     "type": "error",
     "name": "GoalInactive",
     "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InsufficientGoalBalance",
+    "inputs": [
+      {
+        "name": "needed",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "available",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
     "type": "error",
@@ -1075,6 +1632,11 @@ export const musdPocketAbi = [
   },
   {
     "type": "error",
+    "name": "NoActiveTrove",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "NotContributor",
     "inputs": []
   },
@@ -1085,12 +1647,17 @@ export const musdPocketAbi = [
   },
   {
     "type": "error",
+    "name": "NotOwner",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "NotPendingOwner",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "NotOwner",
+    "name": "RecoveryModeActive",
     "inputs": []
   },
   {
@@ -1100,12 +1667,33 @@ export const musdPocketAbi = [
   },
   {
     "type": "error",
+    "name": "RepayMismatch",
+    "inputs": [
+      {
+        "name": "expected",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "burned",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "StillLocked",
     "inputs": []
   },
   {
     "type": "error",
     "name": "TransferFailed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "VaultMismatch",
     "inputs": []
   },
   {

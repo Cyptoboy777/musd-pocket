@@ -34,7 +34,7 @@ function short(a: string) {
   return a.slice(0, 6) + "…" + a.slice(-4);
 }
 
-/** Public on-chain stats for MUSDPocketV2 — no wallet required. */
+/** Public on-chain stats for the live MUSD Pocket (v3) — no wallet required. */
 export function StatsPanel({ lang = "en" }: { lang?: Lang }) {
   const client = usePublicClient({ chainId: mezoTestnet.id });
   const [events, setEvents] = useState<StatsEvent[]>([]);
