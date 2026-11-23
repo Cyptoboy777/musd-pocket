@@ -18,6 +18,7 @@ export const troveManagerAbi = [
   },
   { type: "function", name: "getTroveStatus", stateMutability: "view", inputs: [{ name: "_borrower", type: "address" }], outputs: [{ type: "uint8" }] },
   { type: "function", name: "checkRecoveryMode", stateMutability: "view", inputs: [{ name: "_price", type: "uint256" }], outputs: [{ type: "bool" }] },
+  { type: "function", name: "getTCR", stateMutability: "view", inputs: [{ name: "_price", type: "uint256" }], outputs: [{ type: "uint256" }] },
 ] as const;
 
 export const priceFeedAbi = [
@@ -61,6 +62,7 @@ export const borrowerOperationsAbi = [
     outputs: [],
   },
   { type: "function", name: "closeTrove", stateMutability: "nonpayable", inputs: [], outputs: [] },
+  { type: "function", name: "minNetDebt", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 ] as const;
 
 /** Compute SortedTroves insert hints for a projected NICR. */
@@ -99,9 +101,48 @@ const erc20BalanceAbi = [
 
 /* ───────────── Read: the wallet's Mezo loan, BTC price and MEZO ───────────── */
 
+/**
+ * TroveManager.getEntireDebtAndColl returns coll/principal/interest with pending
+ * redistribution rewards ALREADY folded in (mezo-org/musd TroveManager.sol:
+ * `coll += pendingCollateral; principal += pendingPrincipal; interest += pendingInterest`).
+ * The pending fields are informational. Wave 2 added them a second time, which overstated
+ * both collateral and debt in the ratio view. Use the first three values only.
+ */
+export function troveFromEntire(dc: readonly bigint[]): Trove {
+  const [coll, principal, interest] = dc;
+  return {
+    coll: Number(formatUnits(coll ?? 0n, 18)),
+    debt: Number(formatUnits((principal ?? 0n) + (interest ?? 0n), 18)),
+  };
+}
+
+/** Same as troveFromEntire, in wei, for exact pre-checks. */
+export function debtWeiFromEntire(dc: readonly bigint[]): bigint {
+  return (dc[1] ?? 0n) + (dc[2] ?? 0n);
+}
+
+/** Mezo's gas compensation (LiquityBase.MUSD_GAS_COMPENSATION): part of debt, never repayable. */
+export const GAS_COMP_WEI = 200n * 10n ** 18n;
+
+/**
+ * Largest emergency repay that keeps Mezo's minimum net debt.
+ * netDebt = debt - 200; Mezo requires netDebt - amount >= minNetDebt.
+ */
+export function maxRepayWei(debtWei: bigint, minNetDebtWei: bigint): bigint {
+  if (debtWei <= GAS_COMP_WEI) return 0n;
+  const net = debtWei - GAS_COMP_WEI;
+  return net > minNetDebtWei ? net - minNetDebtWei : 0n;
+}
+
+/** MUSD the goal must hold to close the whole loan (debt minus gas compensation). */
+export function closeCostWei(debtWei: bigint): bigint {
+  return debtWei > GAS_COMP_WEI ? debtWei - GAS_COMP_WEI : 0n;
+}
+
 export type MezoPosition = {
   loading: boolean;
   price?: number; // USD per BTC, from Mezo's PriceFeed
+  priceRaw?: bigint;
   trove?: Trove; // undefined when there is no active loan
   status?: number; // 1 = active
   recoveryMode?: boolean;
@@ -138,14 +179,11 @@ export function useMezoPosition(): MezoPosition {
 
   let trove: Trove | undefined;
   if (status === 1 && dc) {
-    const [coll, principal, interest, pColl, pPrincipal, pInterest] = dc;
-    trove = {
-      coll: Number(formatUnits(coll + pColl, 18)),
-      debt: Number(formatUnits(principal + interest + pPrincipal + pInterest, 18)),
-    };
+    trove = troveFromEntire(dc);
   }
   return {
     loading: enabled && isLoading,
+    priceRaw,
     price: toN(priceRaw),
     trove,
     status,
@@ -249,11 +287,7 @@ export function createPocketActions(deps: PocketActionDeps) {
       deps.readContract({ address: MEZO.priceFeed, abi: priceFeedAbi, functionName: "fetchPrice" }),
     ]);
     if (status !== 1) throw new Error("No active Mezo loan on this wallet.");
-    const [coll, principal, interest, pColl, pPrincipal, pInterest] = dc as readonly bigint[];
-    const live: Trove = {
-      coll: Number(formatUnits(coll + pColl, 18)),
-      debt: Number(formatUnits(principal + interest + pPrincipal + pInterest, 18)),
-    };
+    const live: Trove = troveFromEntire(dc as readonly bigint[]);
     const price = Number(formatUnits(priceRaw as bigint, 18));
     const maxSafe = Math.floor((((live.coll * price) / 1.5) - live.debt) / 1.001 * 100) / 100;
     if (Number(amountStr) > maxSafe + 1e-9) {
@@ -362,7 +396,86 @@ export function createPocketActions(deps: PocketActionDeps) {
     });
   }
 
-  return { depositWithPermit, sendWithPermit, borrowToGoal, addCollateral, repayLoan, closeLoan };
+  /** Turn a goal's earn mode (MUSD Savings Vault) on or off. One transaction, no signature. */
+  async function setEarn(goalId: bigint, on: boolean): Promise<Hex> {
+    requireTestnet(deps);
+    if (!deps.getAddress()) throw new Error("Connect a wallet first.");
+    return deps.writeContract({
+      address: POCKET_ADDRESS, abi: musdPocketAbi, functionName: "setEarn",
+      args: [goalId, on], chainId: mezoTestnet.id,
+    });
+  }
+
+  async function liveLoan(address: Address) {
+    const [status, dc, minNet] = await Promise.all([
+      deps.readContract({ address: MEZO.troveManager, abi: troveManagerAbi, functionName: "getTroveStatus", args: [address] }),
+      deps.readContract({ address: MEZO.troveManager, abi: troveManagerAbi, functionName: "getEntireDebtAndColl", args: [address] }),
+      deps.readContract({ address: MEZO.borrowerOperations, abi: borrowerOperationsAbi, functionName: "minNetDebt" }),
+    ]);
+    if (status !== 1) throw new Error("NO_LOAN");
+    const entire = dc as readonly bigint[];
+    return { collWei: entire[0] ?? 0n, debtWei: debtWeiFromEntire(entire), minNetWei: minNet as bigint };
+  }
+
+  /**
+   * Pay part of the caller's Mezo loan from a goal.
+   * 1. Re-read the loan and Mezo's minimum net debt, and refuse early if the repay would break it.
+   * 2. Sign Mezo's RepayMUSD(amount, borrower, nonce, deadline).
+   * 3. MUSD Pocket burns the MUSD from the goal through BorrowerOperationsSignatures.
+   */
+  async function emergencyRepay(goalId: bigint, amountStr: string): Promise<Hex> {
+    requireTestnet(deps);
+    const address = deps.getAddress();
+    if (!address) throw new Error("Connect a wallet first.");
+    const amount = parseUnits(amountStr, 18);
+    if (amount <= 0n) throw new Error("Enter a MUSD amount greater than zero.");
+    const loan = await liveLoan(address);
+    const max = maxRepayWei(loan.debtWei, loan.minNetWei);
+    if (amount > max) throw new Error(`MIN_NET_DEBT ${formatUnits(max, 18)}`);
+    const { upper, lower } = await computeHints({ readContract: deps.readContract }, loan.collWei, loan.debtWei - amount);
+    const nonce = await deps.readContract({ address: MEZO.borrowerOpsSignatures, abi: bosAbi, functionName: "getNonce", args: [address] });
+    const deadline = EIP712_DEADLINE();
+    const signature = await deps.signTypedData({
+      domain: { name: "BorrowerOperationsSignatures", version: "1", chainId: mezoTestnet.id, verifyingContract: MEZO.borrowerOpsSignatures },
+      types: { RepayMUSD: [
+        { name: "amount", type: "uint256" }, { name: "borrower", type: "address" },
+        { name: "nonce", type: "uint256" }, { name: "deadline", type: "uint256" },
+      ] },
+      primaryType: "RepayMUSD",
+      message: { amount, borrower: address, nonce, deadline },
+    });
+    requireTestnet(deps);
+    return deps.writeContract({
+      address: POCKET_ADDRESS, abi: musdPocketAbi, functionName: "emergencyRepay",
+      args: [goalId, amount, upper, lower, signature, deadline], chainId: mezoTestnet.id,
+    });
+  }
+
+  /** Close the whole loan from a goal. Collateral BTC goes back to the signer's wallet. */
+  async function emergencyClose(goalId: bigint): Promise<Hex> {
+    requireTestnet(deps);
+    const address = deps.getAddress();
+    if (!address) throw new Error("Connect a wallet first.");
+    await liveLoan(address);
+    const nonce = await deps.readContract({ address: MEZO.borrowerOpsSignatures, abi: bosAbi, functionName: "getNonce", args: [address] });
+    const deadline = EIP712_DEADLINE();
+    const signature = await deps.signTypedData({
+      domain: { name: "BorrowerOperationsSignatures", version: "1", chainId: mezoTestnet.id, verifyingContract: MEZO.borrowerOpsSignatures },
+      types: { CloseTrove: [
+        { name: "borrower", type: "address" }, { name: "recipient", type: "address" },
+        { name: "nonce", type: "uint256" }, { name: "deadline", type: "uint256" },
+      ] },
+      primaryType: "CloseTrove",
+      message: { borrower: address, recipient: address, nonce, deadline },
+    });
+    requireTestnet(deps);
+    return deps.writeContract({
+      address: POCKET_ADDRESS, abi: musdPocketAbi, functionName: "emergencyClose",
+      args: [goalId, signature, deadline], chainId: mezoTestnet.id,
+    });
+  }
+
+  return { depositWithPermit, sendWithPermit, borrowToGoal, addCollateral, repayLoan, closeLoan, setEarn, emergencyRepay, emergencyClose };
 }
 
 export function useMezoActions() {
