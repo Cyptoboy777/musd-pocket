@@ -1,0 +1,367 @@
+Multiple frameworks detected: Foundry, solc, Solc-json. Using Foundry (highest priority). Use --compile-force-framework to override.
+'forge clean' running (wd: /tmp/musd-pocket/contracts)
+'forge config --json' running
+'forge build --build-info --deny never src/MUSDPocketV3.sol' running (wd: /tmp/musd-pocket/contracts)
+INFO:Detectors:
+Detector: reentrancy-balance
+Reentrancy in MUSDPocketV3._unpark(uint256,uint256) (src/MUSDPocketV3.sol#620-630):
+	External call allowing reentrancy:
+	- savingsVault.withdraw(amount) (src/MUSDPocketV3.sol#623)
+	Balance read before the call:
+	- before = musd.balanceOf(address(this)) (src/MUSDPocketV3.sol#622)
+	Possible stale balance used after the call in a condition:
+	- got < amount (src/MUSDPocketV3.sol#625)
+		- stale variable `got`
+Reentrancy in MUSDPocketV3.borrowToGoal(uint256,uint256,address,address,bytes,uint256) (src/MUSDPocketV3.sol#255-281):
+	External call allowing reentrancy:
+	- IBorrowerOperationsSignatures(borrowerOpsSig).withdrawMUSDWithSignature(amount,upperHint,lowerHint,msg.sender,address(this),signature,deadline) (src/MUSDPocketV3.sol#270-272)
+	Balance read before the call:
+	- before = musd.balanceOf(address(this)) (src/MUSDPocketV3.sol#267)
+	Possible stale balance used after the call in a condition:
+	- received != amount (src/MUSDPocketV3.sol#274)
+		- stale variable `received`
+Reentrancy in MUSDPocketV3.emergencyClose(uint256,bytes,uint256) (src/MUSDPocketV3.sol#390-409):
+	External call allowing reentrancy:
+	- IBorrowerOperationsSignaturesRepay(borrowerOpsSig).closeTroveWithSignature(msg.sender,msg.sender,signature,deadline) (src/MUSDPocketV3.sol#402-404)
+	Balance read before the call:
+	- before = musd.balanceOf(address(this)) (src/MUSDPocketV3.sol#401)
+	Possible stale balance used after the call in a condition:
+	- burned != netDebt (src/MUSDPocketV3.sol#406)
+		- stale variable `burned`
+Reentrancy in MUSDPocketV3.emergencyRepay(uint256,uint256,address,address,bytes,uint256) (src/MUSDPocketV3.sol#356-384):
+	External call allowing reentrancy:
+	- IBorrowerOperationsSignaturesRepay(borrowerOpsSig).repayMUSDWithSignature(amount,upperHint,lowerHint,msg.sender,signature,deadline) (src/MUSDPocketV3.sol#377-379)
+	Balance read before the call:
+	- before = musd.balanceOf(address(this)) (src/MUSDPocketV3.sol#376)
+	Possible stale balance used after the call in a condition:
+	- burned != amount (src/MUSDPocketV3.sol#381)
+		- stale variable `burned`
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities
+INFO:Detectors:
+Detector: incorrect-equality
+MUSDPocketV3.recoverStray(address) (src/MUSDPocketV3.sol#522-528) uses a dangerous strict equality:
+	- amount == 0 (src/MUSDPocketV3.sol#525)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+INFO:Detectors:
+Detector: locked-ether
+Contract locking ether found:
+	Contract MUSDPocketV3 (src/MUSDPocketV3.sol#37-685) has payable functions:
+	 - MUSDPocketV3.receive() (src/MUSDPocketV3.sol#197-199)
+	But does not have a function to withdraw the ether
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#contracts-that-lock-ether
+INFO:Detectors:
+Detector: reentrancy-no-eth
+Reentrancy in MUSDPocketV3._autoPark(uint256,uint256) (src/MUSDPocketV3.sol#604-609):
+	External calls:
+	- _settle(goalId) (src/MUSDPocketV3.sol#606)
+		- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	- _park(goalId,amount) (src/MUSDPocketV3.sol#607)
+		- savingsVault.deposit(amount) (src/MUSDPocketV3.sol#613)
+		- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.approve.selector,spender,amount)) (src/MUSDPocketV3.sol#670-671)
+	State variables written after the call(s):
+	- _park(goalId,amount) (src/MUSDPocketV3.sol#607)
+		- earnPrincipal[goalId] += amount (src/MUSDPocketV3.sol#614)
+	MUSDPocketV3.earnPrincipal (src/MUSDPocketV3.sol#101) can be used in cross function reentrancies:
+	- MUSDPocketV3.earnInfo(uint256) (src/MUSDPocketV3.sol#466-472)
+	- MUSDPocketV3.earnPrincipal (src/MUSDPocketV3.sol#101)
+	- MUSDPocketV3.pendingYield(uint256) (src/MUSDPocketV3.sol#474-480)
+Reentrancy in MUSDPocketV3._debit(uint256,uint256) (src/MUSDPocketV3.sol#578-585):
+	External calls:
+	- _unpark(goalId,amount - liquid) (src/MUSDPocketV3.sol#582)
+		- savingsVault.withdraw(amount) (src/MUSDPocketV3.sol#623)
+		- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	State variables written after the call(s):
+	- g.balance -= amount (src/MUSDPocketV3.sol#583)
+	MUSDPocketV3.goals (src/MUSDPocketV3.sol#95) can be used in cross function reentrancies:
+	- MUSDPocketV3._ownedActive(uint256) (src/MUSDPocketV3.sol#548-552)
+	- MUSDPocketV3.createGoal(string,uint256,uint64,bool) (src/MUSDPocketV3.sol#205-233)
+	- MUSDPocketV3.getGoal(uint256) (src/MUSDPocketV3.sol#448-463)
+	- MUSDPocketV3.goals (src/MUSDPocketV3.sol#95)
+	- MUSDPocketV3.progressBps(uint256) (src/MUSDPocketV3.sol#490-494)
+	- totalLocked -= amount (src/MUSDPocketV3.sol#584)
+	MUSDPocketV3.totalLocked (src/MUSDPocketV3.sol#88) can be used in cross function reentrancies:
+	- MUSDPocketV3.strayBalance() (src/MUSDPocketV3.sol#497-501)
+	- MUSDPocketV3.totalLocked (src/MUSDPocketV3.sol#88)
+Reentrancy in MUSDPocketV3._settle(uint256) (src/MUSDPocketV3.sol#638-660):
+	External calls:
+	- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	State variables written after the call(s):
+	- yieldPool += musd.balanceOf(address(this)) - before (src/MUSDPocketV3.sol#652)
+	MUSDPocketV3.yieldPool (src/MUSDPocketV3.sol#92) can be used in cross function reentrancies:
+	- MUSDPocketV3.strayBalance() (src/MUSDPocketV3.sol#497-501)
+	- MUSDPocketV3.yieldPool (src/MUSDPocketV3.sol#92)
+	- yieldPool -= earned (src/MUSDPocketV3.sol#655)
+	MUSDPocketV3.yieldPool (src/MUSDPocketV3.sol#92) can be used in cross function reentrancies:
+	- MUSDPocketV3.strayBalance() (src/MUSDPocketV3.sol#497-501)
+	- MUSDPocketV3.yieldPool (src/MUSDPocketV3.sol#92)
+Reentrancy in MUSDPocketV3._unpark(uint256,uint256) (src/MUSDPocketV3.sol#620-630):
+	External calls:
+	- _settle(goalId) (src/MUSDPocketV3.sol#621)
+		- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	- savingsVault.withdraw(amount) (src/MUSDPocketV3.sol#623)
+	State variables written after the call(s):
+	- earnPrincipal[goalId] -= amount (src/MUSDPocketV3.sol#627)
+	MUSDPocketV3.earnPrincipal (src/MUSDPocketV3.sol#101) can be used in cross function reentrancies:
+	- MUSDPocketV3.earnInfo(uint256) (src/MUSDPocketV3.sol#466-472)
+	- MUSDPocketV3.earnPrincipal (src/MUSDPocketV3.sol#101)
+	- MUSDPocketV3.pendingYield(uint256) (src/MUSDPocketV3.sol#474-480)
+	- yieldPool += got - amount (src/MUSDPocketV3.sol#626)
+	MUSDPocketV3.yieldPool (src/MUSDPocketV3.sol#92) can be used in cross function reentrancies:
+	- MUSDPocketV3.strayBalance() (src/MUSDPocketV3.sol#497-501)
+	- MUSDPocketV3.yieldPool (src/MUSDPocketV3.sol#92)
+Reentrancy in MUSDPocketV3.borrowToGoal(uint256,uint256,address,address,bytes,uint256) (src/MUSDPocketV3.sol#255-281):
+	External calls:
+	- IBorrowerOperationsSignatures(borrowerOpsSig).withdrawMUSDWithSignature(amount,upperHint,lowerHint,msg.sender,address(this),signature,deadline) (src/MUSDPocketV3.sol#270-272)
+	- _autoPark(goalId,amount) (src/MUSDPocketV3.sol#280)
+		- savingsVault.deposit(amount) (src/MUSDPocketV3.sol#613)
+		- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.approve.selector,spender,amount)) (src/MUSDPocketV3.sol#670-671)
+		- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	State variables written after the call(s):
+	- _autoPark(goalId,amount) (src/MUSDPocketV3.sol#280)
+		- goals[goalId].balance += earned (src/MUSDPocketV3.sol#656)
+	MUSDPocketV3.goals (src/MUSDPocketV3.sol#95) can be used in cross function reentrancies:
+	- MUSDPocketV3._ownedActive(uint256) (src/MUSDPocketV3.sol#548-552)
+	- MUSDPocketV3.createGoal(string,uint256,uint64,bool) (src/MUSDPocketV3.sol#205-233)
+	- MUSDPocketV3.getGoal(uint256) (src/MUSDPocketV3.sol#448-463)
+	- MUSDPocketV3.goals (src/MUSDPocketV3.sol#95)
+	- MUSDPocketV3.progressBps(uint256) (src/MUSDPocketV3.sol#490-494)
+	- _autoPark(goalId,amount) (src/MUSDPocketV3.sol#280)
+		- totalLocked += earned (src/MUSDPocketV3.sol#657)
+	MUSDPocketV3.totalLocked (src/MUSDPocketV3.sol#88) can be used in cross function reentrancies:
+	- MUSDPocketV3.strayBalance() (src/MUSDPocketV3.sol#497-501)
+	- MUSDPocketV3.totalLocked (src/MUSDPocketV3.sol#88)
+Reentrancy in MUSDPocketV3.deposit(uint256,uint256) (src/MUSDPocketV3.sol#235-240):
+	External calls:
+	- _pullTo(msg.sender,address(this),amount) (src/MUSDPocketV3.sol#238)
+		- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.transferFrom.selector,from,to,amount)) (src/MUSDPocketV3.sol#676-677)
+	- _autoPark(goalId,amount) (src/MUSDPocketV3.sol#239)
+		- savingsVault.deposit(amount) (src/MUSDPocketV3.sol#613)
+		- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.approve.selector,spender,amount)) (src/MUSDPocketV3.sol#670-671)
+		- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	State variables written after the call(s):
+	- _autoPark(goalId,amount) (src/MUSDPocketV3.sol#239)
+		- goals[goalId].balance += earned (src/MUSDPocketV3.sol#656)
+	MUSDPocketV3.goals (src/MUSDPocketV3.sol#95) can be used in cross function reentrancies:
+	- MUSDPocketV3._ownedActive(uint256) (src/MUSDPocketV3.sol#548-552)
+	- MUSDPocketV3.createGoal(string,uint256,uint64,bool) (src/MUSDPocketV3.sol#205-233)
+	- MUSDPocketV3.getGoal(uint256) (src/MUSDPocketV3.sol#448-463)
+	- MUSDPocketV3.goals (src/MUSDPocketV3.sol#95)
+	- MUSDPocketV3.progressBps(uint256) (src/MUSDPocketV3.sol#490-494)
+	- _autoPark(goalId,amount) (src/MUSDPocketV3.sol#239)
+		- totalLocked += earned (src/MUSDPocketV3.sol#657)
+	MUSDPocketV3.totalLocked (src/MUSDPocketV3.sol#88) can be used in cross function reentrancies:
+	- MUSDPocketV3.strayBalance() (src/MUSDPocketV3.sol#497-501)
+	- MUSDPocketV3.totalLocked (src/MUSDPocketV3.sol#88)
+Reentrancy in MUSDPocketV3.depositWithPermit(uint256,uint256,uint256,uint8,bytes32,bytes32) (src/MUSDPocketV3.sol#242-251):
+	External calls:
+	- _permit(amount,deadline,v,r,s) (src/MUSDPocketV3.sol#248)
+		- IERC20Permit(address(musd)).permit(msg.sender,address(this),amount,deadline,v,r,s) (src/MUSDPocketV3.sol#663-666)
+	- _pullTo(msg.sender,address(this),amount) (src/MUSDPocketV3.sol#249)
+		- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.transferFrom.selector,from,to,amount)) (src/MUSDPocketV3.sol#676-677)
+	- _autoPark(goalId,amount) (src/MUSDPocketV3.sol#250)
+		- savingsVault.deposit(amount) (src/MUSDPocketV3.sol#613)
+		- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.approve.selector,spender,amount)) (src/MUSDPocketV3.sol#670-671)
+		- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	State variables written after the call(s):
+	- _autoPark(goalId,amount) (src/MUSDPocketV3.sol#250)
+		- goals[goalId].balance += earned (src/MUSDPocketV3.sol#656)
+	MUSDPocketV3.goals (src/MUSDPocketV3.sol#95) can be used in cross function reentrancies:
+	- MUSDPocketV3._ownedActive(uint256) (src/MUSDPocketV3.sol#548-552)
+	- MUSDPocketV3.createGoal(string,uint256,uint64,bool) (src/MUSDPocketV3.sol#205-233)
+	- MUSDPocketV3.getGoal(uint256) (src/MUSDPocketV3.sol#448-463)
+	- MUSDPocketV3.goals (src/MUSDPocketV3.sol#95)
+	- MUSDPocketV3.progressBps(uint256) (src/MUSDPocketV3.sol#490-494)
+	- _autoPark(goalId,amount) (src/MUSDPocketV3.sol#250)
+		- totalLocked += earned (src/MUSDPocketV3.sol#657)
+	MUSDPocketV3.totalLocked (src/MUSDPocketV3.sol#88) can be used in cross function reentrancies:
+	- MUSDPocketV3.strayBalance() (src/MUSDPocketV3.sol#497-501)
+	- MUSDPocketV3.totalLocked (src/MUSDPocketV3.sol#88)
+Reentrancy in MUSDPocketV3.earlyWithdraw(uint256) (src/MUSDPocketV3.sol#300-317):
+	External calls:
+	- _exitVault(goalId) (src/MUSDPocketV3.sol#303)
+		- savingsVault.withdraw(amount) (src/MUSDPocketV3.sol#623)
+		- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	State variables written after the call(s):
+	- totalLocked -= amount (src/MUSDPocketV3.sol#312)
+	MUSDPocketV3.totalLocked (src/MUSDPocketV3.sol#88) can be used in cross function reentrancies:
+	- MUSDPocketV3.strayBalance() (src/MUSDPocketV3.sol#497-501)
+	- MUSDPocketV3.totalLocked (src/MUSDPocketV3.sol#88)
+Reentrancy in MUSDPocketV3.emergencyClose(uint256,bytes,uint256) (src/MUSDPocketV3.sol#390-409):
+	External calls:
+	- _settle(goalId) (src/MUSDPocketV3.sol#398)
+		- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	- _debit(goalId,netDebt + fee) (src/MUSDPocketV3.sol#399)
+		- savingsVault.withdraw(amount) (src/MUSDPocketV3.sol#623)
+		- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	State variables written after the call(s):
+	- _debit(goalId,netDebt + fee) (src/MUSDPocketV3.sol#399)
+		- earnIndexSnap[goalId] = idx (src/MUSDPocketV3.sol#643)
+	MUSDPocketV3.earnIndexSnap (src/MUSDPocketV3.sol#102) can be used in cross function reentrancies:
+	- MUSDPocketV3.earnIndexSnap (src/MUSDPocketV3.sol#102)
+	- MUSDPocketV3.pendingYield(uint256) (src/MUSDPocketV3.sol#474-480)
+	- _debit(goalId,netDebt + fee) (src/MUSDPocketV3.sol#399)
+		- earnPrincipal[goalId] -= amount (src/MUSDPocketV3.sol#627)
+	MUSDPocketV3.earnPrincipal (src/MUSDPocketV3.sol#101) can be used in cross function reentrancies:
+	- MUSDPocketV3.earnInfo(uint256) (src/MUSDPocketV3.sol#466-472)
+	- MUSDPocketV3.earnPrincipal (src/MUSDPocketV3.sol#101)
+	- MUSDPocketV3.pendingYield(uint256) (src/MUSDPocketV3.sol#474-480)
+	- _debit(goalId,netDebt + fee) (src/MUSDPocketV3.sol#399)
+		- goalYieldEarned[goalId] += earned (src/MUSDPocketV3.sol#658)
+	MUSDPocketV3.goalYieldEarned (src/MUSDPocketV3.sol#103) can be used in cross function reentrancies:
+	- MUSDPocketV3.earnInfo(uint256) (src/MUSDPocketV3.sol#466-472)
+	- MUSDPocketV3.goalYieldEarned (src/MUSDPocketV3.sol#103)
+	- _debit(goalId,netDebt + fee) (src/MUSDPocketV3.sol#399)
+		- g.balance -= amount (src/MUSDPocketV3.sol#583)
+		- goals[goalId].balance += earned (src/MUSDPocketV3.sol#656)
+	MUSDPocketV3.goals (src/MUSDPocketV3.sol#95) can be used in cross function reentrancies:
+	- MUSDPocketV3._ownedActive(uint256) (src/MUSDPocketV3.sol#548-552)
+	- MUSDPocketV3.createGoal(string,uint256,uint64,bool) (src/MUSDPocketV3.sol#205-233)
+	- MUSDPocketV3.getGoal(uint256) (src/MUSDPocketV3.sol#448-463)
+	- MUSDPocketV3.goals (src/MUSDPocketV3.sol#95)
+	- MUSDPocketV3.progressBps(uint256) (src/MUSDPocketV3.sol#490-494)
+	- _debit(goalId,netDebt + fee) (src/MUSDPocketV3.sol#399)
+		- totalLocked -= amount (src/MUSDPocketV3.sol#584)
+		- totalLocked += earned (src/MUSDPocketV3.sol#657)
+	MUSDPocketV3.totalLocked (src/MUSDPocketV3.sol#88) can be used in cross function reentrancies:
+	- MUSDPocketV3.strayBalance() (src/MUSDPocketV3.sol#497-501)
+	- MUSDPocketV3.totalLocked (src/MUSDPocketV3.sol#88)
+	- _debit(goalId,netDebt + fee) (src/MUSDPocketV3.sol#399)
+		- yieldPool += got - amount (src/MUSDPocketV3.sol#626)
+		- yieldPool += musd.balanceOf(address(this)) - before (src/MUSDPocketV3.sol#652)
+		- yieldPool -= earned (src/MUSDPocketV3.sol#655)
+	MUSDPocketV3.yieldPool (src/MUSDPocketV3.sol#92) can be used in cross function reentrancies:
+	- MUSDPocketV3.strayBalance() (src/MUSDPocketV3.sol#497-501)
+	- MUSDPocketV3.yieldPool (src/MUSDPocketV3.sol#92)
+Reentrancy in MUSDPocketV3.emergencyRepay(uint256,uint256,address,address,bytes,uint256) (src/MUSDPocketV3.sol#356-384):
+	External calls:
+	- _settle(goalId) (src/MUSDPocketV3.sol#373)
+		- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	- _debit(goalId,amount + fee) (src/MUSDPocketV3.sol#374)
+		- savingsVault.withdraw(amount) (src/MUSDPocketV3.sol#623)
+		- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	State variables written after the call(s):
+	- _debit(goalId,amount + fee) (src/MUSDPocketV3.sol#374)
+		- earnIndexSnap[goalId] = idx (src/MUSDPocketV3.sol#643)
+	MUSDPocketV3.earnIndexSnap (src/MUSDPocketV3.sol#102) can be used in cross function reentrancies:
+	- MUSDPocketV3.earnIndexSnap (src/MUSDPocketV3.sol#102)
+	- MUSDPocketV3.pendingYield(uint256) (src/MUSDPocketV3.sol#474-480)
+	- _debit(goalId,amount + fee) (src/MUSDPocketV3.sol#374)
+		- earnPrincipal[goalId] -= amount (src/MUSDPocketV3.sol#627)
+	MUSDPocketV3.earnPrincipal (src/MUSDPocketV3.sol#101) can be used in cross function reentrancies:
+	- MUSDPocketV3.earnInfo(uint256) (src/MUSDPocketV3.sol#466-472)
+	- MUSDPocketV3.earnPrincipal (src/MUSDPocketV3.sol#101)
+	- MUSDPocketV3.pendingYield(uint256) (src/MUSDPocketV3.sol#474-480)
+	- _debit(goalId,amount + fee) (src/MUSDPocketV3.sol#374)
+		- goalYieldEarned[goalId] += earned (src/MUSDPocketV3.sol#658)
+	MUSDPocketV3.goalYieldEarned (src/MUSDPocketV3.sol#103) can be used in cross function reentrancies:
+	- MUSDPocketV3.earnInfo(uint256) (src/MUSDPocketV3.sol#466-472)
+	- MUSDPocketV3.goalYieldEarned (src/MUSDPocketV3.sol#103)
+	- _debit(goalId,amount + fee) (src/MUSDPocketV3.sol#374)
+		- g.balance -= amount (src/MUSDPocketV3.sol#583)
+		- goals[goalId].balance += earned (src/MUSDPocketV3.sol#656)
+	MUSDPocketV3.goals (src/MUSDPocketV3.sol#95) can be used in cross function reentrancies:
+	- MUSDPocketV3._ownedActive(uint256) (src/MUSDPocketV3.sol#548-552)
+	- MUSDPocketV3.createGoal(string,uint256,uint64,bool) (src/MUSDPocketV3.sol#205-233)
+	- MUSDPocketV3.getGoal(uint256) (src/MUSDPocketV3.sol#448-463)
+	- MUSDPocketV3.goals (src/MUSDPocketV3.sol#95)
+	- MUSDPocketV3.progressBps(uint256) (src/MUSDPocketV3.sol#490-494)
+	- _debit(goalId,amount + fee) (src/MUSDPocketV3.sol#374)
+		- totalLocked -= amount (src/MUSDPocketV3.sol#584)
+		- totalLocked += earned (src/MUSDPocketV3.sol#657)
+	MUSDPocketV3.totalLocked (src/MUSDPocketV3.sol#88) can be used in cross function reentrancies:
+	- MUSDPocketV3.strayBalance() (src/MUSDPocketV3.sol#497-501)
+	- MUSDPocketV3.totalLocked (src/MUSDPocketV3.sol#88)
+	- _debit(goalId,amount + fee) (src/MUSDPocketV3.sol#374)
+		- yieldPool += got - amount (src/MUSDPocketV3.sol#626)
+		- yieldPool += musd.balanceOf(address(this)) - before (src/MUSDPocketV3.sol#652)
+		- yieldPool -= earned (src/MUSDPocketV3.sol#655)
+	MUSDPocketV3.yieldPool (src/MUSDPocketV3.sol#92) can be used in cross function reentrancies:
+	- MUSDPocketV3.strayBalance() (src/MUSDPocketV3.sol#497-501)
+	- MUSDPocketV3.yieldPool (src/MUSDPocketV3.sol#92)
+Reentrancy in MUSDPocketV3.setEarn(uint256,bool) (src/MUSDPocketV3.sol#325-337):
+	External calls:
+	- _settle(goalId) (src/MUSDPocketV3.sol#331)
+		- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	- _park(goalId,liquid) (src/MUSDPocketV3.sol#333)
+		- savingsVault.deposit(amount) (src/MUSDPocketV3.sol#613)
+		- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.approve.selector,spender,amount)) (src/MUSDPocketV3.sol#670-671)
+	State variables written after the call(s):
+	- _park(goalId,liquid) (src/MUSDPocketV3.sol#333)
+		- earnPrincipal[goalId] += amount (src/MUSDPocketV3.sol#614)
+	MUSDPocketV3.earnPrincipal (src/MUSDPocketV3.sol#101) can be used in cross function reentrancies:
+	- MUSDPocketV3.earnInfo(uint256) (src/MUSDPocketV3.sol#466-472)
+	- MUSDPocketV3.earnPrincipal (src/MUSDPocketV3.sol#101)
+	- MUSDPocketV3.pendingYield(uint256) (src/MUSDPocketV3.sol#474-480)
+Reentrancy in MUSDPocketV3.withdraw(uint256) (src/MUSDPocketV3.sol#284-297):
+	External calls:
+	- _exitVault(goalId) (src/MUSDPocketV3.sol#287)
+		- savingsVault.withdraw(amount) (src/MUSDPocketV3.sol#623)
+		- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	State variables written after the call(s):
+	- totalLocked -= amount (src/MUSDPocketV3.sol#293)
+	MUSDPocketV3.totalLocked (src/MUSDPocketV3.sol#88) can be used in cross function reentrancies:
+	- MUSDPocketV3.strayBalance() (src/MUSDPocketV3.sol#497-501)
+	- MUSDPocketV3.totalLocked (src/MUSDPocketV3.sol#88)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
+INFO:Detectors:
+Detector: unused-return
+MUSDPocketV3._netDebtOf(address) (src/MUSDPocketV3.sol#589-594) ignores return value by (None,principal,interest,None,None,None) = troveManager.getEntireDebtAndColl(borrower) (src/MUSDPocketV3.sol#590)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-return
+INFO:Detectors:
+Detector: reentrancy-benign
+Reentrancy in MUSDPocketV3._park(uint256,uint256) (src/MUSDPocketV3.sol#611-617):
+	External calls:
+	- _approve(address(savingsVault),amount) (src/MUSDPocketV3.sol#612)
+		- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.approve.selector,spender,amount)) (src/MUSDPocketV3.sol#670-671)
+	- savingsVault.deposit(amount) (src/MUSDPocketV3.sol#613)
+	State variables written after the call(s):
+	- earnPrincipal[goalId] += amount (src/MUSDPocketV3.sol#614)
+	- totalInVault += amount (src/MUSDPocketV3.sol#615)
+Reentrancy in MUSDPocketV3._settle(uint256) (src/MUSDPocketV3.sol#638-660):
+	External calls:
+	- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	State variables written after the call(s):
+	- goalYieldEarned[goalId] += earned (src/MUSDPocketV3.sol#658)
+	- goals[goalId].balance += earned (src/MUSDPocketV3.sol#656)
+	- totalLocked += earned (src/MUSDPocketV3.sol#657)
+Reentrancy in MUSDPocketV3._unpark(uint256,uint256) (src/MUSDPocketV3.sol#620-630):
+	External calls:
+	- _settle(goalId) (src/MUSDPocketV3.sol#621)
+		- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	- savingsVault.withdraw(amount) (src/MUSDPocketV3.sol#623)
+	State variables written after the call(s):
+	- totalInVault -= amount (src/MUSDPocketV3.sol#628)
+Reentrancy in MUSDPocketV3.earlyWithdraw(uint256) (src/MUSDPocketV3.sol#300-317):
+	External calls:
+	- _exitVault(goalId) (src/MUSDPocketV3.sol#303)
+		- savingsVault.withdraw(amount) (src/MUSDPocketV3.sol#623)
+		- savingsVault.claimYield() (src/MUSDPocketV3.sol#651)
+	State variables written after the call(s):
+	- feePool += fee (src/MUSDPocketV3.sol#313)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+INFO:Detectors:
+Detector: timestamp
+MUSDPocketV3.createGoal(string,uint256,uint64,bool) (src/MUSDPocketV3.sol#205-233) uses timestamp for comparisons
+	Dangerous comparisons:
+	- unlockTime <= block.timestamp (src/MUSDPocketV3.sol#210)
+	- lock < MIN_LOCK || lock > MAX_LOCK (src/MUSDPocketV3.sol#212)
+MUSDPocketV3.withdraw(uint256) (src/MUSDPocketV3.sol#284-297) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < g.unlockTime (src/MUSDPocketV3.sol#286)
+MUSDPocketV3.earlyWithdraw(uint256) (src/MUSDPocketV3.sol#300-317) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= g.unlockTime (src/MUSDPocketV3.sol#302)
+MUSDPocketV3._emergencyFee(uint256,address,uint256) (src/MUSDPocketV3.sol#596-602) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= goals[goalId].unlockTime (src/MUSDPocketV3.sol#597)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+INFO:Detectors:
+Detector: low-level-calls
+Low level call in MUSDPocketV3._approve(address,uint256) (src/MUSDPocketV3.sol#669-673):
+	- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.approve.selector,spender,amount)) (src/MUSDPocketV3.sol#670-671)
+Low level call in MUSDPocketV3._pullTo(address,address,uint256) (src/MUSDPocketV3.sol#675-679):
+	- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.transferFrom.selector,from,to,amount)) (src/MUSDPocketV3.sol#676-677)
+Low level call in MUSDPocketV3._send(address,uint256) (src/MUSDPocketV3.sol#681-684):
+	- (ok,data) = address(musd).call(abi.encodeWithSelector(IERC20.transfer.selector,to,amount)) (src/MUSDPocketV3.sol#682)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+INFO:Slither:src/MUSDPocketV3.sol analyzed (10 contracts with 102 detectors), 30 result(s) found
