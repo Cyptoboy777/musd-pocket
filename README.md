@@ -80,7 +80,7 @@ Rules worth knowing:
 
 ## Design
 
-Engraved light: banknote guilloche, bottle-green ink, champagne gold. Type is Gloock and Geist. Tokens are in `frontend/src/styles/tokens.css`; the Wave 3 parts are in `frontend/src/styles/wave3.css`.
+Engraved light: banknote guilloche on charcoal, Bitcoin-amber light and deep-teal shadow. Type is Gloock and Geist. Tokens are in `frontend/src/styles/tokens.css`, the Wave 3 parts in `frontend/src/styles/wave3.css`, and the motion and gauge layer in `frontend/src/styles/redesign.css`. All motion respects `prefers-reduced-motion`; text colours meet WCAG AA (lowest text pair is 6.2:1).
 
 ## Setup
 

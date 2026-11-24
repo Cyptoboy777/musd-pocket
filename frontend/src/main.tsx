@@ -20,20 +20,21 @@ import { ToastProvider } from "./components/Toasts";
 import "./styles/tokens.css";
 import "./App.css";
 import "./styles/wave3.css";
+import "./styles/redesign.css";
 
 const queryClient = new QueryClient();
 
 const theme = darkTheme({
-  accentColor: "#E6C27A",
+  accentColor: "#F0A53A",
   accentColorForeground: "#1B1407",
   borderRadius: "large",
   overlayBlur: "small",
 });
 theme.fonts.body = '"Geist Variable", ui-sans-serif, system-ui, sans-serif';
-theme.colors.modalBackground = "#0C1D17";
-theme.colors.modalBorder = "rgba(230, 194, 122, 0.16)";
-theme.colors.connectButtonBackground = "#10261E";
-theme.colors.actionButtonBorder = "rgba(230, 194, 122, 0.18)";
+theme.colors.modalBackground = "#14171A";
+theme.colors.modalBorder = "rgba(240, 165, 58, 0.16)";
+theme.colors.connectButtonBackground = "#171B1E";
+theme.colors.actionButtonBorder = "rgba(240, 165, 58, 0.18)";
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {

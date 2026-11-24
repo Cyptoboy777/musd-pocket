@@ -14,6 +14,7 @@ import { summarizeTesters, type PocketLog } from "../lib/testers";
 import { useAsyncTx } from "../hooks/useAsyncTx";
 import { txUrl } from "../hooks/useTxFeedback";
 import { IconAlert, IconCheck, IconExternal, IconShield, IconUsers } from "./Icons";
+import { Hint } from "./Hint";
 
 const EXPLORER = mezoTestnet.blockExplorers.default.url;
 const EXPLORER_API = "https://api.explorer.test.mezo.org/api/v2";
@@ -70,15 +71,16 @@ export function RecoveryBanner({ on }: { on?: boolean }) {
 export function RiskChecksPanel({ pos, connected }: { pos: MezoPosition; connected: boolean }) {
   const sys = useSystemRisk();
   const r = pos.trove && pos.price ? ratio(pos.trove, pos.price) : undefined;
-  const rows: { label: string; value: ReactNode; ok?: boolean }[] = [
+  const rows: { label: string; value: ReactNode; ok?: boolean; hint?: ReactNode }[] = [
     {
       label: "Mezo system mode",
+      hint: "Recovery Mode starts when the whole Mezo system falls under 150% collateral. Borrowing into goals and closing a whole loan pause until it recovers. Deposits, withdrawals and repaying still work.",
       value: sys.recoveryMode === undefined ? "Checking…" : sys.recoveryMode ? "Recovery Mode" : "Normal",
       ok: sys.recoveryMode === undefined ? undefined : !sys.recoveryMode,
     },
-    { label: "System collateral (TCR)", value: sys.tcr ? `${Math.round(n18(sys.tcr) * 100)}%` : "—", ok: sys.tcr ? n18(sys.tcr) >= 1.5 : undefined },
+    { label: "System collateral (TCR)", hint: "TCR is the combined collateral ratio of every loan on Mezo. Below 150% the system is in Recovery Mode.", value: sys.tcr ? `${Math.round(n18(sys.tcr) * 100)}%` : "—", ok: sys.tcr ? n18(sys.tcr) >= 1.5 : undefined },
     { label: "Borrow-into-goal floor", value: "150% after borrow, else reverts", ok: true },
-    { label: "Smallest Mezo loan", value: sys.minNetDebt ? `${money(n18(sys.minNetDebt), 0)} MUSD net debt` : "—", ok: true },
+    { label: "Smallest Mezo loan", hint: "Mezo keeps every loan at or above a minimum amount of debt (1,800 MUSD, plus 200 MUSD set aside as a gas deposit). A partial repay cannot take you below it. To clear everything, close the loan.", value: sys.minNetDebt ? `${money(n18(sys.minNetDebt), 0)} MUSD net debt` : "—", ok: true },
     {
       label: "Your loan",
       value: !connected ? "Connect to check" : r === undefined ? "No open loan" : `${Math.round(r * 100)}% · ${BAND_COPY[band(r)]}`,
@@ -101,7 +103,7 @@ export function RiskChecksPanel({ pos, connected }: { pos: MezoPosition; connect
         {rows.map((row) => (
           <li key={row.label}>
             <span className={`risk-dot ${row.ok === undefined ? "" : row.ok ? "ok" : "bad"}`} aria-hidden="true" />
-            <span className="risk-label">{row.label}</span>
+            <span className="risk-label">{row.label}{row.hint && <Hint term={row.label}>{row.hint}</Hint>}</span>
             <span className="risk-value tnum">{row.value}</span>
           </li>
         ))}

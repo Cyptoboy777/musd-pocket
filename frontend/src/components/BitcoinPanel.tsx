@@ -1,9 +1,11 @@
 import {
-  BAND_COPY, COMFORT, GAS_COMPENSATION, MIN_NET_DEBT, MIN_TOTAL_DEBT_AT_OPEN, POCKET_FLOOR,
+  COMFORT, GAS_COMPENSATION, MIN_NET_DEBT, MIN_TOTAL_DEBT_AT_OPEN, POCKET_FLOOR,
   band, btcNeededForMinLoan, dropToLiquidation, liquidationPrice, maxBorrowAt, ratio,
 } from "../lib/risk";
 import type { MezoPosition } from "../lib/mezo";
 import { IconBitcoin, IconExternal } from "./Icons";
+import { HealthGauge } from "./HealthGauge";
+import { Hint } from "./Hint";
 
 const BORROW_URL = "https://testnet.mezo.org/feature/borrow";
 const usd = (n: number) => "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -14,7 +16,6 @@ export function BitcoinPanel({ pos, connected }: { pos: MezoPosition; connected:
   const { price, trove, loading, mezo, btc, recoveryMode } = pos;
   const r = trove && price ? ratio(trove, price) : undefined;
   const b = r !== undefined ? band(r) : "none";
-  const meter = r !== undefined ? Math.max(0, Math.min(100, ((r - 1.1) / (3 - 1.1)) * 100)) : 0;
   const room = trove && price ? maxBorrowAt(trove, price, COMFORT) : 0;
   const btcForMin = price ? btcNeededForMinLoan(price, COMFORT) : undefined;
   const ready = !!trove && r !== undefined && r >= POCKET_FLOOR;
@@ -33,16 +34,13 @@ export function BitcoinPanel({ pos, connected }: { pos: MezoPosition; connected:
       ) : trove && r !== undefined ? (
         <>
           <div className={`btc-ratio band-${b}`}>
-            <div className="btc-ratio-top">
-              <span className="btc-ratio-num tnum">{Math.round(r * 100)}%</span>
-              <span className="btc-band">{BAND_COPY[b]}</span>
-            </div>
-            <div className="meter" role="meter" aria-valuemin={110} aria-valuemax={300} aria-valuenow={Math.round(r * 100)} aria-label="Collateral ratio">
-              <i style={{ width: `${meter}%` }} />
-              <span className="meter-tick" style={{ left: `${((POCKET_FLOOR - 1.1) / 1.9) * 100}%` }} title="150%" />
-              <span className="meter-tick" style={{ left: `${((COMFORT - 1.1) / 1.9) * 100}%` }} title="200%" />
-            </div>
-            <div className="meter-legend"><span>110%</span><span>150%</span><span>200%</span><span>300%</span></div>
+            <HealthGauge ratio={r} />
+            <p className="btc-copy btc-ratio-help">
+              Collateral ratio
+              <Hint term="collateral ratio">
+                How much your Bitcoin is worth compared with your loan. At 200% your BTC is worth twice the loan. If it falls under 110%, the loan can be liquidated.
+              </Hint>
+            </p>
           </div>
           <dl className="account-meta">
             <div><dt>Collateral</dt><dd className="tnum">{num(trove.coll, 4)} BTC</dd></div>

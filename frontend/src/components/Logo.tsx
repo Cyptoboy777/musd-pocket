@@ -12,9 +12,9 @@ export function LogoMark({ size = 32, mono = false }: { size?: number; mono?: bo
     <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true" className="logo-mark">
       <defs>
         <linearGradient id={`g${id}`} x1="10" y1="8" x2="54" y2="58" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#F6E3B4" />
-          <stop offset=".55" stopColor="#E6C27A" />
-          <stop offset="1" stopColor="#B8893F" />
+          <stop offset="0" stopColor="#FDE8C4" />
+          <stop offset=".55" stopColor="#F0A53A" />
+          <stop offset="1" stopColor="#B8741A" />
         </linearGradient>
         <mask id={`k${id}`}>
           <rect width="64" height="64" fill="#fff" />

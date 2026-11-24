@@ -24,6 +24,8 @@ import { ProofPanel } from "./components/ProofPanel";
 import { ProtectLoanPanel } from "./components/ProtectLoanPanel";
 import { RevenuePanel } from "./components/RevenuePanel";
 import { BusinessSection } from "./components/Business";
+import { HeroStats } from "./components/HeroStats";
+import { Reveal } from "./components/Reveal";
 import { InviteLanding, InviteCopyButton, useIsInvite } from "./components/InvitePanel";
 import { StatsPanel } from "./components/StatsPanel";
 import { ConfirmDialog } from "./components/ConfirmDialog";
@@ -250,11 +252,11 @@ export default function App() {
             </div>
           </div>
         </section>
-        <StatsPanel lang={lang} />
-        <TestersSection />
-        <ProofPanel lang={lang} />
-        <BusinessSection />
-        <TeamSection />
+        <Reveal><StatsPanel lang={lang} /></Reveal>
+        <Reveal><TestersSection /></Reveal>
+        <Reveal><ProofPanel lang={lang} /></Reveal>
+        <Reveal><BusinessSection /></Reveal>
+        <Reveal><TeamSection /></Reveal>
       </main>
 
       <footer className="footer">
@@ -304,6 +306,7 @@ function IconInfo2() {
 function Hero({ balance, loading, connected, goals, onStart, onView, onGuide }: { balance: number; loading: boolean; connected: boolean; goals: number; onStart: () => void; onView: () => void; onGuide: () => void }) {
   return (
     <section className="hero" aria-labelledby="hero-title">
+      <div className="hero-mesh" aria-hidden="true"><i /><i /><i /></div>
       <div className="hero-light" aria-hidden="true" />
       <div className="hero-inner">
         <div className="hero-copy">
@@ -357,6 +360,7 @@ function Hero({ balance, loading, connected, goals, onStart, onView, onGuide }: 
           </m.div>
         </m.div>
       </div>
+      <HeroStats />
     </section>
   );
 }
@@ -364,7 +368,7 @@ function Hero({ balance, loading, connected, goals, onStart, onView, onGuide }: 
 function ProgressRing({ pct }: { pct: number }) {
   const r = 20, c = 2 * Math.PI * r;
   return (
-    <svg width="52" height="52" viewBox="0 0 52 52" className="ring">
+    <svg width="52" height="52" viewBox="0 0 52 52" className="ring" aria-hidden="true">
       <circle cx="26" cy="26" r={r} className="ring-track" />
       <circle cx="26" cy="26" r={r} className="ring-fill" strokeDasharray={c} style={{ strokeDashoffset: c * (1 - pct / 100) } as CSSProperties} />
       <text x="26" y="30" textAnchor="middle" className="ring-text">{pct}%</text>
@@ -716,11 +720,14 @@ function GoalCard({ goalId, index, pos, recoveryMode, lang = "en" }: { goalId: b
       transition={{ duration: 0.5, ease: EASE, delay: Math.min(index, 5) * 0.05 }}
     >
       <div className="goal-head">
-        <div>
-          <h3 className="goal-name">{name}</h3>
-          <div className="goal-meta">
-            <span className="tnum">{fmt(balance)} of {fmt(target)} MUSD</span>
-            {isFamily && <span className="tag"><IconUsers width={14} height={14} /> Shared</span>}
+        <div className="goal-id">
+          <ProgressRing pct={Math.round(pct)} />
+          <div>
+            <h3 className="goal-name">{name}</h3>
+            <div className="goal-meta">
+              <span className="tnum">{fmt(balance)} of {fmt(target)} MUSD</span>
+              {isFamily && <span className="tag"><IconUsers width={14} height={14} /> Shared</span>}
+            </div>
           </div>
         </div>
         <span className={`badge ${locked ? "badge-lock" : "badge-ready"}`}>

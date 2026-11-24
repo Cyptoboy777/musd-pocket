@@ -7,16 +7,16 @@
 /* live safety checks */
 .risk-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; background: var(--line-soft); border: 1px solid var(--line-soft); border-radius: 14px; overflow: hidden; }
 .risk-list li { display: grid; grid-template-columns: 10px 1fr auto; gap: 10px; align-items: center; padding: 10px 12px; background: var(--surface-solid); font-size: var(--fs-sm); }
-.risk-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sage-400); box-shadow: 0 0 0 3px rgba(138, 157, 145, 0.12); }
-.risk-dot.ok { background: var(--mint-300); box-shadow: 0 0 0 3px rgba(159, 230, 196, 0.12); }
+.risk-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sage-400); box-shadow: 0 0 0 3px rgba(139, 154, 155, 0.12); }
+.risk-dot.ok { background: var(--mint-300); box-shadow: 0 0 0 3px rgba(143, 217, 205, 0.12); }
 .risk-dot.bad { background: var(--ember-300); box-shadow: 0 0 0 3px rgba(255, 173, 154, 0.14); }
 .risk-label { color: var(--muted); }
 .risk-value { color: var(--text); font-weight: 500; text-align: right; }
 .risk-value a { color: inherit; text-decoration-color: var(--line-strong); }
 
 /* earn row on a goal */
-.earn-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line-soft); background: rgba(4, 12, 9, 0.35); transition: border-color var(--t-fast) var(--ease-out), background var(--t-fast) var(--ease-out); }
-.earn-row.is-on { border-color: rgba(159, 230, 196, 0.28); background: rgba(159, 230, 196, 0.05); }
+.earn-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line-soft); background: rgba(8, 9, 10, 0.35); transition: border-color var(--t-fast) var(--ease-out), background var(--t-fast) var(--ease-out); }
+.earn-row.is-on { border-color: rgba(143, 217, 205, 0.28); background: rgba(143, 217, 205, 0.05); }
 .earn-copy { display: grid; gap: 2px; font-size: var(--fs-sm); min-width: 0; }
 .earn-copy strong { font-weight: 600; color: var(--text); }
 .earn-copy span { color: var(--muted); line-height: 1.45; }
@@ -26,7 +26,7 @@
 .switch:disabled { opacity: 0.5; cursor: not-allowed; }
 .switch:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .switch-knob { position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--paper-200); transition: transform var(--t-med) var(--ease-out), background var(--t-fast); }
-.switch[aria-checked="true"] { background: rgba(159, 230, 196, 0.22); border-color: rgba(159, 230, 196, 0.5); }
+.switch[aria-checked="true"] { background: rgba(143, 217, 205, 0.22); border-color: rgba(143, 217, 205, 0.5); }
 .switch[aria-checked="true"] .switch-knob { transform: translateX(20px); background: var(--mint-300); }
 
 /* loan health + shield */

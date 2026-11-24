@@ -1,42 +1,44 @@
 /* ─────────────────────────────────────────────────────────────
    MUSD Pocket design tokens
    World: "Engraved light" — the security engraving of banknotes and
-   bond certificates, lit like a vault at night. Bottle-green ink,
-   champagne-gold light, one engraved rosette.
+   bond certificates, lit like a vault at night. Charcoal ink,
+   Bitcoin-amber light, deep-teal shadow, one engraved rosette.
    ───────────────────────────────────────────────────────────── */
 :root {
   /* primitives: ink (green-black), gold (light), mint, ember */
-  --ink-990: #040c09;
-  --ink-950: #06130f;
-  --ink-900: #0a1c16;
-  --ink-850: #0d231c;
-  --ink-800: #112b22;
-  --ink-700: #1a3b2f;
-  --ink-600: #2a5040;
-  --paper-50: #f4eee0;
-  --paper-200: #d9d2c0;
-  --sage-300: #a9b9ae;
-  --sage-400: #8a9d91;
-  --gold-100: #f8e9c4;
-  --gold-300: #efd394;
-  --gold-400: #e6c27a;
-  --gold-500: #cfa55a;
-  --gold-700: #8a6a2f;
-  --mint-300: #9fe6c4;
-  --mint-500: #4fbf8f;
+  --ink-990: #08090a;
+  --ink-950: #0e1012;
+  --ink-900: #14171a;
+  --ink-850: #1a1e21;
+  --ink-800: #202528;
+  --ink-700: #2f363a;
+  --ink-600: #434c52;
+  --paper-50: #f3efe6;
+  --paper-200: #d6d2c6;
+  --sage-300: #a7b4b3;
+  --sage-400: #8b9a9b;
+  --gold-100: #fde8c4;
+  --gold-300: #f7c46f;
+  --gold-400: #f0a53a;
+  --gold-500: #d68a1f;
+  --gold-700: #8a5a14;
+  --mint-300: #8fd9cd;
+  --mint-500: #2fa597;
   --ember-300: #ffad9a;
   --ember-500: #e8705a;
-  --amber-300: #f6c879;
+  --amber-300: #f6d58a;
+  --teal-800: #0d3b3a;
+  --teal-600: #14625f;
 
   /* semantic */
   --bg: var(--ink-950);
   --bg-deep: var(--ink-990);
-  --surface-1: rgba(16, 40, 31, 0.62);
-  --surface-2: rgba(22, 52, 41, 0.72);
+  --surface-1: rgba(22, 26, 29, 0.62);
+  --surface-2: rgba(28, 34, 38, 0.72);
   --surface-solid: var(--ink-900);
-  --field: rgba(4, 12, 9, 0.55);
-  --line: rgba(230, 194, 122, 0.12);
-  --line-strong: rgba(230, 194, 122, 0.26);
+  --field: rgba(8, 9, 10, 0.55);
+  --line: rgba(240, 165, 58, 0.12);
+  --line-strong: rgba(240, 165, 58, 0.26);
   --line-soft: rgba(244, 238, 224, 0.07);
   --text: var(--paper-50);
   --text-2: var(--paper-200);
@@ -44,7 +46,7 @@
   --faint: var(--sage-400);   /* 6.2:1 on --bg */
   --accent: var(--gold-400);
   --accent-hi: var(--gold-300);
-  --on-accent: #1b1407;       /* 10.6:1 on --accent */
+  --on-accent: #1B1407;       /* 10.6:1 on --accent */
   --success: var(--mint-300);
   --danger: var(--ember-300);
   --danger-solid: var(--ember-500);
@@ -74,7 +76,7 @@
   --r-pill: 999px;
 
   /* depth */
-  --hi: inset 0 1px 0 rgba(255, 245, 220, 0.07);
+  --hi: inset 0 1px 0 rgba(255, 243, 225, 0.07);
   --shadow-1: var(--hi), 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
   --shadow-2: var(--hi), 0 2px 4px rgba(0, 0, 0, 0.25), 0 40px 80px -32px rgba(0, 0, 0, 0.75);
 

@@ -4,10 +4,11 @@
 
 - New "How it earns" section in the app and [docs/BUSINESS.md](docs/BUSINESS.md): one live fee, three planned streams, projections labelled as projections.
 - Removed GitHub links from the app footer.
+- Redesign: charcoal, Bitcoin-amber and deep-teal palette across the app, icons and share image; drifting colour mesh behind the hero; live on-chain numbers in the hero (dash while unread, real zero when zero); loan-health gauge (110, 150 and 200 percent zones); progress ring on every goal card; plain-English "?" hints for collateral ratio, Recovery Mode, TCR and minimum debt; scroll reveal on the lower sections; logo lines draw on at load. Reduced motion turns the animation off.
 - The app is English only: language toggle and the es/pt/zh/fr strings are gone.
 - New page title, description and share image.
 - README: judge status table, architecture diagram, business model and team.
-- Not changed: contracts, tests and the visual design. Not run in this session: Foundry, Vitest, the build and Lighthouse (no package install was possible).
+- Not changed: contracts. Not run in the build session: Foundry, Vitest, `npm run build` and Lighthouse (no package install was possible), so run them locally.
 
 ## Wave 3 (24 Nov 2026), branch `wave3-judge`
 
