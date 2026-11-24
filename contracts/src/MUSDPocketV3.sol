@@ -14,7 +14,7 @@ import {
 
 /// @title MUSDPocket v3
 /// @notice Dated MUSD savings goals on Mezo that work with the saver's own trove.
-///         v3 answers the Wave 2 review:
+///         v3 answers the Wave 2 review (and adds an optional, capped performance fee on yield only):
 ///         - Earn mode: a goal can park its MUSD in Mezo's MUSD Savings Vault (sMUSD) and
 ///           collect the vault's MUSD yield while it is locked.
 ///         - Emergency repay / close: a goal can pay down, or fully close, its owner's trove
@@ -75,6 +75,12 @@ contract MUSDPocketV3 {
 
     uint16 public earlyFeeBps = 200;
     uint16 public constant MAX_EARLY_FEE_BPS = 500;
+    /// @notice Performance fee on vault YIELD only, never on principal. Off (0) by default.
+    ///         Hard cap 10%. Changed only by the owner, which is the 2-day timelock.
+    uint16 public yieldFeeBps;
+    uint16 public constant MAX_YIELD_FEE_BPS = 1000;
+    /// @notice Where `claimFeesToRecipient` sends collected fees. Shown in the app.
+    address public feeRecipient;
     uint256 public constant MIN_LOCK = 1 days;
     uint256 public constant MAX_LOCK = 730 days;
     uint256 public constant MIN_ICR_AFTER_BORROW = 1.5e18;
@@ -120,6 +126,9 @@ contract MUSDPocketV3 {
     event FeeClaimed(address indexed to, uint256 amount);
     event StrayRecovered(address indexed to, uint256 amount);
     event EarlyFeeUpdated(uint16 bps);
+    event YieldFeeUpdated(uint16 bps);
+    event YieldFeeTaken(uint256 indexed goalId, uint256 fee);
+    event FeeRecipientUpdated(address indexed recipient);
     event GoalFeeSnapshotted(uint256 indexed goalId, uint16 feeBps);
     event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
@@ -479,6 +488,12 @@ contract MUSDPocketV3 {
         return idx > snap ? (p * (idx - snap)) / 1e18 : 0;
     }
 
+    /// @notice Pending yield after the performance fee, i.e. what the goal would actually be credited.
+    function pendingYieldAfterFee(uint256 goalId) external view returns (uint256) {
+        uint256 gross = pendingYield(goalId);
+        return gross - (gross * yieldFeeBps) / 10_000;
+    }
+
     function earnAvailable() external view returns (bool) {
         return address(savingsVault) != address(0);
     }
@@ -508,6 +523,31 @@ contract MUSDPocketV3 {
         if (bps > MAX_EARLY_FEE_BPS) revert FeeTooHigh();
         earlyFeeBps = bps;
         emit EarlyFeeUpdated(bps);
+    }
+
+    /// @notice Set the performance fee on yield, in basis points. Capped at 10%. 0 turns it off.
+    /// @dev Applies to yield credited after the change. Yield already credited keeps the old rate.
+    function setYieldFeeBps(uint16 bps) external onlyOwner {
+        if (bps > MAX_YIELD_FEE_BPS) revert FeeTooHigh();
+        yieldFeeBps = bps;
+        emit YieldFeeUpdated(bps);
+    }
+
+    function setFeeRecipient(address recipient) external onlyOwner {
+        if (recipient == address(0)) revert ZeroAddress();
+        feeRecipient = recipient;
+        emit FeeRecipientUpdated(recipient);
+    }
+
+    /// @notice Send all collected fees to `feeRecipient`. Anyone may call it: the money can only go there.
+    function claimFeesToRecipient() external nonReentrant {
+        address to = feeRecipient;
+        if (to == address(0)) revert ZeroAddress();
+        uint256 amount = feePool;
+        if (amount == 0) revert BadAmount();
+        feePool = 0;
+        emit FeeClaimed(to, amount);
+        _send(to, amount);
     }
 
     function claimFees(address to) external onlyOwner nonReentrant {
@@ -653,10 +693,17 @@ contract MUSDPocketV3 {
         }
         if (earned > yieldPool) earned = yieldPool; // rounding guard, never pay what was not received
         yieldPool -= earned;
-        goals[goalId].balance += earned;
-        totalLocked += earned;
-        goalYieldEarned[goalId] += earned;
-        emit YieldCredited(goalId, earned);
+        // Performance fee: a share of this yield only. Rounds down, so rounding favours the saver.
+        uint256 fee = (earned * yieldFeeBps) / 10_000;
+        uint256 credit = earned - fee;
+        if (fee != 0) {
+            feePool += fee;
+            emit YieldFeeTaken(goalId, fee);
+        }
+        goals[goalId].balance += credit;
+        totalLocked += credit;
+        goalYieldEarned[goalId] += credit;
+        emit YieldCredited(goalId, credit);
     }
 
     function _permit(uint256 amount, uint256 deadline, uint8 v, bytes32 r, bytes32 s) internal {
