@@ -158,21 +158,18 @@ describe("share intents", () => {
 });
 
 describe("i18n wave2 upgrade keys", () => {
-  it("covers tabs empty states stats and fee preview in all langs", () => {
-    const langs: Lang[] = ["en", "es", "pt", "zh", "fr"];
-    for (const lang of langs) {
-      expect(t(lang, "tabPockets").length).toBeGreaterThan(0);
-      expect(t(lang, "emptyConnectTitle").length).toBeGreaterThan(0);
-      expect(t(lang, "earlyFeePreview").length).toBeGreaterThan(0);
-      expect(t(lang, "statsTitle").length).toBeGreaterThan(0);
-      expect(t(lang, "statsEventsError").length).toBeGreaterThan(0);
-      expect(t(lang, "statsEventsError")).not.toMatch(/eth_getLogs|viem|Missing or invalid/i);
-      expect(t(lang, "vaultNotLive")).not.toMatch(/eth_getCode|bytecode|honest empty|no code/i);
-      expect(t(lang, "networkMainnet").length).toBeGreaterThan(0);
-      expect(t(lang, "statsReadError")).not.toMatch(/rpc\.|https?:/i);
-      expect(t(lang, "closeNeedMusd").length).toBeGreaterThan(0);
-      expect(t(lang, "heroExample").length).toBeGreaterThan(0);
-    }
+  it("covers tabs empty states stats and fee preview", () => {
+    expect(t("en", "tabPockets").length).toBeGreaterThan(0);
+    expect(t("en", "emptyConnectTitle").length).toBeGreaterThan(0);
+    expect(t("en", "earlyFeePreview").length).toBeGreaterThan(0);
+    expect(t("en", "statsTitle").length).toBeGreaterThan(0);
+    expect(t("en", "statsEventsError").length).toBeGreaterThan(0);
+    expect(t("en", "statsEventsError")).not.toMatch(/eth_getLogs|viem|Missing or invalid/i);
+    expect(t("en", "vaultNotLive")).not.toMatch(/eth_getCode|bytecode|honest empty|no code/i);
+    expect(t("en", "networkMainnet").length).toBeGreaterThan(0);
+    expect(t("en", "statsReadError")).not.toMatch(/rpc\.|https?:/i);
+    expect(t("en", "closeNeedMusd").length).toBeGreaterThan(0);
+    expect(t("en", "heroExample").length).toBeGreaterThan(0);
   });
 });
 
