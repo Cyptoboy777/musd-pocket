@@ -29,7 +29,7 @@ import { StatsPanel } from "./components/StatsPanel";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { Coach, type Draft } from "./components/Coach";
 import { LIVE_APP } from "./lib/proof";
-import { cycleLang, LANG_META, loadLang, saveLang, t as tr, type Lang } from "./lib/i18n";
+import { t as tr, type Lang } from "./lib/i18n";
 import { earlyFeePreview } from "./lib/stats";
 import { useAsyncTx } from "./hooks/useAsyncTx";
 import { LogoMark, Wordmark } from "./components/Logo";
@@ -84,7 +84,7 @@ export default function App() {
   const chainId = useChainId();
   const [tab, setTab] = useState<Tab>("goals");
   const [draft, setDraft] = useState<(Draft & { n: number }) | null>(null);
-  const [lang, setLang] = useState<Lang>(() => (typeof window !== "undefined" ? loadLang() : "en"));
+  const lang: Lang = "en";
   const showInvite = useIsInvite();
   const [showStats, setShowStats] = useState(() =>
     typeof window !== "undefined" && (window.location.pathname.replace(/\/$/, "") === "/stats" || window.location.hash === "#stats")
@@ -98,11 +98,6 @@ export default function App() {
   const sys = useSystemRisk();
   const recoveryMode = sys.recoveryMode ?? pos.recoveryMode;
   const deployed = POCKET_ADDRESS !== zeroAddress;
-  const toggleLang = () => {
-    const next = cycleLang(lang);
-    setLang(next);
-    saveLang(next);
-  };
 
   const { data: musdBal, isLoading: balLoading } = useReadContract({
     address: MUSD_ADDRESS,
@@ -168,9 +163,6 @@ export default function App() {
               Contract <IconExternal width={14} height={14} />
             </a>
           </nav>
-          <button type="button" className="lang-toggle" onClick={toggleLang} aria-label={tr(lang, "langToggleAria")} data-feature="lang-toggle" title={LANG_META.find((m) => m.id === lang)?.label}>
-            {LANG_META.find((m) => m.id === lang)?.native ?? "EN"}
-          </button>
           <ConnectButton showBalance={false} chainStatus="icon" accountStatus="avatar" />
         </div>
       </header>

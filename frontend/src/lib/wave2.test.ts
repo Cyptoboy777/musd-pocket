@@ -7,7 +7,7 @@ import {
 } from "./risk";
 import { parseInvite, buildInviteUrl, isInviteLanding } from "./invite";
 import { hasBytecode } from "./vault";
-import { cycleLang, loadLang, t, type Lang } from "./i18n";
+import { t } from "./i18n";
 import {
   chunkBlockRange,
   earlyFeeAmount,
@@ -92,20 +92,10 @@ describe("sMUSD feature flag", () => {
   });
 });
 
-describe("global i18n", () => {
-  it("defaults to English and cycles global langs only", () => {
+describe("copy", () => {
+  it("is English only", () => {
     expect(t("en", "protectTitle")).toBe("Protect my loan");
-    expect(t("es", "protectTitle")).toContain("préstamo");
-    expect(t("zh", "inviteChip")).toBe("存入");
-    let lang: Lang = "en";
-    const seen = new Set<Lang>();
-    for (let i = 0; i < 5; i++) { lang = cycleLang(lang); seen.add(lang); }
-    expect(seen.has("en")).toBe(true);
-    expect(seen.has("es")).toBe(true);
-    expect([...seen].some((x) => x === ("hi" as Lang))).toBe(false);
-  });
-  it("loadLang falls back to en without storage noise", () => {
-    expect(["en", "es", "pt", "zh", "fr"]).toContain(loadLang());
+    expect(t("en", "inviteChip")).toBe("Chip in");
   });
 });
 

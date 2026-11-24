@@ -4,6 +4,7 @@
 
 - New "How it earns" section in the app and [docs/BUSINESS.md](docs/BUSINESS.md): one live fee, three planned streams, projections labelled as projections.
 - Removed GitHub links from the app footer.
+- The app is English only: language toggle and the es/pt/zh/fr strings are gone.
 - New page title, description and share image.
 - README: judge status table, architecture diagram, business model and team.
 - Not changed: contracts, tests and the visual design. Not run in this session: Foundry, Vitest, the build and Lighthouse (no package install was possible).

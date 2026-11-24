@@ -588,19 +588,7 @@ button { font: inherit; color: inherit; }
 }
 .proof-txs a:hover { color: var(--gold); }
 
-/* ───── Wave 2: lang, protect, invite, revenue, community ───── */
-.lang-toggle {
-  flex-shrink: 0;
-  min-width: 44px; min-height: 44px;
-  padding: 8px 12px; border-radius: var(--r-pill);
-  border: 1px solid var(--line); background: rgba(16, 40, 31, 0.55);
-  color: var(--accent-hi); font-size: var(--fs-sm); font-weight: 600;
-  cursor: pointer; transition: background var(--t-fast) var(--ease-out), border-color var(--t-fast);
-}
-@media (hover: hover) {
-  .lang-toggle:hover { background: rgba(230, 194, 122, 0.12); border-color: var(--line-strong); }
-}
-.lang-toggle:active { transform: scale(0.97); }
+/* ───── Wave 2: protect, invite, revenue, community ───── */
 
 .protect-panel .seg { margin: 12px 0 8px; }
 .protect-panel.band-watch { box-shadow: inset 0 0 0 1px rgba(246, 200, 121, 0.28); }
@@ -643,11 +631,11 @@ button { font: inherit; color: inherit; }
   .invite-grid { grid-template-columns: 1fr; }
   .nav-inner { padding: 12px 16px; gap: 10px; flex-wrap: wrap; }
   .nav-links { display: none; }
-  .lang-toggle { margin-left: auto; }
+  .nav-inner > :last-child { margin-left: auto; }
   .app-grid { grid-template-columns: 1fr; }
   .hero-inner { grid-template-columns: 1fr; min-height: auto; padding-top: 36px; }
   .account { display: grid; gap: 12px; }
-  .btn, .lang-toggle, .tab { min-height: 44px; }
+  .btn, .tab { min-height: 44px; }
   input, textarea, .input-wrap input { font-size: 16px !important; }
 }
 @media (max-width: 480px) {
