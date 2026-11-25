@@ -666,6 +666,7 @@ function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: 
   const safeRoom = t && price ? maxBorrowAt(t, price, COMFORT) : 0;
   const floorRoom = t && price ? maxBorrowAt(t, price, POCKET_FLOOR) : 0;
   const tooRisky = after !== undefined && after < POCKET_FLOOR;
+  const recovery = pos.recoveryMode === true;
   const liqAfter = t && bAmt > 0 ? liquidationPrice({ coll: t.coll, debt: t.debt + bAmt * 1.001 }) : undefined;
 
   const feeBps = typeof feeBpsData === "number" ? feeBpsData : Number(feeBpsData ?? 200);
@@ -741,7 +742,7 @@ function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: 
           <a className="btn btn-ghost btn-block" href={LINKS.borrow} target="_blank" rel="noreferrer">Open a loan on Mezo <IconExternal width={15} height={15} /></a>
         </div>
       ) : (
-        <form className="fund" onSubmit={(e) => { e.preventDefault(); if (bAmt > 0 && !tooRisky) void bor.run(() => actions.borrowToGoal(goalId, borrowAmt, t)); }}>
+        <form className="fund" onSubmit={(e) => { e.preventDefault(); if (bAmt > 0 && !tooRisky && !recovery) void bor.run(() => actions.borrowToGoal(goalId, borrowAmt, t)); }}>
           <div className="field">
             <label htmlFor={`bor-${goalId}`}>Borrow MUSD against your BTC into this goal</label>
             <div className="input-wrap">
@@ -754,9 +755,10 @@ function GoalCard({ goalId, index, pos, lang = "en" }: { goalId: bigint; index: 
             <div><span>Liquidation at</span><strong className="tnum">{liqAfter ? `$${fmtNum(liqAfter, 0)}` : t ? `$${fmtNum(liquidationPrice(t), 0)}` : "—"}</strong></div>
             <div><span>After this</span><strong>{after !== undefined ? BAND_COPY[band(after)] : now !== undefined ? BAND_COPY[band(now)] : "—"}</strong></div>
           </div>
+          {recovery && <div className="notice notice-warn" role="alert" data-feature="recovery-borrow-off"><span>Borrowing is paused: Mezo is in Recovery Mode. Add BTC or repay to protect your loan, then borrow again once it ends.</span></div>}
           {tooRisky && <div className="form-error" role="alert">That would take your loan under 150%. The contract refuses it; most you can borrow here is {fmtNum(floorRoom)} MUSD.</div>}
           {!tooRisky && after !== undefined && after < COMFORT && <div className="notice notice-warn" role="note"><span>Below 200% your loan is more exposed to BTC drops and to redemptions. Fine for testing; be careful with real money.</span></div>}
-          <button type="submit" className="btn btn-primary btn-block" disabled={!canWrite || busy || !(bAmt > 0) || tooRisky}>
+          <button type="submit" className="btn btn-primary btn-block" disabled={!canWrite || busy || !(bAmt > 0) || tooRisky || recovery}>
             {bor.busy ? <span className="spinner" /> : <IconBitcoin />} {tr(lang, "borrowIntoGoal")}
           </button>
           <p className="fund-note">You sign Mezo's own borrow message with this goal as the recipient. The MUSD never touches your wallet, and the whole thing reverts if your loan would end under 150%.</p>

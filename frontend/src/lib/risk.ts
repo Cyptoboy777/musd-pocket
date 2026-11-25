@@ -75,6 +75,34 @@ export function dropToLiquidation(t: Trove, price: number): number {
   return Math.max(0, 1 - lp / price);
 }
 
+/** Smallest total debt a loan may keep after a partial repay: min net debt + gas compensation. */
+export function minRemainingDebt(minNetDebt = MIN_NET_DEBT): number {
+  return minNetDebt + GAS_COMPENSATION;
+}
+
+export type RepayCheck = {
+  /** True when a repay of this size leaves the loan at or above Mezo's minimum. */
+  ok: boolean;
+  /** Debt left after the repay. */
+  remaining: number;
+  /** Most MUSD that can be repaid without closing the loan. Zero when the loan sits at the minimum. */
+  maxPartial: number;
+  /** Debt floor a loan must keep to stay open. */
+  floor: number;
+};
+
+/**
+ * Mezo refuses a partial repay that leaves net debt under the minimum (1,800 MUSD, governable),
+ * and repayMUSD cannot take debt to zero: closing the loan is a separate call.
+ * `minNetDebt` should come from the contract when it can be read.
+ */
+export function checkRepay(t: Trove, amount: number, minNetDebt = MIN_NET_DEBT): RepayCheck {
+  const floor = minRemainingDebt(minNetDebt);
+  const remaining = Math.max(0, t.debt - Math.max(0, amount));
+  const maxPartial = Math.max(0, Math.floor((t.debt - floor) * 100) / 100);
+  return { ok: amount > 0 && remaining >= floor - 1e-9, remaining, maxPartial, floor };
+}
+
 /** BTC collateral needed to open a fresh loan of `debt` MUSD at `target` ratio. */
 export function btcNeededFor(debt: number, price: number, target = COMFORT): number {
   if (price <= 0) return 0;

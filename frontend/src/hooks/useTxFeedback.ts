@@ -24,6 +24,21 @@ export function walletErrorCopy(err: unknown): WalletErrorCopy {
       notSubmitted: true,
     };
   }
+  if (/RECOVERY_MODE/i.test(msg)) {
+    return {
+      title: "Borrowing is paused",
+      body: "Mezo is in Recovery Mode, so new borrowing is paused. Nothing was sent. Add BTC or repay to protect your loan.",
+      notSubmitted: true,
+    };
+  }
+  if (/REPAY_BELOW_MIN/i.test(msg)) {
+    const [, max, floor] = msg.match(/REPAY_BELOW_MIN\s+([\d.]+)\s+([\d.]+)/) ?? [];
+    const f = Number(floor || 2000).toLocaleString("en-US");
+    const body = Number(max) > 0
+      ? `Mezo needs your loan to keep at least ${f} MUSD of debt. You can repay up to ${Number(max).toLocaleString("en-US")} MUSD, or close the loan. Nothing was sent.`
+      : `Your loan is at Mezo's minimum (${f} MUSD), so it cannot be partly repaid. Add BTC or close the loan. Nothing was sent.`;
+    return { title: "Repay too large", body, notSubmitted: true };
+  }
   if (/insufficient funds/i.test(msg)) {
     return { title: "Not sent", body: "Not enough BTC for gas. Nothing was sent.", notSubmitted: true };
   }

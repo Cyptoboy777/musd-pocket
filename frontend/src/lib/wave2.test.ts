@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { ProofPanel } from "../components/ProofPanel";
 import {
-  ratioAfterAddColl, ratioAfterRepay, needsProtection, protectLevel, ratio, liquidationPrice,
+  ratioAfterAddColl, ratioAfterRepay, needsProtection, protectLevel, ratio, liquidationPrice, checkRepay, minRemainingDebt,
 } from "./risk";
 import { parseInvite, buildInviteUrl, isInviteLanding } from "./invite";
 import { hasBytecode } from "./vault";
@@ -245,5 +245,26 @@ describe("passport wallets", () => {
     expect(group.groupName).toBe(MEZO_PASSPORT_GROUP);
     expect(group.wallets).toHaveLength(3);
     for (const w of group.wallets) expect(typeof w).toBe("function");
+  });
+});
+
+describe("repay minimum", () => {
+  it("keeps the documented 1,800 net + 200 gas compensation floor and reads a governed value", () => {
+    expect(minRemainingDebt()).toBe(2000);
+    expect(minRemainingDebt(2500)).toBe(2700);
+  });
+
+  it("allows a repay down to the floor and blocks anything below it", () => {
+    const loan = { coll: 1, debt: 5000 };
+    expect(checkRepay(loan, 3000).ok).toBe(true);
+    expect(checkRepay(loan, 3000.01).ok).toBe(false);
+    expect(checkRepay(loan, 3000.01).maxPartial).toBe(3000);
+    expect(checkRepay(loan, 0).ok).toBe(false);
+  });
+
+  it("offers no partial repay when the loan is already at the minimum", () => {
+    const r = checkRepay({ coll: 1, debt: 2000 }, 1);
+    expect(r.ok).toBe(false);
+    expect(r.maxPartial).toBe(0);
   });
 });

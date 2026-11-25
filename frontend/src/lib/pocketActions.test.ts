@@ -18,6 +18,8 @@ function harness(opts?: {
   receipt?: { status: "success" | "reverted" } | "throw";
   flipChainOnSign?: boolean;
   repayError?: Error;
+  recovery?: boolean;
+  pending?: readonly bigint[];
 }) {
   let chain = opts?.chain ?? mezoTestnet.id;
   const writes: PocketWrite[] = [];
@@ -30,7 +32,10 @@ function harness(opts?: {
       if (args.functionName === "nonces") return 0n;
       if (args.functionName === "allowance") return opts?.allowance ?? parseUnits("1000", 18);
       if (args.functionName === "getTroveStatus") return 1;
-      if (args.functionName === "getEntireDebtAndColl") return DEBT;
+      if (args.functionName === "getEntireDebtAndColl") return opts?.pending ?? DEBT;
+      if (args.functionName === "checkRecoveryMode") return opts?.recovery ?? false;
+      if (args.functionName === "getCurrentICR") return parseUnits("40", 18); // 1 BTC * 80,000 / 2,000 MUSD
+      if (args.functionName === "minNetDebt") return parseUnits("1800", 18);
       if (args.functionName === "fetchPrice") return parseUnits("80000", 18);
       if (args.functionName === "getApproxHint") return [OTHER, 0n, 1n];
       if (args.functionName === "findInsertPosition") return [OTHER, OTHER];
@@ -55,6 +60,8 @@ function harness(opts?: {
 }
 
 const trove = { coll: 1, debt: 2000 };
+// A loan with room above Mezo's minimum, so a partial repay is allowed.
+const roomyTrove = { coll: 1, debt: 5000 };
 
 describe("pocket action dispatch", () => {
   it("sends deposit, send, borrow, collateral, and close only on testnet pocket or Mezo contracts", async () => {
@@ -100,7 +107,7 @@ describe("pocket action dispatch", () => {
 
   it("repays without an approval when allowance is already enough", async () => {
     const { actions, writes } = harness({ allowance: parseUnits("50", 18) });
-    await actions.repayLoan("10", trove);
+    await actions.repayLoan("10", roomyTrove);
     expect(writes.map((w) => w.functionName)).toEqual(["repayMUSD"]);
     expect(writes[0]?.address).toBe(MEZO.borrowerOperations);
     expect(writes[0]?.chainId).toBe(mezoTestnet.id);
@@ -126,13 +133,13 @@ describe("pocket action dispatch", () => {
         return { status: "success" };
       },
     });
-    await actions.repayLoan("10", trove);
+    await actions.repayLoan("10", roomyTrove);
     expect(order).toEqual([`write:approve`, `receipt:${APPROVE}`, "write:repayMUSD"]);
   });
 
   it("keeps the submitted approval in view if the repayment prompt is declined", async () => {
     const h = harness({ allowance: 0n, repayError: new Error("User rejected the request.") });
-    await expect(h.actions.repayLoan("10", trove)).rejects.toThrow(/REPAY_AFTER_APPROVAL/);
+    await expect(h.actions.repayLoan("10", roomyTrove)).rejects.toThrow(/REPAY_AFTER_APPROVAL/);
     expect(h.writes.map((w) => w.functionName)).toEqual(["approve", "repayMUSD"]);
     const copy = walletErrorCopy(new Error("REPAY_AFTER_APPROVAL User rejected the request."));
     expect(copy.notSubmitted).toBe(false);
@@ -142,7 +149,7 @@ describe("pocket action dispatch", () => {
 
   it("keeps the submitted approval in view if repayment lacks gas", async () => {
     const h = harness({ allowance: 0n, repayError: new Error("insufficient funds for gas * price + value") });
-    await expect(h.actions.repayLoan("10", trove)).rejects.toThrow(/REPAY_AFTER_APPROVAL/);
+    await expect(h.actions.repayLoan("10", roomyTrove)).rejects.toThrow(/REPAY_AFTER_APPROVAL/);
     expect(h.writes.map((w) => w.functionName)).toEqual(["approve", "repayMUSD"]);
     const copy = walletErrorCopy(new Error("REPAY_AFTER_APPROVAL insufficient funds for gas * price + value"));
     expect(copy.notSubmitted).toBe(false);
@@ -152,11 +159,11 @@ describe("pocket action dispatch", () => {
 
   it("does not submit repay when the approval receipt reverts or never confirms", async () => {
     const reverted = harness({ allowance: 0n, receipt: { status: "reverted" } });
-    await expect(reverted.actions.repayLoan("10", trove)).rejects.toThrow(/APPROVAL_REVERTED/);
+    await expect(reverted.actions.repayLoan("10", roomyTrove)).rejects.toThrow(/APPROVAL_REVERTED/);
     expect(reverted.writes.map((w) => w.functionName)).toEqual(["approve"]);
 
     const unknown = harness({ allowance: 0n, receipt: "throw" });
-    await expect(unknown.actions.repayLoan("10", trove)).rejects.toThrow(/APPROVAL_UNCONFIRMED/);
+    await expect(unknown.actions.repayLoan("10", roomyTrove)).rejects.toThrow(/APPROVAL_UNCONFIRMED/);
     expect(unknown.writes.map((w) => w.functionName)).toEqual(["approve"]);
   });
 
@@ -176,5 +183,37 @@ describe("pocket action dispatch", () => {
     const leak = walletErrorCopy(new Error("VITE_POCKET_ADDRESS\n    at main.tsx:1:1"));
     expect(leak.body).not.toMatch(/VITE_|at main/);
     expect(leak.title).not.toMatch(/VITE_|at main/);
+  });
+
+  it("does not borrow in Recovery Mode and sends nothing", async () => {
+    const h = harness({ recovery: true });
+    await expect(h.actions.borrowToGoal(4n, "10", trove)).rejects.toThrow(/RECOVERY_MODE/);
+    expect(h.writes).toEqual([]);
+    const copy = walletErrorCopy(new Error("RECOVERY_MODE"));
+    expect(copy.notSubmitted).toBe(true);
+    expect(copy.body).toMatch(/Recovery Mode/);
+  });
+
+  it("refuses a repay that would leave the loan under Mezo's minimum before any approval", async () => {
+    // 5,000 debt - 3,100 = 1,900, under the 2,000 floor (1,800 net + 200 gas compensation).
+    const h = harness({ allowance: 0n });
+    await expect(h.actions.repayLoan("3100", roomyTrove)).rejects.toThrow(/REPAY_BELOW_MIN 3000 2000/);
+    expect(h.writes).toEqual([]);
+    const copy = walletErrorCopy(new Error("REPAY_BELOW_MIN 3000 2000"));
+    expect(copy.notSubmitted).toBe(true);
+    expect(copy.body).toMatch(/up to 3,000 MUSD/);
+    // A repay that lands exactly on the floor is fine.
+    await h.actions.repayLoan("3000", roomyTrove);
+    expect(h.writes.map((w) => w.functionName)).toEqual(["approve", "repayMUSD"]);
+  });
+
+  it("does not count pending rewards twice when the contract ratio says they are already included", async () => {
+    // getEntireDebtAndColl returns coll 1, debt 2,000 and pending 0.1 BTC / 400 MUSD on top.
+    // The contract ICR (40x) matches the plain numbers, so the pending fields must be ignored.
+    const pending = [ONE, parseUnits("2000", 18), 0n, parseUnits("0.1", 18), parseUnits("400", 18), 0n] as const;
+    const h = harness({ pending });
+    // Plain numbers allow up to (80000/1.5 - 2000)/1.001 ~ 51,000 MUSD; the double-counted debt of 2,400 would allow less.
+    await h.actions.borrowToGoal(4n, "51000", trove);
+    expect(h.writes.map((w) => w.functionName)).toEqual(["borrowToGoal"]);
   });
 });

@@ -54,7 +54,7 @@ export function BitcoinPanel({ pos, connected }: { pos: MezoPosition; connected:
             {room >= 1
               ? <>You could borrow about <strong className="tnum">{num(room)} MUSD</strong> into a goal and stay at 200%. We re-check the live price right before you sign.</>
               : <>Your loan is below 200%, so we don't suggest borrowing more. Adding BTC on Mezo gives you room.</>}
-            {recoveryMode && <> Mezo is in Recovery Mode: loans under 150% can be liquidated.</>}
+            {recoveryMode && <> Mezo is in Recovery Mode: borrowing is paused and loans under 150% can be liquidated.</>}
           </p>
         </>
       ) : (
@@ -74,7 +74,7 @@ export function BitcoinPanel({ pos, connected }: { pos: MezoPosition; connected:
           <dl className="account-meta">
             <div><dt>BTC needed (≈200% ICR)</dt><dd className="tnum">{num(btcForMin, 4)} BTC ≈ {usd(btcForMin * price)}</dd></div>
             {btc !== undefined && <div><dt>Your test BTC</dt><dd className="tnum">{num(btc, 5)} BTC</dd></div>}
-            <div><dt>Borrow-into-goal</dt><dd>{ready ? <span className="status status-ok">Ready</span> : <span className="status">Needs valid trove</span>}</dd></div>
+            <div><dt>Borrow-into-goal</dt><dd>{recoveryMode ? <span className="status status-warn">Paused (Recovery Mode)</span> : ready ? <span className="status status-ok">Ready</span> : <span className="status">Needs valid trove</span>}</dd></div>
           </dl>
         )}
       </div>
